@@ -1,0 +1,17 @@
+name: sliding_sheet
+description: A sliding sheet that 
+version: 0.0.1
+author: Bendix Mahnke
+
+environment:
+  sdk: ">=2.2.2 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
