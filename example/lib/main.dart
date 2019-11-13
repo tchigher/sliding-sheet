@@ -63,6 +63,22 @@ class _MyAppState extends State<MyApp> {
               children: <Widget>[
                 buildMap(),
                 buildSheet(),
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + 16, 16, 0),
+                    child: FloatingActionButton(
+                      child: Icon(
+                        Icons.layers,
+                        color: mapsBlue,
+                      ),
+                      backgroundColor: Colors.white,
+                      onPressed: () {
+                        showBottomSheet(context);
+                      },
+                    ),
+                  ),
+                ),
               ],
             ),
           );
@@ -109,7 +125,6 @@ class _MyAppState extends State<MyApp> {
 
   Widget buildHeader(BuildContext context, SheetState state) {
     final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
 
     return MyContainer(
       key: headerKey,
@@ -319,7 +334,7 @@ class _MyAppState extends State<MyApp> {
           ),
         ),
         SizedBox(height: 8),
-         Align(
+        Align(
           alignment: Alignment.center,
           child: Text(
             '(Stars too)',
@@ -425,6 +440,28 @@ class _MyAppState extends State<MyApp> {
           cornerStrategy: const charts.ConstCornerStrategy(5),
         ),
       ),
+    );
+  }
+
+  void showBottomSheet(BuildContext context) {
+    showSlidingBottomSheet(
+      context,
+      snapBehavior: const SnapBehavior(
+        snap: false,
+        snappings: const [0.4, 0.7, 1.0],
+      ),
+      color: Colors.white,
+      builder: (context, state) {
+        return Container(
+          height: 1000,
+          child: Center(
+            child: Text(
+              'This is a bottom sheet dialog!',
+              style: textStyle,
+            ),
+          ),
+        );
+      },
     );
   }
 

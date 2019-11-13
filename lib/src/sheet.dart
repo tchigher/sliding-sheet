@@ -143,7 +143,7 @@ class SlidingSheet extends StatefulWidget {
     this.headerBuilder,
     this.footerBuilder,
     this.route,
-    this.color,
+    this.color = Colors.white,
     this.backdropColor,
     this.cornerRadius = 0.0,
     this.elevation = 0.0,
@@ -428,7 +428,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   }
 
   void _pop(double velocity) {
-    if (_fromBottomSheet) {
+    if (_fromBottomSheet && !_dismissUnderway && Navigator.canPop(context)) {
       _dismissUnderway = true;
       Navigator.pop(context);
     }
@@ -470,7 +470,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                 ),
               SizedBox.expand(
                 child: FractionallySizedBox(
-                  heightFactor: _currentExtent,
+                  heightFactor: _currentExtent.clamp(0.0, 1.0),
                   alignment: Alignment.bottomCenter,
                   child: _SheetContainer(
                     color: widget.color,
@@ -587,6 +587,8 @@ class _SheetExtent {
   void addPixelDelta(double pixelDelta) {
     if (targetHeight == 0 || availableHeight == 0) return;
     currentExtent = (currentExtent + (pixelDelta / availableHeight));
+
+    // The bottom sheet should be allowed to be dragged below its min extent.
     if (!isFromBottomSheet) currentExtent = currentExtent.clamp(minExtent, maxExtent);
   }
 }
@@ -617,11 +619,9 @@ class _DragableScrollableSheetController extends ScrollController {
     bool clamp = true,
   }) {
     if (clamp) snap = snap.clamp(extent.minExtent, extent.maxExtent);
-    final speedFactor =
-        (math.max((currentExtent - snap).abs(), .25) / maxExtent) * (1 - ((velocity.abs() / 2000) * 0.3).clamp(.0, 0.3));
+    final speedFactor = (math.max((currentExtent - snap).abs(), .25) / maxExtent) *
+        (1 - ((velocity.abs() / 2000) * 0.3).clamp(.0, 0.3));
     duration = this.duration * speedFactor;
-
-    print(velocity);
 
     final controller = AnimationController(duration: duration, vsync: vsync);
     final tween = Tween(begin: extent.currentExtent, end: snap).animate(
@@ -681,12 +681,14 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
 
   VoidCallback _dragCancelCallback;
   bool up = true;
+  double lastVelocity = 0.0;
+  bool inDrag = false;
 
   bool get fromBottomSheet => extent.isFromBottomSheet;
   SnapBehavior get snapBehavior => scrollController.snapBehavior;
   bool get snap => snapBehavior.snap;
   List<double> get snappings => extent.snappings;
-  bool get listShouldScroll => pixels > 0.0;
+  bool get shouldScroll => pixels > 0.0;
   double get availableHeight => extent.targetHeight;
   double get currentExtent => extent.currentExtent;
   double get maxExtent => extent.maxExtent;
@@ -706,8 +708,9 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
   @override
   void applyUserOffset(double delta) {
     up = delta.isNegative;
+    inDrag = true;
 
-    if (!listShouldScroll &&
+    if (!shouldScroll &&
         (!(extent.isAtMin || extent.isAtMax) ||
             (extent.isAtMin && (delta < 0 || fromBottomSheet)) ||
             (extent.isAtMax && delta > 0))) {
@@ -721,7 +724,8 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
   void didEndScroll() {
     super.didEndScroll();
 
-    if (fromBottomSheet || (snap && !extent.isAtMax && !extent.isAtMin && !listShouldScroll)) {
+    if ((snap && !extent.isAtMax && !extent.isAtMin && !shouldScroll) ||
+        (fromBottomSheet && currentExtent < minExtent && inDrag)) {
       goSnapped(0.0);
     }
   }
@@ -729,8 +733,11 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
   @override
   void goBallistic(double velocity) {
     up = !velocity.isNegative;
+    lastVelocity = velocity;
 
-    if (velocity == 0.0 || (velocity.isNegative && listShouldScroll) || (!velocity.isNegative && extent.isAtMax)) {
+    if (velocity != 0) inDrag = false;
+
+    if (velocity == 0.0 || (velocity.isNegative && shouldScroll) || (!velocity.isNegative && extent.isAtMax)) {
       super.goBallistic(velocity);
       return;
     }
@@ -796,7 +803,7 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
     }
   }
 
-  void goUnsnapped(double velocity) {
+  void goUnsnapped(double velocity) async {
     // The iOS bouncing simulation just isn't right here - once we delegate
     // the ballistic back to the ScrollView, it will use the right simulation.
     final simulation = ClampingScrollSimulation(
@@ -815,7 +822,7 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
       final double delta = ballisticController.value - lastDelta;
       lastDelta = ballisticController.value;
       extent.addPixelDelta(delta);
-      if ((velocity > 0 && extent.isAtMax) || (velocity < 0 && extent.isAtMin)) {
+      if ((velocity > 0 && extent.isAtMax) || (!fromBottomSheet && (velocity < 0 && extent.isAtMin))) {
         // Make sure we pass along enough velocity to keep scrolling - otherwise
         // we just "bounce" off the top making it look like the list doesn't
         // have more to scroll.
@@ -825,11 +832,19 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
       }
     }
 
-    ballisticController
-      ..addListener(_tick)
-      ..animateWith(simulation).whenCompleteOrCancel(
+    ballisticController.addListener(_tick);
+    final animation = ballisticController.animateWith(simulation)
+      ..whenCompleteOrCancel(
         ballisticController.dispose,
       );
+
+    // Await the animation. In bottom sheets we need to decide whether to pop the route
+    // when the animation ends and the sheet is below its min extent
+    await animation;
+
+    if (fromBottomSheet && currentExtent < minExtent) {
+      goSnapped(0.0);
+    }
   }
 
   @override
@@ -938,17 +953,20 @@ class SheetController {
   Future Function() _expand;
 }
 
-Future<T> showScrollableBottomSheet<T>(
+Future<T> showSlidingBottomSheet<T>(
   BuildContext context, {
   SnapBehavior snapBehavior = const SnapBehavior(),
-  Duration duration,
+  Duration duration = const Duration(milliseconds: 800),
   Color color,
-  Color backdropColor = Colors.black45,
-  Color shadowColor = Colors.black54,
+  Color backdropColor = Colors.black54,
+  Color shadowColor,
+  double elevation = 0.0,
+  EdgeInsets padding,
+  EdgeInsets margin,
+  Border border,
   double cornerRadius = 0.0,
-  double elevation = 0,
   bool dismissableBackground = true,
-  SheetBuilder builder,
+  @required SheetBuilder builder,
   SheetBuilder headerBuilder,
   SheetBuilder footerBuilder,
   SheetListener listener,
@@ -965,26 +983,31 @@ Future<T> showScrollableBottomSheet<T>(
     );
   }
 
+  final theme = Theme.of(context).bottomSheetTheme;
+
   return Navigator.push(
     context,
     _TransparentRoute(
       duration: duration,
       builder: (context, animation, route) => SlidingSheet(
-        snapBehavior: snapBehavior,
         route: route,
+        snapBehavior: snapBehavior,
         duration: duration,
+        color: color ?? theme.modalBackgroundColor,
+        backdropColor: backdropColor,
+        shadowColor: shadowColor,
+        elevation: elevation ?? theme.modalElevation,
+        padding: padding,
+        margin: margin,
+        border: border,
+        cornerRadius: cornerRadius,
+        dismissableBackground: dismissableBackground,
         builder: builder,
         headerBuilder: headerBuilder,
         footerBuilder: footerBuilder,
-        controller: controller,
-        color: color,
-        backdropColor: backdropColor,
-        scrollBehavior: scrollBehavior,
-        shadowColor: shadowColor,
-        cornerRadius: cornerRadius,
-        elevation: elevation,
-        dismissableBackground: dismissableBackground,
         listener: listener,
+        controller: controller,
+        scrollBehavior: scrollBehavior,
       ),
     ),
   );
