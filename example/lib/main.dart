@@ -311,11 +311,22 @@ class _MyAppState extends State<MyApp> {
         Align(
           alignment: Alignment.center,
           child: Text(
-            'Pull request are welcome!\n(Stars too)',
+            'Pull request are welcome!',
             style: textStyle.copyWith(
               color: Colors.grey.shade700,
             ),
             textAlign: TextAlign.center,
+          ),
+        ),
+        SizedBox(height: 8),
+         Align(
+          alignment: Alignment.center,
+          child: Text(
+            '(Stars too)',
+            style: textStyle.copyWith(
+              fontSize: 12,
+              color: Colors.grey,
+            ),
           ),
         ),
         SizedBox(height: 32),
