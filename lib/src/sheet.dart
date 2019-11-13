@@ -201,14 +201,27 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   double get _sheetHeight => _childHeight + _headerHeight + _footerHeight;
 
   double get _currentExtent => _extent?.currentExtent ?? 0.0;
-  double get _minExtent => _snappings[_fromBottomSheet ? 1 : 0].clamp(0.0, 1.0);
-  double get _maxExtent => _snappings.last.clamp(0.0, 1.0);
+  double get _minExtent {
+    if (!_isLaidOut && _snapPositioning == SnapPositioning.pixelOffset) return 0.0;
+    return _snappings[_fromBottomSheet ? 1 : 0].clamp(0.0, 1.0);
+  }
+
+  double get _maxExtent {
+    if (!_isLaidOut && _snapPositioning == SnapPositioning.pixelOffset) return 1.0;
+    return _snappings.last.clamp(0.0, 1.0);
+  }
 
   bool get _fromBottomSheet => widget.route != null;
   SnapBehavior get _snapBehavior => widget.snapBehavior;
   SnapPositioning get _snapPositioning => _snapBehavior.positioning;
   List<double> get _snappings => _snapBehavior.snappings.map(_normalizeSnap).toList()..sort();
-  SheetState get _state => SheetState(_extent, _controller);
+  SheetState get _state => SheetState(
+        _controller,
+        extent: _reverseSnap(_currentExtent),
+        minExtent: _reverseSnap(_minExtent),
+        maxExtent: _reverseSnap(_maxExtent),
+        isLaidOut: _isLaidOut,
+      );
 
   @override
   void initState() {
@@ -277,6 +290,11 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       ..duration = widget.duration;
 
     _extent.snappings = _snappings;
+
+    // TODO: Check if user is currently dragging
+    if (oldWidget.snapBehavior.snappings != widget.snapBehavior.snappings) {
+      // snapToExtent(_currentExtent);
+    }
   }
 
   // A snap must be relative to its availableHeight.
@@ -294,8 +312,27 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
           final extent = (snap * math.min(_sheetHeight, _availableHeight)) / _availableHeight;
           return math.min(extent, maxPossibleExtent).clamp(0.0, 1.0);
         case SnapPositioning.pixelOffset:
+          if (snap == double.infinity) snap = _availableHeight;
           final extent = snap / _availableHeight;
           return math.min(extent, maxPossibleExtent).clamp(0.0, 1.0);
+        default:
+          return snap.clamp(0.0, 1.0);
+      }
+    } else {
+      return snap.clamp(0.0, 1.0);
+    }
+  }
+
+  // Reverse a normalized snap.
+  double _reverseSnap(double snap) {
+    if (_isLaidOut && _childHeight > 0) {
+      switch (_snapPositioning) {
+        case SnapPositioning.relativeToAvailableSize:
+          return snap;
+        case SnapPositioning.relativeToSheetSize:
+          return snap * (_availableHeight / _sheetHeight);
+        case SnapPositioning.pixelOffset:
+          return snap * _availableHeight;
         default:
           return snap.clamp(0.0, 1.0);
       }
@@ -310,10 +347,10 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     if (controller != null) {
       // Assign the controller functions to the state functions.
       controller
-        .._snapToExtent = snapToExtent
         .._scrollTo = scrollTo
         .._rebuild = rebuild;
 
+      controller._snapToExtent = (snap, {duration}) => snapToExtent(_normalizeSnap(snap), duration: duration);
       controller._expand = () => snapToExtent(_maxExtent);
       controller._collapse = () => snapToExtent(_minExtent);
     }
@@ -330,8 +367,6 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       _headerHeight = header?.size?.height ?? 0;
       _footerHeight = footer?.size?.height ?? 0;
       _availableHeight = parent?.size?.height ?? 0;
-
-      print(_availableHeight);
 
       _extent
         ..snappings = _snappings
@@ -361,7 +396,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     }
 
     return _controller.snapToExtent(
-      _normalizeSnap(snap),
+      snap,
       this,
       duration: duration,
       velocity: velocity,
@@ -805,29 +840,33 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
 
 /// A data class containing state information about the [_SlidingSheetState].
 class SheetState {
-  final _SheetExtent _extent;
   final _DragableScrollableSheetController _controller;
+
+  /// The current extent the sheet covers.
+  final double extent;
+
+  /// The minimum extent that the sheet will cover.
+  final double minExtent;
+
+  /// The maximum extent that the sheet will cover
+  /// until it begins scrolling.
+  final double maxExtent;
+
+  /// Whether the sheet has finished measuring its children and computed
+  /// the correct extents. This takes until the first frame was drawn.
+  final bool isLaidOut;
   SheetState(
-    this._extent,
-    this._controller,
-  );
-
-  /// The current extent this sheet covers in relation to
-  /// its available space.
-  double get extent => _extent.currentExtent;
-
-  /// The minimum extent that this sheet will cover in relation
-  /// to its available space.
-  double get minExtent => _extent.minExtent;
-
-  /// The maximum extent that this sheet will cover in relation
-  /// to its available space.
-  double get maxExtent => _extent.maxExtent;
+    this._controller, {
+    @required this.extent,
+    @required this.minExtent,
+    @required this.maxExtent,
+    @required this.isLaidOut,
+  });
 
   /// The progress between [minExtent] and [maxExtent] of the current [extent].
   /// A progress of 1 means the sheet is fully expanded, while
   /// a progress of 0 means the sheet is fully collapsed.
-  double get progress => ((extent - minExtent) / (maxExtent - minExtent)).clamp(0.0, 1.0);
+  double get progress => isLaidOut ? ((extent - minExtent) / (maxExtent - minExtent)).clamp(0.0, 1.0) : 0.0;
 
   /// The scroll offset when the content is bigger than the available space.
   double get scrollOffset {

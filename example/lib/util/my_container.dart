@@ -61,13 +61,16 @@ class MyContainer extends StatelessWidget {
     this.padding = const EdgeInsets.all(0),
   }) : super(key: key);
 
+  static const double WRAP = -1;
+  static const double EXPAND = -2;
+
   bool get circle => boxShape == BoxShape.circle;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final w = width == null && height != null ? double.infinity : width;
-    final h = height;
+    final w = width == null || width == EXPAND ? double.infinity : width == WRAP ? null : width;
+    final h = height == EXPAND ? double.infinity : height;
     final br = customBorders ??
         BorderRadius.circular(
           boxShape == BoxShape.rectangle ? borderRadius : w != null ? w / 2.0 : h != null ? h / 2.0 : 0,
