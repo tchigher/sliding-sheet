@@ -618,8 +618,10 @@ class _DragableScrollableSheetController extends ScrollController {
   }) {
     if (clamp) snap = snap.clamp(extent.minExtent, extent.maxExtent);
     final speedFactor =
-        (math.max((currentExtent - snap).abs(), .25) / maxExtent) * (1 - ((velocity.abs() / 2000) * .5).clamp(.0, .6));
-    duration ??= this.duration * speedFactor;
+        (math.max((currentExtent - snap).abs(), .25) / maxExtent) * (1 - ((velocity.abs() / 2000) * 0.3).clamp(.0, 0.3));
+    duration = this.duration * speedFactor;
+
+    print(velocity);
 
     final controller = AnimationController(duration: duration, vsync: vsync);
     final tween = Tween(begin: extent.currentExtent, end: snap).animate(

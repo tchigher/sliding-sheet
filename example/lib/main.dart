@@ -55,13 +55,18 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Example App',
-      home: Scaffold(
-        body: Stack(
-          children: <Widget>[
-            buildMap(),
-            buildSheet(),
-          ],
-        ),
+      debugShowCheckedModeBanner: false,
+      home: Builder(
+        builder: (context) {
+          return Scaffold(
+            body: Stack(
+              children: <Widget>[
+                buildMap(),
+                buildSheet(),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
