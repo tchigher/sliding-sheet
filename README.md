@@ -1,10 +1,10 @@
-# Sliding Sheet
+# Sliding Sheet (Preview)
 
 <p>
   <img width="205px" alt="Example" src="assets/example.gif"/>
 </p>
 
-## Installing
+## Installing (Soon)
 Add it to your `pubspec.yaml` file:
 ```yaml
 dependencies:
