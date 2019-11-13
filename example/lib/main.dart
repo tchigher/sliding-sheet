@@ -1,9 +1,5 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong/latlong.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 
@@ -135,7 +131,7 @@ class _MyAppState extends State<MyApp> {
           Row(
             children: <Widget>[
               Text(
-                '44 min',
+                '5h 36m',
                 style: textStyle.copyWith(
                   color: Color(0xFFF0BA64),
                   fontSize: 22,
@@ -143,10 +139,10 @@ class _MyAppState extends State<MyApp> {
               ),
               SizedBox(width: 8),
               Text(
-                '(36 km)',
+                '(353 mi)',
                 style: textStyle.copyWith(
                   color: Colors.grey.shade600,
-                  fontSize: 22,
+                  fontSize: 21,
                 ),
               ),
             ],
@@ -235,7 +231,7 @@ class _MyAppState extends State<MyApp> {
                 fontSize: 15,
               ),
             ),
-            !isExpanded ? () => controller.scrollTo(229) : controller.collapse,
+            !isExpanded ? () => controller.scrollTo(230) : controller.collapse,
             color: Colors.white,
             border: BorderSide(
               color: Colors.grey.shade400,
@@ -303,15 +299,18 @@ class _MyAppState extends State<MyApp> {
         SizedBox(height: 32),
         Icon(
           MdiIcons.githubCircle,
-          color: Colors.grey.shade800,
+          color: Colors.grey.shade900,
           size: 48,
         ),
         SizedBox(height: 16),
         Align(
           alignment: Alignment.center,
           child: Text(
-            'Feel free to contribute on GitHub!',
-            style: textStyle.copyWith(),
+            'Pull request are welcome!\n(Stars too)',
+            style: textStyle.copyWith(
+              color: Colors.grey.shade700,
+            ),
+            textAlign: TextAlign.center,
           ),
         ),
         SizedBox(height: 32),
@@ -386,7 +385,7 @@ class _MyAppState extends State<MyApp> {
         ],
         colorFn: (traffic, __) {
           if (traffic.time == '14:30') return charts.Color.fromHex(code: '#F0BA64');
-          return charts.MaterialPalette.gray.shade100;
+          return charts.MaterialPalette.gray.shade300;
         },
         domainFn: (Traffic traffic, _) => traffic.time,
         measureFn: (Traffic traffic, _) => traffic.intesity,
@@ -394,7 +393,7 @@ class _MyAppState extends State<MyApp> {
     ];
 
     return Container(
-      height: 156,
+      height: 128,
       child: charts.BarChart(
         series,
         animate: true,
@@ -414,30 +413,18 @@ class _MyAppState extends State<MyApp> {
   }
 
   Widget buildMap() {
-    return FlutterMap(
-      options: MapOptions(
-        center: LatLng(53.551086, 9.993682),
-        zoom: 9,
-        maxZoom: 15,
-      ),
-      layers: [
-        TileLayerOptions(
-          urlTemplate: "https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png",
-          tileSize: 256,
+    return Column(
+      children: <Widget>[
+        Expanded(
+          child: Image.asset(
+            'assets/maps_screenshot.png',
+            width: double.infinity,
+            height: double.infinity,
+            alignment: Alignment.center,
+            fit: BoxFit.cover,
+          ),
         ),
-        MarkerLayerOptions(
-          markers: [
-            Marker(
-              point: LatLng(40.441753, -80.011476),
-              builder: (ctx) => Icon(
-                Icons.location_on,
-                color: Colors.blue,
-                size: 48.0,
-              ),
-              height: 60,
-            ),
-          ],
-        ),
+        SizedBox(height: 56),
       ],
     );
   }
