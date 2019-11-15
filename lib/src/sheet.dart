@@ -14,25 +14,25 @@ typedef SheetListener = void Function(SheetState);
 enum SnapPositioning {
   /// Positions the snaps relative to the total
   /// available space (that is, the maximum height the widget can expand to).
-  relativeToAvailableSize,
+  relativeToAvailableSpace,
 
-  /// Positions the snaps relative to the total size
+  /// Positions the snaps relative to the total height
   /// of the sheet itself.
-  relativeToSheetSize,
+  relativeToSheetHeight,
 
   /// Positions the snaps at the given pixel offset. If the
   /// sheet is smaller than the offset, it will snap to the max possible offset.
   pixelOffset,
 }
 
-/// Defines how a [SlidingSheet] should snap.
+/// Defines how a [SlidingSheet] should snap, or if it should at all.
 class SnapBehavior {
   /// If true, the [SlidingSheet] will snap to the provided [snappings].
-  /// If false, the [SlidingSheet] will slide until reaching the maxExtent
+  /// If false, the [SlidingSheet] will slide from minExtent to maxExtent
   /// and then begin to scroll.
   final bool snap;
 
-  /// The snap positions for a [SlidingSheet].
+  /// The snap extents for a [SlidingSheet].
   ///
   /// The minimum and maximum values will represent the thresholds in which
   /// the [SlidingSheet] will slide. When the child of the sheet is bigger
@@ -41,9 +41,9 @@ class SnapBehavior {
   final List<double> snappings;
 
   /// How the snaps will be positioned:
-  /// - [SnapPositioning.relativeToAvailableSize] positions the snaps relative to the total
+  /// - [SnapPositioning.relativeToAvailableSpace] positions the snaps relative to the total
   /// available space (that is, the maximum height the widget can expand to). All values must be between 0 and 1.
-  /// - [SnapPositioning.relativeToSheetSize] positions the snaps relative to the total size
+  /// - [SnapPositioning.relativeToSheetHeight] positions the snaps relative to the total size
   /// of the sheet itself. All values must be between 0 and 1.
   /// - [SnapPositioning.pixelOffset] positions the snaps at the given pixel offset. If the
   /// sheet is smaller than the offset, it will snap to the max possible offset.
@@ -51,7 +51,7 @@ class SnapBehavior {
   const SnapBehavior({
     this.snap = true,
     this.snappings = const [0.4, 1.0],
-    this.positioning = SnapPositioning.relativeToAvailableSize,
+    this.positioning = SnapPositioning.relativeToAvailableSpace,
   })  : assert(snap != null),
         assert(snappings != null),
         assert(positioning != null);
@@ -69,8 +69,8 @@ class SnapBehavior {
   }
 }
 
-/// Creates a widget that can be dragged and scrolled in a single gesture and snapped
-/// to arbitrary offsets.
+/// A widget that can be dragged and scrolled in a single gesture and snapped
+/// to a list of extents.
 ///
 /// The [builder] parameter must not be null.
 class SlidingSheet extends StatefulWidget {
@@ -104,8 +104,8 @@ class SlidingSheet extends StatefulWidget {
   /// The radius of the corners of this sheet.
   final double cornerRadius;
 
-  /// If true, will collapse the sheet when the sheets background was tapped.
-  final bool dismissableBackground;
+  /// If true, will collapse the sheet when the sheets backdrop was tapped.
+  final bool closeOnBackdropTap;
 
   /// The builder for the main content of the sheet that will be scrolled if
   /// the content is bigger than the height that the sheet can expand to.
@@ -148,7 +148,7 @@ class SlidingSheet extends StatefulWidget {
     this.cornerRadius = 0.0,
     this.elevation = 0.0,
     this.shadowColor = Colors.black54,
-    this.dismissableBackground = false,
+    this.closeOnBackdropTap = false,
     this.listener,
     this.controller,
     this.scrollBehavior,
@@ -270,7 +270,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
         // to the minExtent.
         widget.route.popped.then(
           (_) {
-            if (!_dismissUnderway) _controller.snapToExtent(0.0, this);
+            if (!_dismissUnderway) _controller.snapToExtent(0.0, this, clamp: false);
           },
         );
       } else {
@@ -290,11 +290,6 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       ..duration = widget.duration;
 
     _extent.snappings = _snappings;
-
-    // TODO: Check if user is currently dragging
-    if (oldWidget.snapBehavior.snappings != widget.snapBehavior.snappings) {
-      // snapToExtent(_currentExtent);
-    }
   }
 
   // A snap must be relative to its availableHeight.
@@ -304,10 +299,10 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     if (_isLaidOut && _childHeight > 0) {
       final maxPossibleExtent = _sheetHeight / _availableHeight;
       switch (_snapPositioning) {
-        case SnapPositioning.relativeToAvailableSize:
+        case SnapPositioning.relativeToAvailableSpace:
           assert(snap >= 0.0 && snap <= 1.0, 'Relative snap $snap is not between 0 and 1.');
           return math.min(snap, maxPossibleExtent).clamp(0.0, 1.0);
-        case SnapPositioning.relativeToSheetSize:
+        case SnapPositioning.relativeToSheetHeight:
           assert(snap >= 0.0 && snap <= 1.0, 'Relative snap $snap is not between 0 and 1.');
           final extent = (snap * math.min(_sheetHeight, _availableHeight)) / _availableHeight;
           return math.min(extent, maxPossibleExtent).clamp(0.0, 1.0);
@@ -327,9 +322,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   double _reverseSnap(double snap) {
     if (_isLaidOut && _childHeight > 0) {
       switch (_snapPositioning) {
-        case SnapPositioning.relativeToAvailableSize:
+        case SnapPositioning.relativeToAvailableSpace:
           return snap;
-        case SnapPositioning.relativeToSheetSize:
+        case SnapPositioning.relativeToSheetHeight:
           return snap * (_availableHeight / _sheetHeight);
         case SnapPositioning.pixelOffset:
           return snap * _availableHeight;
@@ -421,12 +416,6 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     );
   }
 
-  void rebuild() {
-    _callBuilder();
-    _stream.add(_currentExtent);
-    _measure();
-  }
-
   void _pop(double velocity) {
     if (_fromBottomSheet && !_dismissUnderway && Navigator.canPop(context)) {
       _dismissUnderway = true;
@@ -436,17 +425,23 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     snapToExtent(_fromBottomSheet ? 0.0 : _minExtent, velocity: velocity);
   }
 
-  void _callBuilder() {
+  void rebuild() {
+    _callBuilders();
+    _stream.add(_currentExtent);
+    _measure();
+  }
+
+  void _callBuilders() {
     if (context != null) {
-      if (widget.headerBuilder != null) _header = buildHeader(widget.headerBuilder(context, _state));
-      if (widget.footerBuilder != null) _footer = buildHeader(widget.footerBuilder(context, _state));
+      if (widget.headerBuilder != null) _header = _delegateInteractions(widget.headerBuilder(context, _state));
+      if (widget.footerBuilder != null) _footer = _delegateInteractions(widget.footerBuilder(context, _state));
       if (widget.builder != null) _child = widget.builder(context, _state);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    _callBuilder();
+    _callBuilders();
 
     return StreamBuilder(
       stream: _stream.stream,
@@ -456,9 +451,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
           child: Stack(
             key: _parentKey,
             children: <Widget>[
-              if (widget.dismissableBackground || (widget.backdropColor != null && widget.backdropColor.opacity != 0))
+              if (widget.closeOnBackdropTap || (widget.backdropColor != null && widget.backdropColor.opacity != 0))
                 GestureDetector(
-                  onTap: widget.dismissableBackground ? () => _pop(0.0) : null,
+                  onTap: widget.closeOnBackdropTap ? () => _pop(0.0) : null,
                   child: Opacity(
                     opacity: _currentExtent != 0 ? (_currentExtent / _minExtent).clamp(0.0, 1.0) : 0.0,
                     child: Container(
@@ -473,7 +468,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                   heightFactor: _currentExtent.clamp(0.0, 1.0),
                   alignment: Alignment.bottomCenter,
                   child: _SheetContainer(
-                    color: widget.color,
+                    color: widget.color ?? Colors.white,
                     border: widget.border,
                     margin: widget.margin,
                     padding: widget.padding,
@@ -526,7 +521,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     );
   }
 
-  Widget buildHeader(Widget child) {
+  Widget _delegateInteractions(Widget child) {
     if (child == null) return child;
     return GestureDetector(
       onVerticalDragUpdate: (details) {
@@ -983,7 +978,7 @@ Future<T> showSlidingBottomSheet<T>(
     );
   }
 
-  final theme = Theme.of(context).bottomSheetTheme;
+  final theme = Theme.of(context);
 
   return Navigator.push(
     context,
@@ -993,15 +988,20 @@ Future<T> showSlidingBottomSheet<T>(
         route: route,
         snapBehavior: snapBehavior,
         duration: duration,
-        color: color ?? theme.modalBackgroundColor,
+        color: color ??
+            theme.bottomSheetTheme.modalBackgroundColor ??
+            theme.bottomSheetTheme.backgroundColor ??
+            theme.dialogTheme.backgroundColor ??
+            theme.dialogBackgroundColor ??
+            theme.backgroundColor,
         backdropColor: backdropColor,
         shadowColor: shadowColor,
-        elevation: elevation ?? theme.modalElevation,
+        elevation: elevation ?? theme.bottomSheetTheme.modalElevation,
         padding: padding,
         margin: margin,
         border: border,
         cornerRadius: cornerRadius,
-        dismissableBackground: dismissableBackground,
+        closeOnBackdropTap: dismissableBackground,
         builder: builder,
         headerBuilder: headerBuilder,
         footerBuilder: footerBuilder,
