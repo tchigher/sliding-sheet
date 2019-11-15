@@ -103,7 +103,7 @@ class _MyAppState extends State<MyApp> {
             color: Colors.grey.shade300,
             width: 3,
           ),
-          snapBehavior: SnapSpec(
+          snapSpec: SnapSpec(
             snap: true,
             positioning: SnapPositioning.pixelOffset,
             snappings: [
@@ -449,10 +449,11 @@ class _MyAppState extends State<MyApp> {
   void showBottomSheet(BuildContext context) {
     showSlidingBottomSheet(
       context,
-      snapBehavior: const SnapSpec(
+      snapSpec: const SnapSpec(
         snap: false,
         snappings: const [0.4, 0.7, 1.0],
       ),
+      scrollSpec: ScrollSpec.bouncingScroll(),
       color: Colors.white,
       builder: (context, state) {
         return Container(

@@ -72,8 +72,10 @@ class SnapSpec {
 class ScrollSpec {
   /// Whether the containing ScrollView should overscroll.
   final bool overscroll;
+
   /// The color of the overscroll when [overscroll] is true.
   final Color overscrollColor;
+
   /// The physics of the containing ScrollView.
   final ScrollPhysics physics;
   const ScrollSpec({
@@ -93,7 +95,7 @@ class ScrollSpec {
 /// The [builder] parameter must not be null.
 class SlidingSheet extends StatefulWidget {
   /// The [SnapSpec] that defines how the sheet should snap or if it should at all.
-  final SnapSpec snapBehavior;
+  final SnapSpec snapSpec;
 
   /// The base animation duration for the sheet. Swipes and flings may have a different duration.
   final Duration duration;
@@ -154,7 +156,7 @@ class SlidingSheet extends StatefulWidget {
     Key key,
     @required this.builder,
     this.duration = const Duration(milliseconds: 800),
-    this.snapBehavior = const SnapSpec(),
+    this.snapSpec = const SnapSpec(),
     this.padding,
     this.margin,
     this.border,
@@ -172,7 +174,7 @@ class SlidingSheet extends StatefulWidget {
     this.scrollSpec = const ScrollSpec(overscroll: false),
   })  : assert(duration != null),
         assert(builder != null),
-        assert(snapBehavior != null),
+        assert(snapSpec != null),
         super(key: key);
 
   @override
@@ -231,9 +233,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
   bool get _fromBottomSheet => widget.route != null;
   ScrollSpec get _scrollSpec => widget.scrollSpec;
-  SnapSpec get _snapBehavior => widget.snapBehavior;
-  SnapPositioning get _snapPositioning => _snapBehavior.positioning;
-  List<double> get _snappings => _snapBehavior.snappings.map(_normalizeSnap).toList()..sort();
+  SnapSpec get _snapSpec => widget.snapSpec;
+  SnapPositioning get _snapPositioning => _snapSpec.positioning;
+  List<double> get _snappings => _snapSpec.snappings.map(_normalizeSnap).toList()..sort();
   SheetState get _state => SheetState(
         _controller,
         extent: _reverseSnap(_currentExtent),
@@ -270,7 +272,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     // The ScrollController of the sheet.
     _controller = _DragableScrollableSheetController(
       duration: widget.duration,
-      snapBehavior: _snapBehavior,
+      snapBehavior: _snapSpec,
       extent: _extent,
       onPop: _pop,
     )..addListener(listener);
@@ -305,7 +307,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     _assignSheetController();
 
     _controller
-      ..snapBehavior = widget.snapBehavior
+      ..snapBehavior = widget.snapSpec
       ..duration = widget.duration;
 
     _extent.snappings = _snappings;
@@ -470,6 +472,29 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     return StreamBuilder(
       stream: _stream.stream,
       builder: (context, snapshot) {
+        // Wrap the scrollView in a ScrollConfiguration to
+        // remove the default overscroll effect.
+        Widget scrollView = ScrollConfiguration(
+          behavior: ScrollBehavior(),
+          child: SingleChildScrollView(
+            controller: _controller,
+            physics: _scrollSpec.physics ?? ScrollPhysics(),
+            child: Container(
+              key: _childKey,
+              child: _child,
+            ),
+          ),
+        );
+
+        // Add the overscroll if required again if required 
+        if (_scrollSpec.overscroll) {
+          scrollView = GlowingOverscrollIndicator(
+            axisDirection: AxisDirection.down,
+            color: _scrollSpec.overscrollColor ?? theme.accentColor,
+            child: scrollView,
+          );
+        }
+
         return WillPopScope(
           onWillPop: () async => _fromBottomSheet,
           child: Stack(
@@ -506,22 +531,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                         Column(
                           children: <Widget>[
                             SizedBox(height: _headerHeight),
-                            Expanded(
-                              child: GlowingOverscrollIndicator(
-                                axisDirection: AxisDirection.down,
-                                color: _scrollSpec.overscrollColor ?? theme.accentColor,
-                                showLeading: _scrollSpec.overscroll,
-                                showTrailing: _scrollSpec.overscroll,
-                                child: SingleChildScrollView(
-                                  controller: _controller,
-                                  physics: _scrollSpec.physics ?? ScrollPhysics(),
-                                  child: Container(
-                                    key: _childKey,
-                                    child: _child,
-                                  ),
-                                ),
-                              ),
-                            ),
+                            Expanded(child: scrollView),
                             SizedBox(height: _footerHeight),
                           ],
                         ),
@@ -982,7 +992,7 @@ class SheetController {
 
 Future<T> showSlidingBottomSheet<T>(
   BuildContext context, {
-  SnapSpec snapBehavior = const SnapSpec(),
+  SnapSpec snapSpec = const SnapSpec(),
   Duration duration = const Duration(milliseconds: 800),
   Color color,
   Color backdropColor = Colors.black54,
@@ -1004,9 +1014,9 @@ Future<T> showSlidingBottomSheet<T>(
   assert(context != null);
 
   // A zero stop must be the first stop.
-  if (snapBehavior.snappings.first != 0.0) {
-    snapBehavior = snapBehavior.copyWith(
-      snappings: [0.0] + snapBehavior.snappings,
+  if (snapSpec.snappings.first != 0.0) {
+    snapSpec = snapSpec.copyWith(
+      snappings: [0.0] + snapSpec.snappings,
     );
   }
 
@@ -1018,7 +1028,7 @@ Future<T> showSlidingBottomSheet<T>(
       duration: duration,
       builder: (context, animation, route) => SlidingSheet(
         route: route,
-        snapBehavior: snapBehavior,
+        snapSpec: snapSpec,
         duration: duration,
         color: color ??
             theme.bottomSheetTheme.modalBackgroundColor ??

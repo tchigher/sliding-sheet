@@ -47,7 +47,7 @@ Widget build(BuildContext context) {
         SlidingSheet(
           elevation: 8,
           cornerRadius: 16,
-          snapBehavior: const SnapBehavior(
+          snapSpec: const SnapSpec(
             // Enable snapping. This is true by default.
             snap: true,
             // Set custom snapping points.
@@ -87,7 +87,7 @@ void showAsBottomSheet() async {
     context,
     elevation: 8,
     cornerRadius: 16,
-    snapBehavior: const SnapBehavior(
+    snapSpec: const SnapSpec(
       snap: true,
       snappings: [0.4, 0.7, 1.0],
       positioning: SnapPositioning.relativeToAvailableSpace,
@@ -120,14 +120,10 @@ void showAsBottomSheet() async {
 #### Result:
 <img width="205px" alt="Example" src="assets/usage_example_bottom_sheet.gif"/>
 
-### ListViews and Columns
-
-The children of a `SlidingSheet` are not allowed to have an inifinite height. Therefore when using a `Column` as a child of a `SlidingSheet`, make sure to set the `mainAxisSize` to `MainAxisSize.min`. Similarly when using a `ListView`, make sure to set `shrinkWrap` to `true` and `physics` to `NeverScrollableScrollPhysics`.
-
 ### Snapping
 
-A `SlidingSheet` can snap to multiple extents. You can customize the snapping behavior by
-passing an instance of `SnapBehavior` to the `SlidingSheet`.
+A `SlidingSheet` can snap to multiple extents or to no at all. You can customize the snapping behavior by
+passing an instance of `SnapSpec` to the `SlidingSheet`.
 
  Parameter | Description 
 --- | ---
@@ -141,6 +137,10 @@ positioning | Can be set to one of these three values: `SnapPositioning.relative
   <img width="205px" alt="SnapPositioning.pixelOffset with a snap of 100" src="assets/example_snapping_pixelOffset.png"/>
 </p>
 
+### ListViews and Columns
+
+The children of a `SlidingSheet` are not allowed to have an inifinite (unbounded) height. Therefore when using a `ListView`, make sure to set `shrinkWrap` to `true` and `physics` to `NeverScrollableScrollPhysics`. Similarly when using a `Column` as a child of a `SlidingSheet`, make sure to set the `mainAxisSize` to `MainAxisSize.min`.
+
 ### SheetController
 
 The `SheetController` can be used to change the state of a `SlidingSheet` manually, simply passing an instance of `SheetController` to a `SlidingSheet`. Note that the methods can only be used after the `SlidingSheet` has been rendered, however calling them before wont throw an exception.
@@ -151,12 +151,10 @@ The `SheetController` can be used to change the state of a `SlidingSheet` manual
 `collapse()` | Collapses the `SlidingSheet` to its minimum extent.
 `snapToExtent()` | Snaps the `SlidingSheet` to an arbitrary extent. The extent will be clamped to the minimum and maximum extent. If the scroll offset is > 0, the `SlidingSheet` will first scroll to the top and then slide to the extent.
 `scrollTo()` | Scrolls the `SlidingSheet` to the given offset. If the `SlidingSheet` is not yet at its maximum extent, it will first snap to the maximum extent and then scroll to the given offset.
-`rebuild()` | Calls all builders of the 
+`rebuild()` | Calls all builders of the `SlidingSheet` to rebuild their children. This method can be used to reflect changes in the `SlidingSheet`s children without calling `setState(() {});` on the parent widget to improve performance.
 
+### Reflecting changes
 
+To improve performace, the children of a `SlidingSheet` are no rebuild when it slides or gets scrolled. You can however pass a callback function to the `listener` parameter of a `SlidingSheet`, that gets called with the current `SheetState` whenever it slides or gets scrolled. You can then rebuild your UI by calling `setState(() {})`, `SheetController.rebuild()` or by a different state management solution to rebuild the sheet. The example for instance decreases the corner radius of the `SlidingSheet` as it gets dragged to the top and increases the headers top padding by the status bar height.
 
-
-
-
-
-
+<img width="205px" alt="Example on how to reflect changes in the SlidingSheet" src="assets/example_reflecting_changes.png"/>
