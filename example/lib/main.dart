@@ -59,12 +59,11 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       home: Builder(
         builder: (context) {
-          return W();
-          /* return Scaffold(
+          //return W();
+          return Scaffold(
             body: Stack(
               children: <Widget>[
                 buildMap(),
-                buildSheet(),
                 Align(
                   alignment: Alignment.topRight,
                   child: Padding(
@@ -81,9 +80,10 @@ class _MyAppState extends State<MyApp> {
                     ),
                   ),
                 ),
+                buildSheet(),
               ],
             ),
-          ); */
+          );
         },
       ),
     );
@@ -103,7 +103,7 @@ class _MyAppState extends State<MyApp> {
             color: Colors.grey.shade300,
             width: 3,
           ),
-          snapBehavior: SnapBehavior(
+          snapBehavior: SnapSpec(
             snap: true,
             positioning: SnapPositioning.pixelOffset,
             snappings: [
@@ -112,6 +112,7 @@ class _MyAppState extends State<MyApp> {
               double.infinity,
             ],
           ),
+          scrollSpec: ScrollSpec.bouncingScroll(),
           listener: (state) {
             this.state = state;
             setState(() {});
@@ -448,7 +449,7 @@ class _MyAppState extends State<MyApp> {
   void showBottomSheet(BuildContext context) {
     showSlidingBottomSheet(
       context,
-      snapBehavior: const SnapBehavior(
+      snapBehavior: const SnapSpec(
         snap: false,
         snappings: const [0.4, 0.7, 1.0],
       ),

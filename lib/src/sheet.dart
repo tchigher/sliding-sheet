@@ -26,7 +26,7 @@ enum SnapPositioning {
 }
 
 /// Defines how a [SlidingSheet] should snap, or if it should at all.
-class SnapBehavior {
+class SnapSpec {
   /// If true, the [SlidingSheet] will snap to the provided [snappings].
   /// If false, the [SlidingSheet] will slide from minExtent to maxExtent
   /// and then begin to scroll.
@@ -48,7 +48,7 @@ class SnapBehavior {
   /// - [SnapPositioning.pixelOffset] positions the snaps at the given pixel offset. If the
   /// sheet is smaller than the offset, it will snap to the max possible offset.
   final SnapPositioning positioning;
-  const SnapBehavior({
+  const SnapSpec({
     this.snap = true,
     this.snappings = const [0.4, 1.0],
     this.positioning = SnapPositioning.relativeToAvailableSpace,
@@ -56,12 +56,12 @@ class SnapBehavior {
         assert(snappings != null),
         assert(positioning != null);
 
-  SnapBehavior copyWith({
+  SnapSpec copyWith({
     bool snap,
     List<double> snappings,
     SnapPositioning position,
   }) {
-    return SnapBehavior(
+    return SnapSpec(
       snap: snap ?? this.snap,
       snappings: snappings ?? this.snappings,
       positioning: position ?? this.positioning,
@@ -69,13 +69,31 @@ class SnapBehavior {
   }
 }
 
+class ScrollSpec {
+  /// Whether the containing ScrollView should overscroll.
+  final bool overscroll;
+  /// The color of the overscroll when [overscroll] is true.
+  final Color overscrollColor;
+  /// The physics of the containing ScrollView.
+  final ScrollPhysics physics;
+  const ScrollSpec({
+    this.overscroll = true,
+    this.overscrollColor,
+    this.physics,
+  });
+
+  factory ScrollSpec.overscroll({Color color}) => ScrollSpec(overscrollColor: color);
+
+  factory ScrollSpec.bouncingScroll() => ScrollSpec(physics: BouncingScrollPhysics());
+}
+
 /// A widget that can be dragged and scrolled in a single gesture and snapped
 /// to a list of extents.
 ///
 /// The [builder] parameter must not be null.
 class SlidingSheet extends StatefulWidget {
-  /// The [SnapBehavior] that defines how the sheet should snap or if it should at all.
-  final SnapBehavior snapBehavior;
+  /// The [SnapSpec] that defines how the sheet should snap or if it should at all.
+  final SnapSpec snapBehavior;
 
   /// The base animation duration for the sheet. Swipes and flings may have a different duration.
   final Duration duration;
@@ -131,12 +149,12 @@ class SlidingSheet extends StatefulWidget {
   final _TransparentRoute route;
 
   /// The [ScrollBehavior] of the containing ScrollView.
-  final ScrollBehavior scrollBehavior;
+  final ScrollSpec scrollSpec;
   const SlidingSheet({
     Key key,
     @required this.builder,
     this.duration = const Duration(milliseconds: 800),
-    this.snapBehavior = const SnapBehavior(),
+    this.snapBehavior = const SnapSpec(),
     this.padding,
     this.margin,
     this.border,
@@ -151,7 +169,7 @@ class SlidingSheet extends StatefulWidget {
     this.closeOnBackdropTap = false,
     this.listener,
     this.controller,
-    this.scrollBehavior,
+    this.scrollSpec = const ScrollSpec(overscroll: false),
   })  : assert(duration != null),
         assert(builder != null),
         assert(snapBehavior != null),
@@ -212,7 +230,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   }
 
   bool get _fromBottomSheet => widget.route != null;
-  SnapBehavior get _snapBehavior => widget.snapBehavior;
+  ScrollSpec get _scrollSpec => widget.scrollSpec;
+  SnapSpec get _snapBehavior => widget.snapBehavior;
   SnapPositioning get _snapPositioning => _snapBehavior.positioning;
   List<double> get _snappings => _snapBehavior.snappings.map(_normalizeSnap).toList()..sort();
   SheetState get _state => SheetState(
@@ -379,7 +398,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     });
   }
 
-  Future<void> snapToExtent(double snap, {Duration duration, double velocity = 0}) async {
+  Future snapToExtent(double snap, {Duration duration, double velocity = 0}) async {
+    if (!_isLaidOut) return null;
+
     duration ??= widget.duration;
     if (!_state.isAtTop) {
       duration *= 0.5;
@@ -399,7 +420,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     );
   }
 
-  Future<void> scrollTo(double offset, {Duration duration, Curve curve}) async {
+  Future scrollTo(double offset, {Duration duration, Curve curve}) async {
+    if (!_isLaidOut) return null;
+
     duration ??= widget.duration;
     if (!_extent.isAtMax) {
       duration *= 0.5;
@@ -441,6 +464,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     _callBuilders();
 
     return StreamBuilder(
@@ -479,19 +503,27 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                     ),
                     child: Stack(
                       children: <Widget>[
-                        ScrollConfiguration(
-                          behavior: widget.scrollBehavior ?? const ScrollBehavior(),
-                          child: SingleChildScrollView(
-                            padding: EdgeInsets.only(
-                              top: _headerHeight,
-                              bottom: _footerHeight,
+                        Column(
+                          children: <Widget>[
+                            SizedBox(height: _headerHeight),
+                            Expanded(
+                              child: GlowingOverscrollIndicator(
+                                axisDirection: AxisDirection.down,
+                                color: _scrollSpec.overscrollColor ?? theme.accentColor,
+                                showLeading: _scrollSpec.overscroll,
+                                showTrailing: _scrollSpec.overscroll,
+                                child: SingleChildScrollView(
+                                  controller: _controller,
+                                  physics: _scrollSpec.physics ?? ScrollPhysics(),
+                                  child: Container(
+                                    key: _childKey,
+                                    child: _child,
+                                  ),
+                                ),
+                              ),
                             ),
-                            controller: _controller,
-                            child: Container(
-                              key: _childKey,
-                              child: _child,
-                            ),
-                          ),
+                            SizedBox(height: _footerHeight),
+                          ],
                         ),
                         if (widget.headerBuilder != null)
                           Align(
@@ -592,7 +624,7 @@ class _DragableScrollableSheetController extends ScrollController {
   final _SheetExtent extent;
   final void Function(double) onPop;
   Duration duration;
-  SnapBehavior snapBehavior;
+  SnapSpec snapBehavior;
   _DragableScrollableSheetController({
     @required this.extent,
     @required this.onPop,
@@ -680,7 +712,7 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
   bool inDrag = false;
 
   bool get fromBottomSheet => extent.isFromBottomSheet;
-  SnapBehavior get snapBehavior => scrollController.snapBehavior;
+  SnapSpec get snapBehavior => scrollController.snapBehavior;
   bool get snap => snapBehavior.snap;
   List<double> get snappings => extent.snappings;
   bool get shouldScroll => pixels > 0.0;
@@ -950,7 +982,7 @@ class SheetController {
 
 Future<T> showSlidingBottomSheet<T>(
   BuildContext context, {
-  SnapBehavior snapBehavior = const SnapBehavior(),
+  SnapSpec snapBehavior = const SnapSpec(),
   Duration duration = const Duration(milliseconds: 800),
   Color color,
   Color backdropColor = Colors.black54,
@@ -966,7 +998,7 @@ Future<T> showSlidingBottomSheet<T>(
   SheetBuilder footerBuilder,
   SheetListener listener,
   SheetController controller,
-  ScrollBehavior scrollBehavior,
+  ScrollSpec scrollSpec = const ScrollSpec(overscroll: false),
 }) {
   assert(duration != null);
   assert(context != null);
@@ -1007,7 +1039,7 @@ Future<T> showSlidingBottomSheet<T>(
         footerBuilder: footerBuilder,
         listener: listener,
         controller: controller,
-        scrollBehavior: scrollBehavior,
+        scrollSpec: scrollSpec,
       ),
     ),
   );

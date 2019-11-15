@@ -27,7 +27,7 @@ class _WState extends State<W> {
           SlidingSheet(
             elevation: 8,
             cornerRadius: 16,
-            snapBehavior: const SnapBehavior(
+            snapBehavior: const SnapSpec(
               snap: true,
               snappings: [100, double.infinity],
               positioning: SnapPositioning.pixelOffset,
@@ -54,7 +54,7 @@ class _WState extends State<W> {
       context,
       elevation: 8,
       cornerRadius: 16,
-      snapBehavior: const SnapBehavior(
+      snapBehavior: const SnapSpec(
         snap: true,
         snappings: [0.4, 0.7, 1.0],
         positioning: SnapPositioning.relativeToAvailableSpace,

@@ -141,6 +141,18 @@ positioning | Can be set to one of these three values: `SnapPositioning.relative
   <img width="205px" alt="SnapPositioning.pixelOffset with a snap of 100" src="assets/example_snapping_pixelOffset.png"/>
 </p>
 
+### SheetController
+
+The `SheetController` can be used to change the state of a `SlidingSheet` manually, simply passing an instance of `SheetController` to a `SlidingSheet`. Note that the methods can only be used after the `SlidingSheet` has been rendered, however calling them before wont throw an exception.
+
+ Method | Description 
+--- | ---
+`expand()` | Expands the `SlidingSheet` to its maximum extent.
+`collapse()` | Collapses the `SlidingSheet` to its minimum extent.
+`snapToExtent()` | Snaps the `SlidingSheet` to an arbitrary extent. The extent will be clamped to the minimum and maximum extent. If the scroll offset is > 0, the `SlidingSheet` will first scroll to the top and then slide to the extent.
+`scrollTo()` | Scrolls the `SlidingSheet` to the given offset. If the `SlidingSheet` is not yet at its maximum extent, it will first snap to the maximum extent and then scroll to the given offset.
+`rebuild()` | Calls all builders of the 
+
 
 
 
