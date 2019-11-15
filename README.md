@@ -9,7 +9,7 @@ A widget that can be dragged and scrolled in a single gesture and snapped to a l
 
 
 ## Installing (Soon)
----
+
 Add it to your `pubspec.yaml` file:
 ```yaml
 dependencies:
@@ -21,7 +21,6 @@ flutter packages get
 ```
 
 ## Usage
----
 
 There are two ways in which you can use a `SlidingSheet`: either as a permanent (or persistent) `Widget` in your
 widget tree or as a `BottomSheetDialog`. 
