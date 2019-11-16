@@ -74,7 +74,7 @@ Widget build(BuildContext context) {
 ```
 
 #### Result:
-<img width="205px" alt="Example" src="assets/usage_example.gif" href/>
+<img width="205px" alt="Example" src="https://github.com/BendixMa/sliding-sheet/blob/master/assets/usage_example.gif" href/>
 
 ### As a BottomSheetDialog
 
@@ -116,7 +116,7 @@ void showAsBottomSheet() async {
 }
 ```
 #### Result:
-<img width="205px" alt="Example" src="assets/usage_example_bottom_sheet.gif"/>
+<img width="205px" alt="Example" src="https://github.com/BendixMa/sliding-sheet/blob/master/assets/usage_example_bottom_sheet.gif"/>
 
 ### Snapping
 
@@ -131,9 +131,9 @@ positioning | Can be set to one of these three values: `SnapPositioning.relative
 onSnap | A callback function that gets invoked when the `SlidingSheet` snaps to an extent.
 
 <p float="left">
-  <img width="205px" alt="SnapPositioning.relativeToAvailableSpace with a snap of 0.5" src="assets/example_snapping_relativeToAvailableSpace.png"/>
-  <img width="205px" alt="SnapPositioning.relativeToSheetHeight with a snap of 0.5" src="assets/example_snapping_relativeToSheetHeight.png"/>
-  <img width="205px" alt="SnapPositioning.pixelOffset with a snap of 100" src="assets/example_snapping_pixelOffset.png"/>
+  <img width="205px" alt="SnapPositioning.relativeToAvailableSpace with a snap of 0.5" src="https://github.com/BendixMa/sliding-sheet/blob/master/assets/example_snapping_relativeToAvailableSpace.png"/>
+  <img width="205px" alt="SnapPositioning.relativeToSheetHeight with a snap of 0.5" src="https://github.com/BendixMa/sliding-sheet/blob/master/assets/example_snapping_relativeToSheetHeight.png"/>
+  <img width="205px" alt="SnapPositioning.pixelOffset with a snap of 100" src="https://github.com/BendixMa/sliding-sheet/blob/master/assets/example_snapping_pixelOffset.png"/>
 </p>
 
 ### SheetController
@@ -212,7 +212,7 @@ Widget build(BuildContext context) {
 }
 ```
 #### Result:
-<img width="205px" alt="Simple header/footer example" src="assets/example_header_footer.gif"/>
+<img width="205px" alt="Simple header/footer example" src="https://github.com/BendixMa/sliding-sheet/blob/master/assets/example_header_footer.gif"/>
 
 ### ListViews and Columns
 
@@ -222,4 +222,4 @@ The children of a `SlidingSheet` are not allowed to have an inifinite (unbounded
 
 To improve performace, the children of a `SlidingSheet` are not rebuild when it slides or gets scrolled. You can however pass a callback function to the `listener` parameter of a `SlidingSheet`, that gets called with the current `SheetState` whenever the `SlidingSheet` slides or gets scrolled. You can then rebuild your UI by calling `setState(() {})`, `(instance of SheetController).rebuild()` or by a different state management solution to rebuild the sheet. The example for instance decreases the corner radius of the `SlidingSheet` as it gets dragged to the top and increases the headers top padding by the status bar height.
 
-<img width="205px" alt="Example on how to reflect changes in the SlidingSheet" src="assets/example_reflecting_changes.gif"/>
+<img width="205px" alt="Example on how to reflect changes in the SlidingSheet" src="https://github.com/BendixMa/sliding-sheet/blob/master/assets/example_reflecting_changes.gif"/>
