@@ -73,6 +73,7 @@ class SnapSpec {
   }
 }
 
+/// Defines the scroll effects, physics and more.
 class ScrollSpec {
   /// Whether the containing ScrollView should overscroll.
   final bool overscroll;
@@ -988,7 +989,7 @@ class SheetState {
 
 /// A controller for a [SlidingSheet].
 class SheetController {
-  /// Animates the sheet to an arbitrary extent.
+  /// Animates the sheet to the [extent].
   ///
   /// The [extent] will be clamped to the minimum and maximum extent.
   /// If the scrolling child is not at the top, it will scroll to the top
@@ -1067,14 +1068,13 @@ Future<T> showSlidingBottomSheet<T>(
         snapSpec: snapSpec,
         duration: duration,
         color: color ??
-            theme.bottomSheetTheme.modalBackgroundColor ??
             theme.bottomSheetTheme.backgroundColor ??
             theme.dialogTheme.backgroundColor ??
             theme.dialogBackgroundColor ??
             theme.backgroundColor,
         backdropColor: backdropColor,
         shadowColor: shadowColor,
-        elevation: elevation ?? theme.bottomSheetTheme.modalElevation,
+        elevation: elevation,
         padding: padding,
         margin: margin,
         border: border,
