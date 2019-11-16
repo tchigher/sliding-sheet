@@ -1,4 +1,3 @@
-import 'package:example/r.dart';
 import 'package:flutter/material.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -59,7 +58,6 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       home: Builder(
         builder: (context) {
-          return W();
           return Scaffold(
             body: Stack(
               children: <Widget>[

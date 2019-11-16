@@ -1,5 +1,5 @@
 name: sliding_sheet
-description: A sliding sheet that 
+description: A widget that can be dragged and scrolled in a single gesture and snapped to a list of extents.
 version: 0.0.1
 author: Bendix Mahnke
 
