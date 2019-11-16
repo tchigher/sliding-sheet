@@ -6,7 +6,7 @@ A widget that can be dragged and scrolled in a single gesture and snapped to a l
   <img width="205px" alt="Example of a SlidingSheet" src="assets/example.gif"/>
 </a>
 
-Click <a href="https://github.com/BendixMa/sliding-sheet/blob/master/example/lib/main.dart">here</a> to view this example.
+Click <a href="https://github.com/BendixMa/sliding-sheet/blob/master/example/lib/main.dart">here</a> to view the full example.
 
 ## Installing
 
@@ -115,7 +115,6 @@ void showAsBottomSheet() async {
   print(result); // This is the result.
 }
 ```
-
 #### Result:
 <img width="205px" alt="Example" src="assets/usage_example_bottom_sheet.gif"/>
 
@@ -136,10 +135,6 @@ onSnap | A callback function that gets invoked when the `SlidingSheet` snaps to 
   <img width="205px" alt="SnapPositioning.relativeToSheetHeight with a snap of 0.5" src="assets/example_snapping_relativeToSheetHeight.png"/>
   <img width="205px" alt="SnapPositioning.pixelOffset with a snap of 100" src="assets/example_snapping_pixelOffset.png"/>
 </p>
-
-### ListViews and Columns
-
-The children of a `SlidingSheet` are not allowed to have an inifinite (unbounded) height. Therefore when using a `ListView`, make sure to set `shrinkWrap` to `true` and `physics` to `NeverScrollableScrollPhysics`. Similarly when using a `Column` as a child of a `SlidingSheet`, make sure to set the `mainAxisSize` to `MainAxisSize.min`.
 
 ### SheetController
 
@@ -216,9 +211,12 @@ Widget build(BuildContext context) {
   );
 }
 ```
-
 #### Result:
 <img width="205px" alt="Simple header/footer example" src="assets/example_header_footer.gif"/>
+
+### ListViews and Columns
+
+The children of a `SlidingSheet` are not allowed to have an inifinite (unbounded) height. Therefore when using a `ListView`, make sure to set `shrinkWrap` to `true` and `physics` to `NeverScrollableScrollPhysics`. Similarly when using a `Column` as a child of a `SlidingSheet`, make sure to set the `mainAxisSize` to `MainAxisSize.min`.
 
 ### Reflecting changes
 
