@@ -117,7 +117,6 @@ class _MyAppState extends State<MyApp> {
           listener: (state) {
             this.state = state;
             setState(() {});
-            //if (state.scrollOffset < 10) controller.rebuild();
           },
           headerBuilder: buildHeader,
           footerBuilder: buildFooter,
@@ -128,8 +127,6 @@ class _MyAppState extends State<MyApp> {
   }
 
   Widget buildHeader(BuildContext context, SheetState state) {
-    final theme = Theme.of(context);
-
     return MyContainer(
       key: headerKey,
       animate: true,
