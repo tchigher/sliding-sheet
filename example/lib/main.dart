@@ -59,7 +59,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       home: Builder(
         builder: (context) {
-          //return W();
+          return W();
           return Scaffold(
             body: Stack(
               children: <Widget>[
@@ -111,6 +111,9 @@ class _MyAppState extends State<MyApp> {
               height * 0.7,
               double.infinity,
             ],
+            onSnap: (state, snap) {
+              print('Snapped to $snap');
+            }
           ),
           scrollSpec: ScrollSpec.bouncingScroll(),
           listener: (state) {

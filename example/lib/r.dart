@@ -16,12 +16,6 @@ class _WState extends State<W> {
       appBar: AppBar(
         title: Text('Simple Example'),
       ),
-      /* floatingActionButton: FloatingActionButton(
-        onPressed: showAsBottomSheet,
-        child: Icon(
-          Icons.place,
-        ),
-      ), */
       body: Stack(
         children: <Widget>[
           SlidingSheet(
@@ -29,12 +23,12 @@ class _WState extends State<W> {
             cornerRadius: 16,
             snapSpec: const SnapSpec(
               snap: true,
-              snappings: [100, double.infinity],
+              snappings: [112, 400, double.infinity],
               positioning: SnapPositioning.pixelOffset,
             ),
             builder: (context, state) {
               return Container(
-                height: 300,
+                height: 500,
                 child: Center(
                   child: Text(
                     'This is the content of the sheet',
@@ -43,43 +37,33 @@ class _WState extends State<W> {
                 ),
               );
             },
+            headerBuilder: (context, state) {
+              return Container(
+                height: 56,
+                width: double.infinity,
+                color: Colors.green,
+                alignment: Alignment.center,
+                child: Text(
+                  'This is the header',
+                  style: Theme.of(context).textTheme.body1.copyWith(color: Colors.white),
+                ),
+              );
+            },
+            footerBuilder: (context, state) {
+              return Container(
+                height: 56,
+                width: double.infinity,
+                color: Colors.yellow,
+                alignment: Alignment.center,
+                child: Text(
+                  'This is the footer',
+                  style: Theme.of(context).textTheme.body1.copyWith(color: Colors.black),
+                ),
+              );
+            },
           ),
         ],
       ),
     );
-  }
-
-  void showAsBottomSheet() async {
-    final result = await showSlidingBottomSheet(
-      context,
-      elevation: 8,
-      cornerRadius: 16,
-      snapSpec: const SnapSpec(
-        snap: true,
-        snappings: [0.4, 0.7, 1.0],
-        positioning: SnapPositioning.relativeToAvailableSpace,
-      ),
-      builder: (context, state) {
-        return Container(
-          height: MediaQuery.of(context).size.height,
-          child: Center(
-            child: Material(
-              child: InkWell(
-                onTap: () => Navigator.pop(context, 'This is the result.'),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    'This is the content of the sheet',
-                    style: Theme.of(context).textTheme.body1,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-
-    print(result); // This is the result.
   }
 }
