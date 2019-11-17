@@ -13,7 +13,7 @@ Click <a href="https://github.com/BendixMa/sliding-sheet/blob/master/example/lib
 Add it to your `pubspec.yaml` file:
 ```yaml
 dependencies:
-  sliding_up_panel: ^0.0.1
+  sliding_up_panel: ^0.1.3
 ```
 Install packages from the command line
 ```
