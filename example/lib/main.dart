@@ -407,6 +407,7 @@ class _MyAppState extends State<MyApp> {
   Widget buildChart(BuildContext context) {
     final series = [
       charts.Series<Traffic, String>(
+        id: 'traffic',
         data: [
           Traffic(0.5, '14:00'),
           Traffic(0.6, '14:30'),

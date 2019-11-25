@@ -398,10 +398,16 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       controller._snapToExtent = (snap, {duration}) => snapToExtent(_normalizeSnap(snap), duration: duration);
       controller._expand = () => snapToExtent(_maxExtent);
       controller._collapse = () => snapToExtent(_minExtent);
+      controller._show = () async {
+        if (_state.isHidden) return snapToExtent(_minExtent);
+      };
+      controller._hide = () async {
+        if (_state.isShown) return snapToExtent(0.0);
+      };
     }
   }
 
-  Future snapToExtent(double snap, {Duration duration, double velocity = 0}) async {
+  Future snapToExtent(double snap, {Duration duration, double velocity = 0, bool clamp}) async {
     if (!_isLaidOut) return null;
 
     duration ??= widget.duration;
@@ -419,7 +425,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       this,
       duration: duration,
       velocity: velocity,
-      clamp: !_fromBottomSheet || (_fromBottomSheet && snap != 0.0),
+      clamp: clamp ?? (!_fromBottomSheet || (_fromBottomSheet && snap != 0.0)),
     );
   }
 
@@ -985,6 +991,10 @@ class SheetState {
 
   /// Whether the [SlidingSheet] has reached its maximum scroll extent.
   bool get isAtBottom => _extent.isAtBottom;
+
+  bool get isHidden => extent == 0.0;
+
+  bool get isShown => !isHidden;
 }
 
 /// A controller for a [SlidingSheet].
@@ -1025,6 +1035,14 @@ class SheetController {
   /// Short-hand for calling `snapToExtent(maxExtent)`.
   Future expand() => _expand();
   Future Function() _expand;
+
+  /// Reveals the [SlidingSheet] if it is currently hidden.
+  Future show() => _show();
+  Future Function() _show;
+
+  /// Slides the sheet off to the bottom and hides it.
+  Future hide() => _hide();
+  Future Function() _hide;
 }
 
 Future<T> showSlidingBottomSheet<T>(
