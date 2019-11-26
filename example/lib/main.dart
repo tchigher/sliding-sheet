@@ -95,22 +95,24 @@ class _MyAppState extends State<MyApp> {
           controller: controller,
           color: Colors.white,
           elevation: 16,
+          maxWidth: 500,
           cornerRadius: 16 * (1 - fInRange(0.7, 1.0, progress)),
           border: Border.all(
             color: Colors.grey.shade300,
             width: 3,
           ),
           snapSpec: SnapSpec(
-              snap: true,
-              positioning: SnapPositioning.pixelOffset,
-              snappings: [
-                headerHeight > 0 ? headerHeight + footerHeight : 140,
-                height * 0.7,
-                double.infinity,
-              ],
-              onSnap: (state, snap) {
-                print('Snapped to $snap');
-              }),
+            snap: true,
+            positioning: SnapPositioning.pixelOffset,
+            snappings: [
+              headerHeight > 0 ? headerHeight + footerHeight : 140,
+              height * 0.7,
+              double.infinity,
+            ],
+            onSnap: (state, snap) {
+              print('Snapped to $snap');
+            },
+          ),
           scrollSpec: ScrollSpec.bouncingScroll(),
           listener: (state) {
             this.state = state;

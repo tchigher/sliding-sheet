@@ -157,6 +157,11 @@ class SlidingSheet extends StatefulWidget {
 
   /// The [ScrollSpec] of the containing ScrollView.
   final ScrollSpec scrollSpec;
+
+  /// The maximum width of the sheet.
+  /// Usually set for large screens. By default the [SlidingSheet]
+  /// expands to the total available width.
+  final double maxWidth;
   const SlidingSheet({
     Key key,
     @required this.builder,
@@ -177,6 +182,7 @@ class SlidingSheet extends StatefulWidget {
     this.listener,
     this.controller,
     this.scrollSpec = const ScrollSpec(overscroll: false),
+    this.maxWidth = double.infinity,
   })  : assert(duration != null),
         assert(builder != null),
         assert(snapSpec != null),
@@ -468,95 +474,102 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     return StreamBuilder(
       stream: _stream.stream,
       builder: (context, snapshot) {
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            _availableHeight = constraints.biggest.height;
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: widget.maxWidth ?? double.infinity),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                _availableHeight = constraints.biggest.height;
 
-            // Wrap the scrollView in a ScrollConfiguration to
-            // remove the default overscroll effect.
-            Widget scrollView = ScrollConfiguration(
-              behavior: ScrollBehavior(),
-              child: SingleChildScrollView(
-                controller: _controller,
-                physics: _scrollSpec.physics ?? ScrollPhysics(),
-                child: Container(
-                  key: _childKey,
-                  child: _child,
-                ),
-              ),
-            );
-
-            // Add the overscroll if required again if required
-            if (_scrollSpec.overscroll) {
-              scrollView = GlowingOverscrollIndicator(
-                axisDirection: AxisDirection.down,
-                color: _scrollSpec.overscrollColor ?? theme.accentColor,
-                child: scrollView,
-              );
-            }
-
-            return Stack(
-              children: <Widget>[
-                if (widget.closeOnBackdropTap || (widget.backdropColor != null && widget.backdropColor.opacity != 0))
-                  GestureDetector(
-                    onTap: widget.closeOnBackdropTap ? () => _pop(0.0) : null,
-                    child: Opacity(
-                      opacity: _currentExtent != 0 ? (_currentExtent / _minExtent).clamp(0.0, 1.0) : 0.0,
-                      child: Container(
-                        width: double.infinity,
-                        height: double.infinity,
-                        color: widget.backdropColor,
-                      ),
+                // Wrap the scrollView in a ScrollConfiguration to
+                // remove the default overscroll effect.
+                Widget scrollView = ScrollConfiguration(
+                  behavior: ScrollBehavior(),
+                  child: SingleChildScrollView(
+                    controller: _controller,
+                    physics: _scrollSpec.physics ?? ScrollPhysics(),
+                    child: Container(
+                      key: _childKey,
+                      child: _child,
                     ),
                   ),
-                SizedBox.expand(
-                  child: FractionallySizedBox(
-                    // Hide the box until it is laid out and measured.
-                    heightFactor: _isLaidOut ? _currentExtent.clamp(0.0, 1.0) : _minExtent,
-                    alignment: Alignment.bottomCenter,
-                    child: _SheetContainer(
-                      color: widget.color ?? Colors.white,
-                      border: widget.border,
-                      margin: widget.margin,
-                      padding: widget.padding,
-                      elevation: widget.elevation,
-                      shadowColor: widget.shadowColor,
-                      customBorders: BorderRadius.vertical(
-                        top: Radius.circular(widget.cornerRadius),
+                );
+
+                // Add the overscroll if required again if required
+                if (_scrollSpec.overscroll) {
+                  scrollView = GlowingOverscrollIndicator(
+                    axisDirection: AxisDirection.down,
+                    color: _scrollSpec.overscrollColor ?? theme.accentColor,
+                    child: scrollView,
+                  );
+                }
+
+                return Stack(
+                  children: <Widget>[
+                    if (widget.closeOnBackdropTap ||
+                        (widget.backdropColor != null && widget.backdropColor.opacity != 0))
+                      GestureDetector(
+                        onTap: widget.closeOnBackdropTap ? () => _pop(0.0) : null,
+                        child: Opacity(
+                          opacity: _currentExtent != 0 ? (_currentExtent / _minExtent).clamp(0.0, 1.0) : 0.0,
+                          child: Container(
+                            width: double.infinity,
+                            height: double.infinity,
+                            color: widget.backdropColor,
+                          ),
+                        ),
                       ),
-                      child: Stack(
-                        children: <Widget>[
-                          Column(
+                    SizedBox.expand(
+                      child: FractionallySizedBox(
+                        // Hide the box until it is laid out and measured.
+                        heightFactor: _isLaidOut ? _currentExtent.clamp(0.0, 1.0) : _minExtent,
+                        alignment: Alignment.bottomCenter,
+                        child: _SheetContainer(
+                          color: widget.color ?? Colors.white,
+                          border: widget.border,
+                          margin: widget.margin,
+                          padding: widget.padding,
+                          elevation: widget.elevation,
+                          shadowColor: widget.shadowColor,
+                          customBorders: BorderRadius.vertical(
+                            top: Radius.circular(widget.cornerRadius),
+                          ),
+                          child: Stack(
                             children: <Widget>[
-                              SizedBox(height: _headerHeight),
-                              Expanded(child: scrollView),
-                              SizedBox(height: _footerHeight),
+                              Column(
+                                children: <Widget>[
+                                  SizedBox(height: _headerHeight),
+                                  Expanded(child: scrollView),
+                                  SizedBox(height: _footerHeight),
+                                ],
+                              ),
+                              if (widget.headerBuilder != null)
+                                Align(
+                                  alignment: Alignment.topCenter,
+                                  child: Container(
+                                    key: _headerKey,
+                                    child: _header,
+                                  ),
+                                ),
+                              if (widget.footerBuilder != null)
+                                Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: Container(
+                                    key: _footerKey,
+                                    child: _footer,
+                                  ),
+                                ),
                             ],
                           ),
-                          if (widget.headerBuilder != null)
-                            Align(
-                              alignment: Alignment.topCenter,
-                              child: Container(
-                                key: _headerKey,
-                                child: _header,
-                              ),
-                            ),
-                          if (widget.footerBuilder != null)
-                            Align(
-                              alignment: Alignment.bottomCenter,
-                              child: Container(
-                                key: _footerKey,
-                                child: _footer,
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              ],
-            );
-          },
+                  ],
+                );
+              },
+            ),
+          ),
         );
       },
     );
@@ -1058,6 +1071,7 @@ Future<T> showSlidingBottomSheet<T>(
   SheetListener listener,
   SheetController controller,
   ScrollSpec scrollSpec = const ScrollSpec(overscroll: false),
+  double maxWidth = double.infinity,
 }) {
   assert(duration != null);
   assert(context != null);
@@ -1098,6 +1112,7 @@ Future<T> showSlidingBottomSheet<T>(
         listener: listener,
         controller: controller,
         scrollSpec: scrollSpec,
+        maxWidth: maxWidth,
       ),
     ),
   );
