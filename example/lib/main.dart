@@ -3,7 +3,6 @@ import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 
-import 'package:example/util/my_container.dart';
 import 'package:example/util/util.dart';
 
 void main() => runApp(MyApp());
@@ -102,17 +101,16 @@ class _MyAppState extends State<MyApp> {
             width: 3,
           ),
           snapSpec: SnapSpec(
-            snap: true,
-            positioning: SnapPositioning.pixelOffset,
-            snappings: [
-              headerHeight > 0 ? headerHeight + footerHeight : 140,
-              height * 0.7,
-              double.infinity,
-            ],
-            onSnap: (state, snap) {
-              print('Snapped to $snap');
-            }
-          ),
+              snap: true,
+              positioning: SnapPositioning.pixelOffset,
+              snappings: [
+                headerHeight > 0 ? headerHeight + footerHeight : 140,
+                height * 0.7,
+                double.infinity,
+              ],
+              onSnap: (state, snap) {
+                print('Snapped to $snap');
+              }),
           scrollSpec: ScrollSpec.bouncingScroll(),
           listener: (state) {
             this.state = state;
@@ -127,7 +125,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Widget buildHeader(BuildContext context, SheetState state) {
-    return MyContainer(
+    return CustomContainer(
       key: headerKey,
       animate: true,
       color: Colors.white,
@@ -141,7 +139,7 @@ class _MyAppState extends State<MyApp> {
           SizedBox(height: 2 + (MediaQuery.of(context).padding.top * fInRange(.7, 1.0, progress))),
           Align(
             alignment: Alignment.topCenter,
-            child: MyContainer(
+            child: CustomContainer(
               width: 16,
               height: 4,
               borderRadius: 2,
@@ -215,7 +213,7 @@ class _MyAppState extends State<MyApp> {
             );
     }
 
-    return MyContainer(
+    return CustomContainer(
       key: footerKey,
       animate: true,
       elevation: !isCollapsed && !state.isAtBottom ? 4 : 0,
@@ -237,7 +235,12 @@ class _MyAppState extends State<MyApp> {
                 fontSize: 15,
               ),
             ),
-            () => controller.expand(),
+            () async {
+              await controller.hide();
+              Future.delayed(const Duration(milliseconds: 1500), () {
+                controller.show();
+              });
+            },
             color: mapsBlue,
           ),
           SizedBox(width: 8),

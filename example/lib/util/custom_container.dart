@@ -14,7 +14,7 @@ enum ShadowDirection {
   center,
 }
 
-class MyContainer extends StatelessWidget {
+class CustomContainer extends StatelessWidget {
   final double borderRadius;
   final double elevation;
   final double height;
@@ -36,7 +36,7 @@ class MyContainer extends StatelessWidget {
   final Color rippleColor;
   final bool animate;
   final Duration duration;
-  MyContainer({
+  CustomContainer({
     Key key,
     this.child,
     this.border,
