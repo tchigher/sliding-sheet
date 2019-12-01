@@ -1,6 +1,6 @@
 name: sliding_sheet
 description: A widget that can be dragged and scrolled in a single gesture and snapped to a list of extents.
-version: 0.2.0
+version: 0.2.1
 homepage: https://github.com/BendixMa/sliding-sheet
 
 environment:
