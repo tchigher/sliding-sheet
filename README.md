@@ -13,7 +13,7 @@ Click <a href="https://github.com/BendixMa/sliding-sheet/blob/master/example/lib
 Add it to your `pubspec.yaml` file:
 ```yaml
 dependencies:
-  sliding_up_panel: ^0.1.5
+  sliding_up_panel: ^0.2.0
 ```
 Install packages from the command line
 ```
@@ -78,38 +78,42 @@ Widget build(BuildContext context) {
 
 ### As a BottomSheetDialog
 
-This method can be used to show a `SlidingSheet` as a `BottomSheetDialog` by calling the `showSlidingBottomSheet` function.
+This method can be used to show a `SlidingSheet` as a `BottomSheetDialog` by calling the `showSlidingBottomSheet` function and returning and instance of `SlidingSheetDialog`.
 
 ```dart
 void showAsBottomSheet() async {
   final result = await showSlidingBottomSheet(
     context,
-    elevation: 8,
-    cornerRadius: 16,
-    snapSpec: const SnapSpec(
-      snap: true,
-      snappings: [0.4, 0.7, 1.0],
-      positioning: SnapPositioning.relativeToAvailableSpace,
-    ),
-    builder: (context, state) {
-      return Container(
-        height: MediaQuery.of(context).size.height,
-        child: Center(
-          child: Material(
-            child: InkWell(
-              onTap: () => Navigator.pop(context, 'This is the result.'),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  'This is the content of the sheet',
-                  style: Theme.of(context).textTheme.body1,
+    builder: (context) {
+      return SlidingSheetDialog(
+        elevation: 8,
+        cornerRadius: 16,
+        snapSpec: const SnapSpec(
+          snap: true,
+          snappings: [0.4, 0.7, 1.0],
+          positioning: SnapPositioning.relativeToAvailableSpace,
+        ),
+        builder: (context, state) {
+          return Container(
+            height: MediaQuery.of(context).size.height,
+            child: Center(
+              child: Material(
+                child: InkWell(
+                  onTap: () => Navigator.pop(context, 'This is the result.'),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      'This is the content of the sheet',
+                      style: Theme.of(context).textTheme.body1,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       );
-    },
+    }
   );
 
   print(result); // This is the result.
@@ -220,6 +224,6 @@ The children of a `SlidingSheet` are not allowed to have an inifinite (unbounded
 
 ### Reflecting changes
 
-To improve performace, the children of a `SlidingSheet` are not rebuild when it slides or gets scrolled. You can however pass a callback function to the `listener` parameter of a `SlidingSheet`, that gets called with the current `SheetState` whenever the `SlidingSheet` slides or gets scrolled. You can then rebuild your UI by calling `setState(() {})`, `(instance of SheetController).rebuild()` or by a different state management solution to rebuild the sheet. The example for instance decreases the corner radius of the `SlidingSheet` as it gets dragged to the top and increases the headers top padding by the status bar height.
+To improve performace, the children of a `SlidingSheet` are not rebuild when it slides or gets scrolled. You can however pass a callback function to the `listener` parameter of a `SlidingSheet`, that gets called with the current `SheetState` whenever the `SlidingSheet` slides or gets scrolled. You can then rebuild your UI by calling `setState(() {})`, `(instance of SheetController).rebuild()` or by a different state management solution to rebuild the sheet. The example for instance decreases the corner radius of the `SlidingSheet` as it gets dragged to the top and increases the headers top padding by the status bar height. When using the `SlidingSheet` as a `bottomSheetDialog` you can also use `(instance of SheetController).rebuild()` to rebuild the sheet.
 
 <img width="205px" alt="Example on how to reflect changes in the SlidingSheet" src="https://raw.githubusercontent.com/BendixMa/sliding-sheet/master/assets/example_reflecting_changes.gif"/>

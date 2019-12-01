@@ -241,7 +241,6 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
   // The current state of this sheet.
   SheetState get _state => SheetState(
-        _controller,
         _extent,
         extent: _reverseSnap(_currentExtent),
         minExtent: _reverseSnap(_minExtent),
@@ -385,7 +384,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     final controller = widget.controller;
     if (controller != null) {
       // Assign the controller functions to the state functions.
-      controller._rebuild = rebuild;
+      if (!_fromBottomSheet) controller._rebuild = rebuild;
       controller._scrollTo = scrollTo;
       controller._snapToExtent = (snap, {duration}) => snapToExtent(_normalizeSnap(snap), duration: duration);
       controller._expand = () => snapToExtent(_maxExtent);
@@ -503,8 +502,6 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                   );
                 }
 
-                final fillContainer = !(_fromBottomSheet && _header != null);
-
                 return Stack(
                   children: <Widget>[
                     if (widget.closeOnBackdropTap ||
@@ -526,7 +523,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                         heightFactor: _isLaidOut ? _currentExtent.clamp(0.0, 1.0) : _minExtent,
                         alignment: Alignment.bottomCenter,
                         child: _SheetContainer(
-                          color: fillContainer ? widget.color ?? Colors.white : null,
+                          color: widget.color ?? Colors.white,
                           border: widget.border,
                           margin: widget.margin,
                           padding: widget.padding,
@@ -541,10 +538,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                                 children: <Widget>[
                                   SizedBox(height: _headerHeight),
                                   Expanded(
-                                    child: Container(
-                                      color: !fillContainer ? widget.color ?? Colors.white : null,
-                                      child: scrollView,
-                                    ),
+                                    child: scrollView,
                                   ),
                                   SizedBox(height: _footerHeight),
                                 ],
@@ -963,7 +957,6 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
 
 /// A data class containing state information about the [_SlidingSheetState].
 class SheetState {
-  final _DragableScrollableSheetController _controller;
   final _SheetExtent _extent;
 
   /// The current extent the sheet covers.
@@ -980,7 +973,6 @@ class SheetState {
   /// the correct extents. This takes until the first frame was drawn.
   final bool isLaidOut;
   SheetState(
-    this._controller,
     this._extent, {
     @required this.extent,
     @required this.minExtent,
@@ -988,13 +980,15 @@ class SheetState {
     @required this.isLaidOut,
   });
 
+  factory SheetState.inital() => SheetState(null, extent: 0.0, minExtent: 0.0, maxExtent: 1.0, isLaidOut: false);
+
   /// The progress between [minExtent] and [maxExtent] of the current [extent].
   /// A progress of 1 means the sheet is fully expanded, while
   /// a progress of 0 means the sheet is fully collapsed.
   double get progress => isLaidOut ? ((extent - minExtent) / (maxExtent - minExtent)).clamp(0.0, 1.0) : 0.0;
 
   /// The scroll offset when the content is bigger than the available space.
-  double get scrollOffset => _extent.scrollOffset;
+  double get scrollOffset => _extent?.scrollOffset ?? 0;
 
   /// Whether the [SlidingSheet] has reached its maximum extent.
   bool get isExpanded => extent >= maxExtent;
@@ -1003,10 +997,10 @@ class SheetState {
   bool get isCollapsed => extent <= minExtent;
 
   /// Whether the [SlidingSheet] has a [scrollOffset] of zero.
-  bool get isAtTop => _extent.isAtTop;
+  bool get isAtTop => _extent?.isAtTop ?? true;
 
   /// Whether the [SlidingSheet] has reached its maximum scroll extent.
-  bool get isAtBottom => _extent.isAtBottom;
+  bool get isAtBottom => _extent?.isAtBottom ?? false;
 
   /// Whether the sheet is hidden to the user.
   bool get isHidden => extent <= 0.0;
@@ -1063,67 +1057,105 @@ class SheetController {
   Future Function() _hide;
 }
 
+class SlidingSheetDialog {
+  final SnapSpec snapSpec;
+  final Duration duration;
+  final Color color;
+  final Color backdropColor;
+  final Color shadowColor;
+  final double elevation;
+  final EdgeInsets padding;
+  final EdgeInsets margin;
+  final Border border;
+  final double cornerRadius;
+  final bool dismissableBackground;
+  final SheetBuilder builder;
+  final SheetBuilder headerBuilder;
+  final SheetBuilder footerBuilder;
+  final SheetListener listener;
+  final SheetController controller;
+  final ScrollSpec scrollSpec;
+  final double maxWidth;
+  SlidingSheetDialog({
+    this.snapSpec = const SnapSpec(),
+    this.duration = const Duration(milliseconds: 800),
+    this.color,
+    this.backdropColor = Colors.black54,
+    this.shadowColor,
+    this.elevation = 0.0,
+    this.padding,
+    this.margin,
+    this.border,
+    this.cornerRadius = 0.0,
+    this.dismissableBackground = true,
+    @required this.builder,
+    this.headerBuilder,
+    this.footerBuilder,
+    this.listener,
+    this.controller,
+    this.scrollSpec = const ScrollSpec(overscroll: false),
+    this.maxWidth = double.infinity,
+  });
+}
+
 Future<T> showSlidingBottomSheet<T>(
   BuildContext context, {
-  SnapSpec snapSpec = const SnapSpec(),
-  Duration duration = const Duration(milliseconds: 800),
-  Color color,
-  Color backdropColor = Colors.black54,
-  Color shadowColor,
-  double elevation = 0.0,
-  EdgeInsets padding,
-  EdgeInsets margin,
-  Border border,
-  double cornerRadius = 0.0,
-  bool dismissableBackground = true,
-  @required SheetBuilder builder,
-  SheetBuilder headerBuilder,
-  SheetBuilder footerBuilder,
-  SheetListener listener,
-  SheetController controller,
-  ScrollSpec scrollSpec = const ScrollSpec(overscroll: false),
-  double maxWidth = double.infinity,
+  @required SlidingSheetDialog Function(BuildContext) builder,
 }) {
-  assert(duration != null);
-  assert(context != null);
+  assert(builder != null);
+  SlidingSheetDialog dialog = builder(context);
 
-  // A zero stop must be the first stop.
-  if (snapSpec.snappings.first != 0.0) {
-    snapSpec = snapSpec.copyWith(
-      snappings: [0.0] + snapSpec.snappings,
-    );
+  ValueNotifier<bool> rebuilder = ValueNotifier(false);
+  if (dialog.controller != null) {
+    dialog.controller._rebuild = () {
+      rebuilder.value = !rebuilder.value;
+    };
   }
 
   final theme = Theme.of(context);
   return Navigator.push(
     context,
     _TransparentRoute(
-      duration: duration,
+      duration: dialog.duration,
       builder: (context, animation, route) {
-        return SlidingSheet(
-          route: route,
-          snapSpec: snapSpec,
-          duration: duration,
-          color: color ??
-              theme.bottomSheetTheme.backgroundColor ??
-              theme.dialogTheme.backgroundColor ??
-              theme.dialogBackgroundColor ??
-              theme.backgroundColor,
-          backdropColor: backdropColor,
-          shadowColor: shadowColor,
-          elevation: elevation,
-          padding: padding,
-          margin: margin,
-          border: border,
-          cornerRadius: cornerRadius,
-          closeOnBackdropTap: dismissableBackground,
-          builder: builder,
-          headerBuilder: headerBuilder,
-          footerBuilder: footerBuilder,
-          listener: listener,
-          controller: controller,
-          scrollSpec: scrollSpec,
-          maxWidth: maxWidth,
+        return ValueListenableBuilder(
+          valueListenable: rebuilder,
+          builder: (context, value, _) {
+            dialog = builder(context);
+            var snapSpec = dialog.snapSpec;
+
+            if (snapSpec.snappings.first != 0.0) {
+              snapSpec = snapSpec.copyWith(
+                snappings: [0.0] + snapSpec.snappings,
+              );
+            }
+
+            return SlidingSheet(
+              route: route,
+              snapSpec: snapSpec,
+              duration: dialog.duration,
+              color: dialog.color ??
+                  theme.bottomSheetTheme.backgroundColor ??
+                  theme.dialogTheme.backgroundColor ??
+                  theme.dialogBackgroundColor ??
+                  theme.backgroundColor,
+              backdropColor: dialog.backdropColor,
+              shadowColor: dialog.shadowColor,
+              elevation: dialog.elevation,
+              padding: dialog.padding,
+              margin: dialog.margin,
+              border: dialog.border,
+              cornerRadius: dialog.cornerRadius,
+              closeOnBackdropTap: dialog.dismissableBackground,
+              builder: dialog.builder,
+              headerBuilder: dialog.headerBuilder,
+              footerBuilder: dialog.footerBuilder,
+              listener: dialog.listener,
+              controller: dialog.controller,
+              scrollSpec: dialog.scrollSpec,
+              maxWidth: dialog.maxWidth,
+            );
+          },
         );
       },
     ),

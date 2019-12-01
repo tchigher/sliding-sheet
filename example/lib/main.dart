@@ -452,82 +452,91 @@ class _MyAppState extends State<MyApp> {
 
   Future showBottomSheet(BuildContext context) async {
     final dialogController = SheetController();
+    double progress = 0;
+    double multiple = 1;
 
     await showSlidingBottomSheet(
       context,
-      controller: dialogController,
-      snapSpec: const SnapSpec(
-        snap: true,
-        snappings: const [0.4, 0.7, 1.0],
-      ),
-      scrollSpec: ScrollSpec.bouncingScroll(),
-      color: Colors.white,
-      listener: (state) {
-        if (state.extent >= 0.7 || state.progress == 0.0) {
-          dialogController.rebuild();
-        }
-      },
-      headerBuilder: (context, state) {
-        final theme = Theme.of(context);
-        final textTheme = theme.textTheme;
-        final progress = state.progress;
-        final multiple = 1 - interval(0.7, 1.0, progress);
+      builder: (context) {
+        return SlidingSheetDialog(
+          controller: dialogController,
+          snapSpec: const SnapSpec(
+            snap: true,
+            snappings: const [0.4, 0.7, 1.0],
+          ),
+          scrollSpec: ScrollSpec.bouncingScroll(),
+          color: Colors.white,
+          cornerRadius: 16 * multiple,
+          listener: (state) {
+            progress = state.progress;
+            multiple = 1 - interval(0.7, 1.0, progress);
+            if (state.extent >= 0.7 || (state.isExpanded && state.scrollOffset < 8.0)) {
+              dialogController.rebuild();
+            }
+          },
+          headerBuilder: (context, state) {
+            final theme = Theme.of(context);
+            final textTheme = theme.textTheme;
 
-        return Material(
-          elevation: interval(0.0, 8.0, state.scrollOffset) * 4,
-          shadowColor: Colors.black,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(16 * multiple),
-          ),
-          color: Colors.white,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Text(
-                  'Header',
-                  style: textTheme.headline,
+            return Material(
+              elevation: interval(0.0, 8.0, state.scrollOffset) * 4,
+              shadowColor: Colors.black,
+              color: Colors.white,
+              child: Container(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16 + (MediaQuery.of(context).viewPadding.top * (1 - multiple)),
+                  16,
+                  16,
                 ),
-                Stack(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    IgnorePointer(
-                      ignoring: progress > 0.7,
-                      child: Opacity(
-                        opacity: 1 - interval(0.7, 0.85, progress),
-                        child: IconButton(
-                          icon: Icon(Icons.keyboard_arrow_up),
-                          onPressed: dialogController.expand,
-                        ),
-                      ),
+                    Text(
+                      'Header',
+                      style: textTheme.headline,
                     ),
-                    IgnorePointer(
-                      ignoring: progress < 1.0,
-                      child: Opacity(
-                        opacity: interval(0.85, 1.0, progress),
-                        child: IconButton(
-                          icon: Icon(Icons.keyboard_arrow_down),
-                          onPressed: () => Navigator.pop(context),
+                    Stack(
+                      children: <Widget>[
+                        IgnorePointer(
+                          ignoring: progress > 0.7,
+                          child: Opacity(
+                            opacity: 1 - interval(0.7, 0.85, progress),
+                            child: IconButton(
+                              icon: Icon(Icons.keyboard_arrow_up),
+                              onPressed: dialogController.expand,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                        IgnorePointer(
+                          ignoring: progress < 1.0,
+                          child: Opacity(
+                            opacity: interval(0.85, 1.0, progress),
+                            child: IconButton(
+                              icon: Icon(Icons.keyboard_arrow_down),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
                   ],
-                )
-              ],
-            ),
-          ),
-        );
-      },
-      builder: (context, state) {
-        return Container(
-          height: 600,
-          color: Colors.white,
-          child: Center(
-            child: Text(
-              'This is a bottom sheet dialog!',
-              style: textStyle,
-            ),
-          ),
+                ),
+              ),
+            );
+          },
+          builder: (context, state) {
+            return Container(
+              height: 1200,
+              color: Colors.white,
+              child: Center(
+                child: Text(
+                  'This is a bottom sheet dialog!',
+                  style: textStyle,
+                ),
+              ),
+            );
+          },
         );
       },
     );
