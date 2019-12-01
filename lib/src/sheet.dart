@@ -385,10 +385,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     final controller = widget.controller;
     if (controller != null) {
       // Assign the controller functions to the state functions.
-      controller
-        .._scrollTo = scrollTo
-        .._rebuild = rebuild;
-
+      controller._rebuild = rebuild;
+      controller._scrollTo = scrollTo;
       controller._snapToExtent = (snap, {duration}) => snapToExtent(_normalizeSnap(snap), duration: duration);
       controller._expand = () => snapToExtent(_maxExtent);
       controller._collapse = () => snapToExtent(_minExtent);
@@ -453,8 +451,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
   void rebuild() {
     _callBuilders();
-    _stream.add(_currentExtent);
     _measure();
+    _stream.add(_currentExtent);
   }
 
   void _callBuilders() {
@@ -505,6 +503,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                   );
                 }
 
+                final fillContainer = !(_fromBottomSheet && _header != null);
+
                 return Stack(
                   children: <Widget>[
                     if (widget.closeOnBackdropTap ||
@@ -526,7 +526,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                         heightFactor: _isLaidOut ? _currentExtent.clamp(0.0, 1.0) : _minExtent,
                         alignment: Alignment.bottomCenter,
                         child: _SheetContainer(
-                          color: widget.color ?? Colors.white,
+                          color: fillContainer ? widget.color ?? Colors.white : null,
                           border: widget.border,
                           margin: widget.margin,
                           padding: widget.padding,
@@ -540,7 +540,12 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                               Column(
                                 children: <Widget>[
                                   SizedBox(height: _headerHeight),
-                                  Expanded(child: scrollView),
+                                  Expanded(
+                                    child: Container(
+                                      color: !fillContainer ? widget.color ?? Colors.white : null,
+                                      child: scrollView,
+                                    ),
+                                  ),
                                   SizedBox(height: _footerHeight),
                                 ],
                               ),
@@ -694,6 +699,7 @@ class _DragableScrollableSheetController extends ScrollController {
   double get currentExtent => extent.currentExtent;
   double get maxExtent => extent.maxExtent;
   double get minExtent => extent.minExtent;
+  bool inDrag = false;
 
   _DraggableScrollableSheetScrollPosition _currentPosition;
 
@@ -727,7 +733,10 @@ class _DragableScrollableSheetController extends ScrollController {
       });
   }
 
-  void imitiateDrag(double delta) => extent.addPixelDelta(delta);
+  void imitiateDrag(double delta) {
+    inDrag = true;
+    extent.addPixelDelta(delta);
+  }
 
   void imitateFling([double velocity = 0.0]) {
     velocity != 0 ? _currentPosition?.goBallistic(velocity) : _currentPosition?.didEndScroll();
@@ -777,7 +786,9 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
   VoidCallback _dragCancelCallback;
   bool up = true;
   double lastVelocity = 0.0;
-  bool inDrag = false;
+
+  bool get inDrag => scrollController.inDrag;
+  set inDrag(bool value) => scrollController.inDrag = value;
 
   bool get fromBottomSheet => extent.isFromBottomSheet;
   SnapSpec get snapBehavior => scrollController.snapSpec;
@@ -1084,36 +1095,37 @@ Future<T> showSlidingBottomSheet<T>(
   }
 
   final theme = Theme.of(context);
-
   return Navigator.push(
     context,
     _TransparentRoute(
       duration: duration,
-      builder: (context, animation, route) => SlidingSheet(
-        route: route,
-        snapSpec: snapSpec,
-        duration: duration,
-        color: color ??
-            theme.bottomSheetTheme.backgroundColor ??
-            theme.dialogTheme.backgroundColor ??
-            theme.dialogBackgroundColor ??
-            theme.backgroundColor,
-        backdropColor: backdropColor,
-        shadowColor: shadowColor,
-        elevation: elevation,
-        padding: padding,
-        margin: margin,
-        border: border,
-        cornerRadius: cornerRadius,
-        closeOnBackdropTap: dismissableBackground,
-        builder: builder,
-        headerBuilder: headerBuilder,
-        footerBuilder: footerBuilder,
-        listener: listener,
-        controller: controller,
-        scrollSpec: scrollSpec,
-        maxWidth: maxWidth,
-      ),
+      builder: (context, animation, route) {
+        return SlidingSheet(
+          route: route,
+          snapSpec: snapSpec,
+          duration: duration,
+          color: color ??
+              theme.bottomSheetTheme.backgroundColor ??
+              theme.dialogTheme.backgroundColor ??
+              theme.dialogBackgroundColor ??
+              theme.backgroundColor,
+          backdropColor: backdropColor,
+          shadowColor: shadowColor,
+          elevation: elevation,
+          padding: padding,
+          margin: margin,
+          border: border,
+          cornerRadius: cornerRadius,
+          closeOnBackdropTap: dismissableBackground,
+          builder: builder,
+          headerBuilder: headerBuilder,
+          footerBuilder: footerBuilder,
+          listener: listener,
+          controller: controller,
+          scrollSpec: scrollSpec,
+          maxWidth: maxWidth,
+        );
+      },
     ),
   );
 }
