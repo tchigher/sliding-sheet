@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -19,6 +21,7 @@ class _MyAppState extends State<MyApp> {
 
   double headerHeight = 0;
   double footerHeight = 0;
+  double get minHeight => headerHeight + footerHeight + 6;
 
   final textStyle = TextStyle(
     color: Colors.black,
@@ -42,10 +45,14 @@ class _MyAppState extends State<MyApp> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final RenderBox header = headerKey?.currentContext?.findRenderObject();
       final RenderBox footer = footerKey?.currentContext?.findRenderObject();
+
       if (header != null && footer != null) {
         headerHeight = header.size.height;
         footerHeight = footer.size.height;
-        setState(() {});
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          setState(() {});
+        });
       }
     });
   }
@@ -96,6 +103,7 @@ class _MyAppState extends State<MyApp> {
           color: Colors.white,
           elevation: 16,
           maxWidth: 500,
+          padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top * interval(.7, 1.0, progress)),
           cornerRadius: 16 * (1 - interval(0.7, 1.0, progress)),
           border: Border.all(
             color: Colors.grey.shade300,
@@ -105,12 +113,12 @@ class _MyAppState extends State<MyApp> {
             snap: true,
             positioning: SnapPositioning.pixelOffset,
             snappings: [
-              headerHeight > 0 ? headerHeight + footerHeight : 140,
+              headerHeight > 0 ? minHeight : 145,
               height * 0.7,
               double.infinity,
             ],
             onSnap: (state, snap) {
-              print('Snapped to $snap');
+              // print('Snapped to $snap');
             },
           ),
           scrollSpec: ScrollSpec.bouncingScroll(),
@@ -138,7 +146,7 @@ class _MyAppState extends State<MyApp> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          SizedBox(height: 2 + (MediaQuery.of(context).padding.top * interval(.7, 1.0, progress))),
+          SizedBox(height: 2),
           Align(
             alignment: Alignment.topCenter,
             child: CustomContainer(

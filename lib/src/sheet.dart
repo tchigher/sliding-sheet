@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import 'util.dart';
 
@@ -215,7 +216,6 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   _SheetExtent _extent;
   // The ScrollController for the sheet.
   _DragableScrollableSheetController _controller;
-  StreamController<double> _stream;
 
   // The height of the child of the sheet that scrolls if its bigger than
   // the availableHeight.
@@ -256,7 +256,6 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     _childKey = GlobalKey();
     _headerKey = GlobalKey();
     _footerKey = GlobalKey();
-    _stream = StreamController.broadcast();
 
     // Call the listener when the extent or scroll position changes.
     final listener = () {
@@ -271,10 +270,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       _controller,
       isFromBottomSheet: _fromBottomSheet,
       snappings: _snappings,
-      listener: (extent) {
-        _stream.add(extent);
-        listener();
-      },
+      listener: (extent) => listener(),
     );
 
     _assignSheetController();
@@ -333,6 +329,13 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     _assignSheetController();
 
     _extent.snappings = _snappings;
+    // Animate to the next snap if the snappings changed and the sheet
+    // is currently not interacted with.
+    if (oldWidget.snapSpec.snappings != widget.snapSpec.snappings) {
+      if (!_controller.inInteraction) {
+        _controller.imitateFling();
+      }
+    }
   }
 
   // A snap must be relative to its availableHeight.
@@ -451,7 +454,6 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   void rebuild() {
     _callBuilders();
     _measure();
-    _stream.add(_currentExtent);
   }
 
   void _callBuilders() {
@@ -468,9 +470,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     _callBuilders();
 
     // StreamBuilder is used to update the sheet irrespective of its children.
-    return StreamBuilder(
-      stream: _stream.stream,
-      builder: (context, snapshot) {
+    return ValueListenableBuilder(
+      valueListenable: _extent._currentExtent,
+      builder: (context, value, _) {
         return Align(
           alignment: Alignment.bottomCenter,
           child: ConstrainedBox(
@@ -520,7 +522,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                     SizedBox.expand(
                       child: FractionallySizedBox(
                         // Hide the box until it is laid out and measured.
-                        heightFactor: _isLaidOut ? _currentExtent.clamp(0.0, 1.0) : _minExtent,
+                        heightFactor:
+                            _isLaidOut ? _currentExtent.clamp(0.0, 1.0) : (!_fromBottomSheet ? _minExtent : 0.0),
                         alignment: Alignment.bottomCenter,
                         child: _SheetContainer(
                           color: widget.color ?? Colors.white,
@@ -537,13 +540,11 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                               Column(
                                 children: <Widget>[
                                   SizedBox(height: _headerHeight),
-                                  Expanded(
-                                    child: scrollView,
-                                  ),
+                                  Expanded(child: scrollView),
                                   SizedBox(height: _footerHeight),
                                 ],
                               ),
-                              if (widget.headerBuilder != null)
+                              if (_header != null)
                                 Align(
                                   alignment: Alignment.topCenter,
                                   child: Container(
@@ -551,7 +552,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                                     child: _header,
                                   ),
                                 ),
-                              if (widget.footerBuilder != null)
+                              if (_footer != null)
                                 Align(
                                   alignment: Alignment.bottomCenter,
                                   child: Container(
@@ -612,7 +613,6 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   @override
   void dispose() {
     _controller.dispose();
-    _stream.close();
     super.dispose();
   }
 }
@@ -693,7 +693,10 @@ class _DragableScrollableSheetController extends ScrollController {
   double get currentExtent => extent.currentExtent;
   double get maxExtent => extent.maxExtent;
   double get minExtent => extent.minExtent;
+
   bool inDrag = false;
+  bool animating = false;
+  bool get inInteraction => inDrag || animating;
 
   _DraggableScrollableSheetScrollPosition _currentPosition;
 
@@ -714,10 +717,12 @@ class _DragableScrollableSheetController extends ScrollController {
       CurvedAnimation(parent: controller, curve: velocity.abs() > 300 ? Curves.easeOutCubic : Curves.ease),
     );
 
+    animating = true;
     controller.addListener(() => this.extent.currentExtent = tween.value);
     return controller.forward()
       ..whenCompleteOrCancel(() {
         controller.dispose();
+        animating = false;
 
         // Invoke the snap callback.
         snapSpec?.onSnap?.call(
@@ -827,6 +832,7 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
     if ((snap && !extent.isAtMax && !extent.isAtMin && !shouldScroll) ||
         (fromBottomSheet && currentExtent < minExtent && inDrag)) {
       goSnapped(0.0);
+      inDrag = false;
     }
   }
 
@@ -1106,11 +1112,6 @@ Future<T> showSlidingBottomSheet<T>(
   SlidingSheetDialog dialog = builder(context);
 
   ValueNotifier<bool> rebuilder = ValueNotifier(false);
-  if (dialog.controller != null) {
-    dialog.controller._rebuild = () {
-      rebuilder.value = !rebuilder.value;
-    };
-  }
 
   final theme = Theme.of(context);
   return Navigator.push(
@@ -1122,8 +1123,13 @@ Future<T> showSlidingBottomSheet<T>(
           valueListenable: rebuilder,
           builder: (context, value, _) {
             dialog = builder(context);
-            var snapSpec = dialog.snapSpec;
+            if (dialog.controller != null) {
+              dialog.controller._rebuild = () {
+                rebuilder.value = !rebuilder.value;
+              };
+            }
 
+            var snapSpec = dialog.snapSpec;
             if (snapSpec.snappings.first != 0.0) {
               snapSpec = snapSpec.copyWith(
                 snappings: [0.0] + snapSpec.snappings,
