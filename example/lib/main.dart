@@ -78,8 +78,8 @@ class _MyAppState extends State<MyApp> {
                         color: mapsBlue,
                       ),
                       backgroundColor: Colors.white,
-                      onPressed: () {
-                        showBottomSheet(context);
+                      onPressed: () async {
+                        await showBottomSheet(context);
                       },
                     ),
                   ),
@@ -469,10 +469,11 @@ class _MyAppState extends State<MyApp> {
         return SlidingSheetDialog(
           controller: dialogController,
           snapSpec: const SnapSpec(
-            snap: true,
+            snap: false,
             snappings: const [0.4, 0.7, 1.0],
           ),
           scrollSpec: ScrollSpec.bouncingScroll(),
+          maxWidth: 500,
           color: Colors.white,
           cornerRadius: 16 * multiple,
           listener: (state) {

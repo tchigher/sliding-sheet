@@ -473,53 +473,52 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     return ValueListenableBuilder(
       valueListenable: _extent._currentExtent,
       builder: (context, value, _) {
-        return Align(
-          alignment: Alignment.bottomCenter,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: widget.maxWidth ?? double.infinity),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                _availableHeight = constraints.biggest.height;
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            _availableHeight = constraints.biggest.height;
 
-                // Wrap the scrollView in a ScrollConfiguration to
-                // remove the default overscroll effect.
-                Widget scrollView = ScrollConfiguration(
-                  behavior: ScrollBehavior(),
-                  child: SingleChildScrollView(
-                    controller: _controller,
-                    physics: _scrollSpec.physics ?? ScrollPhysics(),
-                    child: Container(
-                      key: _childKey,
-                      child: _child,
+            // Wrap the scrollView in a ScrollConfiguration to
+            // remove the default overscroll effect.
+            Widget scrollView = ScrollConfiguration(
+              behavior: ScrollBehavior(),
+              child: SingleChildScrollView(
+                controller: _controller,
+                physics: _scrollSpec.physics ?? ScrollPhysics(),
+                child: Container(
+                  key: _childKey,
+                  child: _child,
+                ),
+              ),
+            );
+
+            // Add the overscroll if required again if required
+            if (_scrollSpec.overscroll) {
+              scrollView = GlowingOverscrollIndicator(
+                axisDirection: AxisDirection.down,
+                color: _scrollSpec.overscrollColor ?? theme.accentColor,
+                child: scrollView,
+              );
+            }
+
+            return Stack(
+              children: <Widget>[
+                if (widget.closeOnBackdropTap || (widget.backdropColor != null && widget.backdropColor.opacity != 0))
+                  GestureDetector(
+                    onTap: widget.closeOnBackdropTap ? () => _pop(0.0) : null,
+                    child: Opacity(
+                      opacity: _currentExtent != 0 ? (_currentExtent / _minExtent).clamp(0.0, 1.0) : 0.0,
+                      child: Container(
+                        width: double.infinity,
+                        height: double.infinity,
+                        color: widget.backdropColor,
+                      ),
                     ),
                   ),
-                );
-
-                // Add the overscroll if required again if required
-                if (_scrollSpec.overscroll) {
-                  scrollView = GlowingOverscrollIndicator(
-                    axisDirection: AxisDirection.down,
-                    color: _scrollSpec.overscrollColor ?? theme.accentColor,
-                    child: scrollView,
-                  );
-                }
-
-                return Stack(
-                  children: <Widget>[
-                    if (widget.closeOnBackdropTap ||
-                        (widget.backdropColor != null && widget.backdropColor.opacity != 0))
-                      GestureDetector(
-                        onTap: widget.closeOnBackdropTap ? () => _pop(0.0) : null,
-                        child: Opacity(
-                          opacity: _currentExtent != 0 ? (_currentExtent / _minExtent).clamp(0.0, 1.0) : 0.0,
-                          child: Container(
-                            width: double.infinity,
-                            height: double.infinity,
-                            color: widget.backdropColor,
-                          ),
-                        ),
-                      ),
-                    SizedBox.expand(
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: widget.maxWidth ?? double.infinity),
+                    child: SizedBox.expand(
                       child: FractionallySizedBox(
                         // Hide the box until it is laid out and measured.
                         heightFactor:
@@ -565,11 +564,11 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                         ),
                       ),
                     ),
-                  ],
-                );
-              },
-            ),
-          ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -799,6 +798,8 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
   double get maxExtent => extent.maxExtent;
   double get minExtent => extent.minExtent;
 
+  List<AnimationController> _controllers = [];
+
   @override
   bool applyContentDimensions(double minScrollExtent, double maxScrollExtent) {
     // We need to provide some extra extent if we haven't yet reached the max or
@@ -923,32 +924,34 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
       vsync: context.vsync,
     );
 
+    _controllers.add(ballisticController);
+
     double lastDelta = 0;
     void _tick() {
       final double delta = ballisticController.value - lastDelta;
       lastDelta = ballisticController.value;
       extent.addPixelDelta(delta);
-      if ((velocity > 0 && extent.isAtMax) || (!fromBottomSheet && (velocity < 0 && extent.isAtMin))) {
+      if ((velocity > 0 && extent.isAtMax) ||
+          (velocity < 0 && (!fromBottomSheet ? extent.isAtMin : currentExtent <= 0.0))) {
         // Make sure we pass along enough velocity to keep scrolling - otherwise
         // we just "bounce" off the top making it look like the list doesn't
         // have more to scroll.
         velocity = ballisticController.velocity + (physics.tolerance.velocity * ballisticController.velocity.sign);
         super.goBallistic(velocity);
         ballisticController.stop();
+
+        // Pop the route when reaching 0.0 extent.
+        if (fromBottomSheet && currentExtent <= 0.0) {
+          onPop(0.0);
+        }
       }
     }
 
     ballisticController.addListener(_tick);
-    final animation = ballisticController.animateWith(simulation)
-      ..whenCompleteOrCancel(
-        ballisticController.dispose,
-      );
+    await ballisticController.animateWith(simulation);
+    ballisticController.dispose();
 
-    // Await the animation. In bottom sheets we need to decide whether to pop the route
-    // when the animation ends and the sheet is below its min extent
-    await animation;
-
-    if (fromBottomSheet && currentExtent < minExtent) {
+    if (fromBottomSheet && currentExtent < minExtent && currentExtent > 0.0) {
       goSnapped(0.0);
     }
   }
