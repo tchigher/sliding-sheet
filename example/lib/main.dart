@@ -41,18 +41,18 @@ class _MyAppState extends State<MyApp> {
     headerKey = GlobalKey();
     footerKey = GlobalKey();
     controller = SheetController();
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+  void _measure() {
+    postFrame(() {
       final RenderBox header = headerKey?.currentContext?.findRenderObject();
       final RenderBox footer = footerKey?.currentContext?.findRenderObject();
 
       if (header != null && footer != null) {
         headerHeight = header.size.height;
         footerHeight = footer.size.height;
-
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          setState(() {});
-        });
+      } else {
+        setState(() {});
       }
     });
   }
@@ -96,6 +96,7 @@ class _MyAppState extends State<MyApp> {
   Widget buildSheet() {
     return LayoutBuilder(
       builder: (context, constraints) {
+        _measure();
         final height = constraints.biggest.height;
 
         return SlidingSheet(
@@ -111,10 +112,10 @@ class _MyAppState extends State<MyApp> {
           ),
           snapSpec: SnapSpec(
             snap: true,
-            positioning: SnapPositioning.pixelOffset,
+            positioning: SnapPositioning.relativeToAvailableSpace,
             snappings: [
-              headerHeight > 0 ? minHeight : 145,
-              height * 0.7,
+              SnapSpec.headerSnap,
+              0.7,
               double.infinity,
             ],
             onSnap: (state, snap) {
