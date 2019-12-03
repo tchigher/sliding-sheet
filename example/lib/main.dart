@@ -87,7 +87,6 @@ class _MyAppState extends State<MyApp> {
       maxWidth: 500,
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top * interval(.7, 1.0, progress),
-        bottom: 16,
       ),
       cornerRadius: 16 * (1 - interval(0.7, 1.0, progress)),
       border: Border.all(
@@ -98,12 +97,12 @@ class _MyAppState extends State<MyApp> {
         snap: true,
         positioning: SnapPositioning.relativeToAvailableSpace,
         snappings: [
-          0.4,
-          0.7,
-          double.infinity,
+          SnapSpec.headerFooterSnap,
+          0.8,
+          SnapSpec.expanded,
         ],
         onSnap: (state, snap) {
-          // print('Snapped to $snap');
+          print('Snapped to $snap');
         },
       ),
       scrollSpec: ScrollSpec.bouncingScroll(),
@@ -111,8 +110,8 @@ class _MyAppState extends State<MyApp> {
         this.state = state;
         setState(() {});
       },
-      // headerBuilder: buildHeader,
-      // footerBuilder: buildFooter,
+      headerBuilder: buildHeader,
+      footerBuilder: buildFooter,
       builder: buildChild,
     );
   }
@@ -460,7 +459,7 @@ class _MyAppState extends State<MyApp> {
           listener: (state) {
             progress = state.progress;
             multiple = 1 - interval(0.7, 1.0, progress);
-            if (state.extent >= 0.7 || (state.isExpanded && state.scrollOffset < 8.0)) {
+            if (progress >= 0.6 || (state.isExpanded && state.scrollOffset < 8.0)) {
               dialogController.rebuild();
             }
           },
@@ -517,7 +516,7 @@ class _MyAppState extends State<MyApp> {
           },
           builder: (context, state) {
             return Container(
-              height: 1200,
+              height: 1000,
               color: Colors.white,
               child: Center(
                 child: Text(

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -61,27 +62,46 @@ class SnapSpec {
         assert(snappings != null),
         assert(positioning != null);
 
-  // The snap extent that makes header and footer fully visible with account for vertical padding.
+  // The snap extent that makes header and footer fully visible without account for vertical padding on the [SlidingSheet].
   static const double headerFooterSnap = -1;
-  // The snap extent that makes the header fully visible with account for top padding.
+  // The snap extent that makes the header fully visible without account for top padding on the [SlidingSheet].
   static const double headerSnap = -2;
-  // The snap extent that makes the footer fully visible with account for bottom padding.
+  // The snap extent that makes the footer fully visible without account for bottom padding on the [SlidingSheet].
   static const double footerSnap = -3;
-  // The maximum snap extent that the available space allows.
-  static const double fullHeightSnap = double.infinity;
+  // The snap extent that expands the whole [SlidingSheet]
+  static const double expanded = double.infinity;
   static _isSnap(double snap) =>
-      snap == double.infinity || snap == headerFooterSnap || snap == headerSnap || snap == footerSnap;
+      snap == expanded || snap == headerFooterSnap || snap == headerSnap || snap == footerSnap;
 
   SnapSpec copyWith({
     bool snap,
     List<double> snappings,
-    SnapPositioning position,
+    SnapPositioning positioning,
+    void Function(SheetState, double snap) onSnap,
   }) {
     return SnapSpec(
       snap: snap ?? this.snap,
       snappings: snappings ?? this.snappings,
-      positioning: position ?? this.positioning,
+      positioning: positioning ?? this.positioning,
+      onSnap: onSnap ?? this.onSnap,
     );
+  }
+
+  @override
+  String toString() {
+    return 'SnapSpec snap: $snap, snappings: $snappings, positioning: $positioning, onSnap: $onSnap';
+  }
+
+  @override
+  bool operator ==(Object o) {
+    if (identical(this, o)) return true;
+
+    return o is SnapSpec && o.snap == snap && listEquals(o.snappings, snappings) && o.positioning == positioning;
+  }
+
+  @override
+  int get hashCode {
+    return snap.hashCode ^ snappings.hashCode ^ positioning.hashCode;
   }
 }
 
@@ -239,17 +259,15 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   // Whether the sheet has drawn its first frame.
   bool get _isLaidOut => _availableHeight > 0 && _childHeight > 0;
   // The total height of all sheet components.
-  double get _sheetHeight => _childHeight + _headerHeight + _footerHeight;
+  double get _sheetHeight => _childHeight + _headerHeight + _footerHeight + padding.vertical + _borderHeight;
   // The maxiumum height that this sheet will cover.
   double get _maxHeight => math.min(_sheetHeight, _availableHeight);
-  double get _borderHeight => (widget.border?.top?.width ?? 0) * 2;
+  bool get _isCoveringFullExtent => _sheetHeight >= _availableHeight;
 
   double get _currentExtent => _extent?.currentExtent ?? _minExtent;
   set _currentExtent(double value) => _extent?.currentExtent = value;
-  double get _headerExtent =>
-      _isLaidOut ? (_headerHeight + (_borderHeight / 2) + (widget.padding?.top ?? 0)) / _availableHeight : 0.0;
-  double get _footerExtent =>
-      _isLaidOut ? (_footerHeight + (_borderHeight / 2) + (widget.padding?.bottom ?? 0)) / _availableHeight : 0.0;
+  double get _headerExtent => _isLaidOut ? (_headerHeight + (_borderHeight / 2)) / _availableHeight : 0.0;
+  double get _footerExtent => _isLaidOut ? (_footerHeight + (_borderHeight / 2)) / _availableHeight : 0.0;
   double get _headerFooterExtent => _headerExtent + _footerExtent;
   double get _minExtent => _snappings[_fromBottomSheet ? 1 : 0].clamp(0.0, 1.0);
   double get _maxExtent => _snappings.last.clamp(0.0, 1.0);
@@ -259,6 +277,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   SnapSpec get _snapSpec => widget.snapSpec;
   SnapPositioning get _snapPositioning => _snapSpec.positioning;
   List<double> get _snappings => _snapSpec.snappings.map(_normalizeSnap).toList()..sort();
+
+  EdgeInsets get padding => widget.padding ?? const EdgeInsets.all(0);
+  double get _borderHeight => (widget.border?.top?.width ?? 0) * 2;
 
   // The current state of this sheet.
   SheetState get _state => SheetState(
@@ -348,9 +369,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     _assignSheetController();
 
     _extent.snappings = _snappings;
-    // Animate to the next snap if the snappings changed and the sheet
+    // Animate to the next snap if the SnapSpec changed and the sheet
     // is currently not interacted with.
-    if (oldWidget.snapSpec.snappings != widget.snapSpec.snappings) {
+    if (oldWidget.snapSpec != _snapSpec) {
       if (!_controller.inInteraction) {
         _controller.imitateFling();
       }
@@ -499,9 +520,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
   void _callBuilders() {
     if (context != null) {
-      if (widget.headerBuilder != null) _header = _delegateInteractions(widget.headerBuilder(context, _state));
-      if (widget.footerBuilder != null) _footer = _delegateInteractions(widget.footerBuilder(context, _state));
-      if (widget.builder != null) _child = widget.builder(context, _state);
+      _header = _delegateInteractions(widget.headerBuilder?.call(context, _state));
+      _footer = _delegateInteractions(widget.footerBuilder?.call(context, _state));
+      _child = widget.builder?.call(context, _state);
     }
   }
 
@@ -521,6 +542,10 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
           child: SingleChildScrollView(
             controller: _controller,
             physics: _scrollSpec.physics ?? ScrollPhysics(),
+            padding: EdgeInsets.only(
+              top: _header == null ? padding.top : 0.0,
+              bottom: _footer == null ? padding.bottom : 0.0,
+            ),
             child: Container(
               key: _childKey,
               child: _child,
@@ -582,7 +607,14 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                           color: widget.color ?? Colors.white,
                           border: widget.border,
                           margin: widget.margin,
-                          padding: widget.padding,
+                          // Add the vertical padding to the scrollView when header or footer is
+                          // not null in order to not clip the scrolling child.
+                          padding: EdgeInsets.fromLTRB(
+                            padding.left,
+                            _header != null ? padding.top : 0.0,
+                            padding.left,
+                            _footer != null ? padding.bottom : 0.0,
+                          ),
                           elevation: widget.elevation,
                           shadowColor: widget.shadowColor,
                           customBorders: BorderRadius.vertical(
@@ -753,6 +785,8 @@ class _DragableScrollableSheetController extends ScrollController {
 
   _DraggableScrollableSheetScrollPosition _currentPosition;
 
+  AnimationController controller;
+
   TickerFuture snapToExtent(
     double snap,
     TickerProvider vsync, {
@@ -760,12 +794,14 @@ class _DragableScrollableSheetController extends ScrollController {
     Duration duration,
     bool clamp = true,
   }) {
+    _dispose();
+
     if (clamp) snap = snap.clamp(extent.minExtent, extent.maxExtent);
     final speedFactor = (math.max((currentExtent - snap).abs(), .25) / maxExtent) *
         (1 - ((velocity.abs() / 2000) * 0.3).clamp(.0, 0.3));
     duration = this.duration * speedFactor;
 
-    final controller = AnimationController(duration: duration, vsync: vsync);
+    controller = AnimationController(duration: duration, vsync: vsync);
     final tween = Tween(begin: extent.currentExtent, end: snap).animate(
       CurvedAnimation(parent: controller, curve: velocity.abs() > 300 ? Curves.easeOutCubic : Curves.ease),
     );
@@ -773,7 +809,7 @@ class _DragableScrollableSheetController extends ScrollController {
     animating = true;
     controller.addListener(() => this.extent.currentExtent = tween.value);
     return controller.forward()
-      ..whenCompleteOrCancel(() {
+      ..whenComplete(() {
         controller.dispose();
         animating = false;
 
@@ -791,7 +827,12 @@ class _DragableScrollableSheetController extends ScrollController {
   }
 
   void imitateFling([double velocity = 0.0]) {
-    velocity != 0 ? _currentPosition?.goBallistic(velocity) : _currentPosition?.didEndScroll();
+    if (velocity != 0.0) {
+      _currentPosition?.goBallistic(velocity);
+    } else {
+      inDrag = true;
+      _currentPosition?.didEndScroll();
+    }
   }
 
   @override
@@ -810,6 +851,19 @@ class _DragableScrollableSheetController extends ScrollController {
     );
 
     return _currentPosition;
+  }
+
+  void _dispose() {
+    if (animating) {
+      controller?.stop();
+      controller?.dispose();
+    }
+  }
+
+  @override
+  void dispose() {
+    _dispose();
+    super.dispose();
   }
 }
 
@@ -842,17 +896,18 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
   bool get inDrag => scrollController.inDrag;
   set inDrag(bool value) => scrollController.inDrag = value;
 
-  bool get fromBottomSheet => extent.isFromBottomSheet;
   SnapSpec get snapBehavior => scrollController.snapSpec;
-  bool get snap => snapBehavior.snap;
+  ScrollSpec get scrollSpec => scrollController.sheet._scrollSpec;
   List<double> get snappings => extent.snappings;
+  bool get fromBottomSheet => extent.isFromBottomSheet;
+  bool get snap => snapBehavior.snap;
   bool get shouldScroll => pixels > 0.0 && extent.isAtMax;
+  bool get isCoveringFullExtent => scrollController.sheet._isCoveringFullExtent;
   double get availableHeight => extent.targetHeight;
   double get currentExtent => extent.currentExtent;
   double get maxExtent => extent.maxExtent;
   double get minExtent => extent.minExtent;
-
-  List<AnimationController> _controllers = [];
+  double get offset => scrollController.offset;
 
   @override
   bool applyContentDimensions(double minScrollExtent, double maxScrollExtent) {
@@ -875,7 +930,7 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
             (extent.isAtMin && (delta < 0 || fromBottomSheet)) ||
             (extent.isAtMax && delta > 0))) {
       extent.addPixelDelta(-delta);
-    } else {
+    } else if (!extent.isAtMin) {
       super.applyUserOffset(delta);
     }
   }
@@ -884,8 +939,9 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
   void didEndScroll() {
     super.didEndScroll();
 
-    if ((snap && !extent.isAtMax && !extent.isAtMin && !shouldScroll) ||
-        (fromBottomSheet && currentExtent < minExtent && inDrag)) {
+    if (inDrag &&
+        ((snap && !extent.isAtMax && !extent.isAtMin && !shouldScroll) ||
+            (fromBottomSheet && currentExtent < minExtent))) {
       goSnapped(0.0);
       inDrag = false;
     }
@@ -895,6 +951,13 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
   void goBallistic(double velocity) {
     up = !velocity.isNegative;
     lastVelocity = velocity;
+
+    // There is an issue with the bouncing scroll physics that when the sheet doesn't cover the full extent
+    // the bounce back of the simulation would be so fast to close the sheet again, although it was swiped
+    // upwards. Here we soften the bounce back to prevent that from happening.
+    if (velocity < 0 && !inDrag && (scrollSpec.physics is BouncingScrollPhysics) && !isCoveringFullExtent) {
+      velocity /= 8;
+    }
 
     if (velocity != 0) inDrag = false;
 
@@ -977,8 +1040,6 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
       debugLabel: '$runtimeType',
       vsync: context.vsync,
     );
-
-    _controllers.add(ballisticController);
 
     double lastDelta = 0;
     void _tick() {

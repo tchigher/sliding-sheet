@@ -140,7 +140,14 @@ onSnap | A callback function that gets invoked when the `SlidingSheet` snaps to 
   <img width="205px" alt="SnapPositioning.pixelOffset with a snap of 100" src="https://raw.githubusercontent.com/BendixMa/sliding-sheet/master/assets/example_snapping_pixelOffset.png"/>
 </p>
 
+There are also some prebuild snaps you can facilitate to snap for example to headers or footers as shown in the example.
 
+ Snap | Description 
+--- | ---
+SnapSpec.headerFooterSnap | The snap extent that makes header and footer fully visible without account for vertical padding on the `SlidingSheet`.
+SnapSpec.headerSnap | The snap extent that makes the header fully visible without account for top padding on the `SlidingSheet`.
+SnapSpec.footerSnap | The snap extent that makes the footer fully visible without account for bottom padding on the `SlidingSheet`.
+SnapSpec.expanded | The snap extent that expands the whole `SlidingSheet`.
 
 ### SheetController
 
