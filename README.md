@@ -13,7 +13,7 @@ Click <a href="https://github.com/BendixMa/sliding-sheet/blob/master/example/lib
 Add it to your `pubspec.yaml` file:
 ```yaml
 dependencies:
-  sliding_sheet: ^0.2.3
+  sliding_sheet: ^0.2.4
 ```
 Install packages from the command line
 ```
@@ -139,6 +139,8 @@ onSnap | A callback function that gets invoked when the `SlidingSheet` snaps to 
   <img width="205px" alt="SnapPositioning.relativeToSheetHeight with a snap of 0.5" src="https://raw.githubusercontent.com/BendixMa/sliding-sheet/master/assets/example_snapping_relativeToSheetHeight.png"/>
   <img width="205px" alt="SnapPositioning.pixelOffset with a snap of 100" src="https://raw.githubusercontent.com/BendixMa/sliding-sheet/master/assets/example_snapping_pixelOffset.png"/>
 </p>
+
+
 
 ### SheetController
 

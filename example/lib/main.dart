@@ -16,8 +16,6 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   SheetController controller;
-  GlobalKey headerKey;
-  GlobalKey footerKey;
 
   double headerHeight = 0;
   double footerHeight = 0;
@@ -38,24 +36,10 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    headerKey = GlobalKey();
-    footerKey = GlobalKey();
     controller = SheetController();
   }
 
-  void _measure() {
-    postFrame(() {
-      final RenderBox header = headerKey?.currentContext?.findRenderObject();
-      final RenderBox footer = footerKey?.currentContext?.findRenderObject();
-
-      if (header != null && footer != null) {
-        headerHeight = header.size.height;
-        footerHeight = footer.size.height;
-      } else {
-        setState(() {});
-      }
-    });
-  }
+  BuildContext context;
 
   @override
   Widget build(BuildContext context) {
@@ -64,6 +48,8 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       home: Builder(
         builder: (context) {
+          this.context = context;
+
           return Scaffold(
             body: Stack(
               children: <Widget>[
@@ -94,50 +80,45 @@ class _MyAppState extends State<MyApp> {
   }
 
   Widget buildSheet() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        _measure();
-        final height = constraints.biggest.height;
-
-        return SlidingSheet(
-          controller: controller,
-          color: Colors.white,
-          elevation: 16,
-          maxWidth: 500,
-          padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top * interval(.7, 1.0, progress)),
-          cornerRadius: 16 * (1 - interval(0.7, 1.0, progress)),
-          border: Border.all(
-            color: Colors.grey.shade300,
-            width: 3,
-          ),
-          snapSpec: SnapSpec(
-            snap: true,
-            positioning: SnapPositioning.relativeToAvailableSpace,
-            snappings: [
-              SnapSpec.headerSnap,
-              0.7,
-              double.infinity,
-            ],
-            onSnap: (state, snap) {
-              // print('Snapped to $snap');
-            },
-          ),
-          scrollSpec: ScrollSpec.bouncingScroll(),
-          listener: (state) {
-            this.state = state;
-            setState(() {});
-          },
-          headerBuilder: buildHeader,
-          footerBuilder: buildFooter,
-          builder: buildChild,
-        );
+    return SlidingSheet(
+      controller: controller,
+      color: Colors.white,
+      elevation: 16,
+      maxWidth: 500,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top * interval(.7, 1.0, progress),
+        bottom: 16,
+      ),
+      cornerRadius: 16 * (1 - interval(0.7, 1.0, progress)),
+      border: Border.all(
+        color: Colors.grey.shade300,
+        width: 3,
+      ),
+      snapSpec: SnapSpec(
+        snap: true,
+        positioning: SnapPositioning.relativeToAvailableSpace,
+        snappings: [
+          0.4,
+          0.7,
+          double.infinity,
+        ],
+        onSnap: (state, snap) {
+          // print('Snapped to $snap');
+        },
+      ),
+      scrollSpec: ScrollSpec.bouncingScroll(),
+      listener: (state) {
+        this.state = state;
+        setState(() {});
       },
+      // headerBuilder: buildHeader,
+      // footerBuilder: buildFooter,
+      builder: buildChild,
     );
   }
 
   Widget buildHeader(BuildContext context, SheetState state) {
     return CustomContainer(
-      key: headerKey,
       animate: true,
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -225,7 +206,6 @@ class _MyAppState extends State<MyApp> {
     }
 
     return CustomContainer(
-      key: footerKey,
       animate: true,
       elevation: !isCollapsed && !state.isAtBottom ? 4 : 0,
       shadowDirection: ShadowDirection.top,

@@ -61,15 +61,16 @@ class SnapSpec {
         assert(snappings != null),
         assert(positioning != null);
 
+  // The snap extent that makes header and footer fully visible with account for vertical padding.
   static const double headerFooterSnap = -1;
+  // The snap extent that makes the header fully visible with account for top padding.
   static const double headerSnap = -2;
+  // The snap extent that makes the footer fully visible with account for bottom padding.
   static const double footerSnap = -3;
+  // The maximum snap extent that the available space allows.
+  static const double fullHeightSnap = double.infinity;
   static _isSnap(double snap) =>
-      snap == double.infinity ||
-      snap == double.negativeInfinity ||
-      snap == headerFooterSnap ||
-      snap == headerSnap ||
-      snap == footerSnap;
+      snap == double.infinity || snap == headerFooterSnap || snap == headerSnap || snap == footerSnap;
 
   SnapSpec copyWith({
     bool snap,
@@ -239,11 +240,16 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   bool get _isLaidOut => _availableHeight > 0 && _childHeight > 0;
   // The total height of all sheet components.
   double get _sheetHeight => _childHeight + _headerHeight + _footerHeight;
+  // The maxiumum height that this sheet will cover.
+  double get _maxHeight => math.min(_sheetHeight, _availableHeight);
   double get _borderHeight => (widget.border?.top?.width ?? 0) * 2;
 
   double get _currentExtent => _extent?.currentExtent ?? _minExtent;
-  double get _headerExtent => _isLaidOut ? (_headerHeight + (_borderHeight / 2)) / _availableHeight : 0.0;
-  double get _footerExtent => _isLaidOut ? (_footerHeight + (_borderHeight / 2)) / _availableHeight : 0.0;
+  set _currentExtent(double value) => _extent?.currentExtent = value;
+  double get _headerExtent =>
+      _isLaidOut ? (_headerHeight + (_borderHeight / 2) + (widget.padding?.top ?? 0)) / _availableHeight : 0.0;
+  double get _footerExtent =>
+      _isLaidOut ? (_footerHeight + (_borderHeight / 2) + (widget.padding?.bottom ?? 0)) / _availableHeight : 0.0;
   double get _headerFooterExtent => _headerExtent + _footerExtent;
   double get _minExtent => _snappings[_fromBottomSheet ? 1 : 0].clamp(0.0, 1.0);
   double get _maxExtent => _snappings.last.clamp(0.0, 1.0);
@@ -306,7 +312,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
           },
         );
       } else {
-        _extent.currentExtent = _minExtent;
+        setState(() => _currentExtent = _minExtent);
       }
     });
   }
@@ -363,7 +369,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     }
 
     if (_availableHeight > 0) {
-      final maxPossibleExtent = _isLaidOut ? _sheetHeight / _availableHeight : 1.0;
+      final maxPossibleExtent = _isLaidOut ? (_sheetHeight / _availableHeight).clamp(0.0, 1.0) : 1.0;
       double extent = snap;
       switch (_snapPositioning) {
         case SnapPositioning.relativeToAvailableSpace:
@@ -371,7 +377,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
           break;
         case SnapPositioning.relativeToSheetHeight:
           isValidRelativeSnap();
-          extent = (snap * math.min(_sheetHeight, _availableHeight)) / _availableHeight;
+          extent = (snap * _maxHeight) / _availableHeight;
           break;
         case SnapPositioning.pixelOffset:
           extent = snap / _availableHeight;
@@ -381,12 +387,15 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       }
 
       if (snap == SnapSpec.headerSnap) {
+        assert(_header != null, 'There is no available header to snap to!');
         extent = _headerExtent;
       } else if (snap == SnapSpec.footerSnap) {
+        assert(_footer != null, 'There is no available footer to snap to!');
         extent = _footerExtent;
       } else if (snap == SnapSpec.headerFooterSnap) {
+        assert(_header != null || _footer != null, 'There is neither a header nor a footer to snap to!');
         extent = _headerFooterExtent;
-      } else if (snap == double.infinity || snap == double.negativeInfinity) {
+      } else if (snap == double.infinity) {
         extent = maxPossibleExtent;
       }
 
@@ -528,6 +537,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
           );
         }
 
+        // Hide the sheet for the first frame until the extents are
+        // correctly measured.
         return Visibility(
           key: _parentKey,
           visible: _isLaidOut,
@@ -1120,7 +1131,7 @@ class SlidingSheetDialog {
   final EdgeInsets margin;
   final Border border;
   final double cornerRadius;
-  final bool dismissableBackground;
+  final bool dismissOnBackdropTap;
   final SheetBuilder builder;
   final SheetBuilder headerBuilder;
   final SheetBuilder footerBuilder;
@@ -1139,7 +1150,7 @@ class SlidingSheetDialog {
     this.margin,
     this.border,
     this.cornerRadius = 0.0,
-    this.dismissableBackground = true,
+    this.dismissOnBackdropTap = true,
     @required this.builder,
     this.headerBuilder,
     this.footerBuilder,
@@ -1198,7 +1209,7 @@ Future<T> showSlidingBottomSheet<T>(
               margin: dialog.margin,
               border: dialog.border,
               cornerRadius: dialog.cornerRadius,
-              closeOnBackdropTap: dialog.dismissableBackground,
+              closeOnBackdropTap: dialog.dismissOnBackdropTap,
               builder: dialog.builder,
               headerBuilder: dialog.headerBuilder,
               footerBuilder: dialog.footerBuilder,
