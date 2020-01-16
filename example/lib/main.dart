@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:sliding_sheet/sliding_sheet.dart';
-
 import 'package:example/util/util.dart';
+import 'package:flutter/material.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+
+import 'package:sliding_sheet/sliding_sheet.dart';
 
 void main() => runApp(MyApp());
 
@@ -15,20 +15,17 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  SheetController controller;
-
-  double headerHeight = 0;
-  double footerHeight = 0;
-  double get minHeight => headerHeight + footerHeight + 6;
-
-  final textStyle = TextStyle(
+  static const mapsBlue = Color(0xFF4185F3);
+  static const textStyle = TextStyle(
     color: Colors.black,
     fontFamily: 'sans-serif-medium',
     fontSize: 15,
   );
 
-  final mapsBlue = Color(0xFF4185F3);
   SheetState state;
+  BuildContext context;
+  SheetController controller;
+
   bool get isExpanded => state?.isExpanded ?? false;
   bool get isCollapsed => state?.isCollapsed ?? true;
   double get progress => state?.progress ?? 0.0;
@@ -39,8 +36,6 @@ class _MyAppState extends State<MyApp> {
     controller = SheetController();
   }
 
-  BuildContext context;
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -50,28 +45,37 @@ class _MyAppState extends State<MyApp> {
         builder: (context) {
           this.context = context;
 
-          return Scaffold(
-            body: Stack(
-              children: <Widget>[
-                buildMap(),
-                Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + 16, 16, 0),
-                    child: FloatingActionButton(
-                      child: Icon(
-                        Icons.layers,
-                        color: mapsBlue,
+          return WillPopScope(
+            onWillPop: () async {
+              if (state?.isCollapsed == false) {
+                controller?.collapse();
+                return false;
+              }
+              return true;
+            },
+            child: Scaffold(
+              body: Stack(
+                children: <Widget>[
+                  buildMap(),
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + 16, 16, 0),
+                      child: FloatingActionButton(
+                        child: Icon(
+                          Icons.layers,
+                          color: mapsBlue,
+                        ),
+                        backgroundColor: Colors.white,
+                        onPressed: () async {
+                          await showBottomSheet(context);
+                        },
                       ),
-                      backgroundColor: Colors.white,
-                      onPressed: () async {
-                        await showBottomSheet(context);
-                      },
                     ),
                   ),
-                ),
-                buildSheet(),
-              ],
+                  buildSheet(),
+                ],
+              ),
             ),
           );
         },
@@ -514,7 +518,7 @@ class _MyAppState extends State<MyApp> {
               ),
             );
           },
-          builder: (context, state) {
+          /* builder: (context, state) {
             return Container(
               height: 1000,
               color: Colors.white,
@@ -522,6 +526,29 @@ class _MyAppState extends State<MyApp> {
                 child: Text(
                   'This is a bottom sheet dialog!',
                   style: textStyle,
+                ),
+              ),
+            );
+          }, */
+          footerBuilder: (context, state) {
+            return Container(
+              height: 56,
+              color: Colors.black,
+            );
+          },
+          builder: (context, state) {
+            return Container(
+              color: Colors.white,
+              child: Material(
+                child: ListView(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  children: [0, 1, 2, 3].map((i) {
+                    return Container(
+                      padding: const EdgeInsets.all(48),
+                      child: Text('Text $i'),
+                    );
+                  }).toList(),
                 ),
               ),
             );
