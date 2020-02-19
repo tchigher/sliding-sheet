@@ -454,7 +454,11 @@ class _MyAppState extends State<MyApp> {
           controller: dialogController,
           duration: const Duration(milliseconds: 900),
           snapSpec: const SnapSpec(
-            snappings: const [0.4, 0.7, 1.0],
+            snappings: const [
+              0.4,
+              0.7,
+              1.0,
+            ],
           ),
           scrollSpec: ScrollSpec.bouncingScroll(),
           maxWidth: 500,
@@ -488,7 +492,7 @@ class _MyAppState extends State<MyApp> {
                   children: <Widget>[
                     Text(
                       'Header',
-                      style: textTheme.headline,
+                      style: textTheme.headline5,
                     ),
                     Stack(
                       children: <Widget>[
