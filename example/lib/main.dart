@@ -100,7 +100,7 @@ class _MyAppState extends State<MyApp> {
       snapSpec: SnapSpec(
         snap: true,
         positioning: SnapPositioning.relativeToAvailableSpace,
-        snappings: [
+        snappings: const [
           SnapSpec.headerFooterSnap,
           0.8,
           SnapSpec.expanded,
@@ -452,8 +452,8 @@ class _MyAppState extends State<MyApp> {
       builder: (context) {
         return SlidingSheetDialog(
           controller: dialogController,
+          duration: const Duration(milliseconds: 900),
           snapSpec: const SnapSpec(
-            snap: false,
             snappings: const [0.4, 0.7, 1.0],
           ),
           scrollSpec: ScrollSpec.bouncingScroll(),
@@ -463,6 +463,7 @@ class _MyAppState extends State<MyApp> {
           listener: (state) {
             progress = state.progress;
             multiple = 1 - interval(0.7, 1.0, progress);
+
             if (progress >= 0.6 || (state.isExpanded && state.scrollOffset < 8.0)) {
               dialogController.rebuild();
             }
@@ -518,18 +519,6 @@ class _MyAppState extends State<MyApp> {
               ),
             );
           },
-          /* builder: (context, state) {
-            return Container(
-              height: 1000,
-              color: Colors.white,
-              child: Center(
-                child: Text(
-                  'This is a bottom sheet dialog!',
-                  style: textStyle,
-                ),
-              ),
-            );
-          }, */
           footerBuilder: (context, state) {
             return Container(
               height: 56,
@@ -542,11 +531,11 @@ class _MyAppState extends State<MyApp> {
               child: Material(
                 child: ListView(
                   shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  children: [0, 1, 2, 3].map((i) {
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: List.generate(10, (i) => i).map((i) {
                     return Container(
                       padding: const EdgeInsets.all(48),
-                      child: Text('Text $i'),
+                      child: Text('Item $i'),
                     );
                   }).toList(),
                 ),

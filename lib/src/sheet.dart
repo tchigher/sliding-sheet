@@ -73,6 +73,9 @@ class SnapSpec {
   static _isSnap(double snap) =>
       snap == expanded || snap == headerFooterSnap || snap == headerSnap || snap == footerSnap;
 
+  double get minSnap => snappings.first;
+  double get maxSnap => snappings.last;
+
   SnapSpec copyWith({
     bool snap,
     List<double> snappings,
@@ -89,7 +92,7 @@ class SnapSpec {
 
   @override
   String toString() {
-    return 'SnapSpec snap: $snap, snappings: $snappings, positioning: $positioning, onSnap: $onSnap';
+    return 'SnapSpec(snap: $snap, snappings: $snappings, positioning: $positioning, onSnap: $onSnap)';
   }
 
   @override
@@ -194,7 +197,7 @@ class SlidingSheet extends StatefulWidget {
   /// Usually set for large screens. By default the [SlidingSheet]
   /// expands to the total available width.
   final double maxWidth;
-  const SlidingSheet({
+  SlidingSheet({
     Key key,
     @required this.builder,
     this.duration = const Duration(milliseconds: 800),
@@ -218,6 +221,8 @@ class SlidingSheet extends StatefulWidget {
   })  : assert(duration != null),
         assert(builder != null),
         assert(snapSpec != null),
+        assert(snapSpec.snappings.length >= 2, 'There must be at least two snappings to snap in between.'),
+        assert(snapSpec.minSnap != snapSpec.maxSnap || route != null, 'The min and max snaps cannot be equal.'),
         super(key: key);
 
   @override
@@ -225,20 +230,20 @@ class SlidingSheet extends StatefulWidget {
 }
 
 class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMixin {
-  // The key of the scrolling child to determine its size.
   GlobalKey childKey;
-  // The key of the header to determine the ScrollView's top inset.
   GlobalKey headerKey;
-  // The key of the footer to determine the ScrollView's bottom inset.
   GlobalKey footerKey;
   GlobalKey parentKey;
-  // The child of the sheet that will be scrollable if the content is bigger
-  // than the available space.
+
   Widget child;
-  // A Widget that will be displayed at the top and that wont be scrolled.
   Widget header;
-  // A Widget that will be displayed at the bottom and that wont be scrolled.
   Widget footer;
+
+  double childHeight = 0;
+  double headerHeight = 0;
+  double footerHeight = 0;
+  double availableHeight = 0;
+
   // Whether a dismiss was already triggered by the sheet itself
   // and thus further route pops can be safely ignored.
   bool dismissUnderway = false;
@@ -247,15 +252,6 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   // The ScrollController for the sheet.
   _DragableScrollableSheetController controller;
 
-  // The height of the child of the sheet that scrolls if its bigger than
-  // the availableHeight.
-  double childHeight = 0;
-  // The height of the non scrolling header of the sheet.
-  double headerHeight = 0;
-  // The height of the non scrolling footer of the sheet.
-  double footerHeight = 0;
-  // The total available height that the sheet can expand to.
-  double availableHeight = 0;
   // Whether the sheet has drawn its first frame.
   bool get isLaidOut => availableHeight > 0 && childHeight > 0;
   // The total height of all sheet components.
@@ -543,7 +539,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     final theme = Theme.of(context);
     rebuild();
 
-    // StreamBuilder is used to update the sheet irrespective of its children.
+    // ValueListenableBuilder is used to update the sheet irrespective of its children.
     return ValueListenableBuilder(
       valueListenable: extent._currentExtent,
       builder: (context, value, _) {
@@ -749,7 +745,7 @@ class _SheetExtent {
   double get additionalMaxExtent => isAtMax ? 0.0 : 1.0;
 
   bool get isAtMax => currentExtent >= maxExtent;
-  bool get isAtMin => currentExtent <= minExtent;
+  bool get isAtMin => currentExtent <= minExtent && minExtent != maxExtent;
 
   void addPixelDelta(double pixelDelta) {
     if (targetHeight == 0 || availableHeight == 0) return;
@@ -1111,10 +1107,12 @@ class SheetState {
   SheetState(
     this._extent, {
     @required this.extent,
-    @required this.minExtent,
-    @required this.maxExtent,
     @required this.isLaidOut,
-  });
+    @required this.maxExtent,
+    @required double minExtent,
+    // On Bottomsheets it is possible for min and maxExtents to be the same (when you only set one snap).
+    // Thus we have to account for this and set the minExtent to be zero.
+  }) : minExtent = minExtent != maxExtent ? minExtent : 0.0;
 
   factory SheetState.inital() => SheetState(null, extent: 0.0, minExtent: 0.0, maxExtent: 1.0, isLaidOut: false);
 
