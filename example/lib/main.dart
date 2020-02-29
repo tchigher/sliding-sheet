@@ -453,12 +453,8 @@ class _MyAppState extends State<MyApp> {
       // The parentBuilder can be used to wrap the sheet inside a parent.
       // This can be for example a Theme or an AnnotatedRegion.
       parentBuilder: (context, sheet) {
-        return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: SystemUiOverlayStyle(
-            systemNavigationBarIconBrightness:
-                Theme.of(context).brightness == Brightness.dark ? Brightness.light : Brightness.dark,
-            systemNavigationBarColor: Theme.of(context).backgroundColor,
-          ),
+        return Theme(
+          data: ThemeData.dark(),
           child: sheet,
         );
       },
