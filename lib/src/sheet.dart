@@ -1194,50 +1194,18 @@ class SheetController {
   SheetState get state => _state;
 }
 
-class SlidingSheetDialog {
-  final SnapSpec snapSpec;
-  final Duration duration;
-  final Color color;
-  final Color backdropColor;
-  final Color shadowColor;
-  final double elevation;
-  final EdgeInsets padding;
-  final EdgeInsets margin;
-  final Border border;
-  final double cornerRadius;
-  final bool dismissOnBackdropTap;
-  final SheetBuilder builder;
-  final SheetBuilder headerBuilder;
-  final SheetBuilder footerBuilder;
-  final SheetListener listener;
-  final SheetController controller;
-  final ScrollSpec scrollSpec;
-  final double maxWidth;
-  SlidingSheetDialog({
-    this.snapSpec = const SnapSpec(),
-    this.duration = const Duration(milliseconds: 800),
-    this.color,
-    this.backdropColor = Colors.black54,
-    this.shadowColor,
-    this.elevation = 0.0,
-    this.padding,
-    this.margin,
-    this.border,
-    this.cornerRadius = 0.0,
-    this.dismissOnBackdropTap = true,
-    @required this.builder,
-    this.headerBuilder,
-    this.footerBuilder,
-    this.listener,
-    this.controller,
-    this.scrollSpec = const ScrollSpec(overscroll: false),
-    this.maxWidth = double.infinity,
-  });
-}
-
+/// Use this function to show the [SlidingSheet] as a bottom sheet dialog.
+///
+/// The [builder] parameter must not be null and is used to construct a [SlidingSheetDialog].
+///
+/// The [parentBuilder] can be used to wrap the sheet inside a parent, for example a
+/// [Theme] or [AnnotatedRegion].
+///
+/// [context] and [builder] must not be null.
 Future<T> showSlidingBottomSheet<T>(
   BuildContext context, {
-  @required SlidingSheetDialog Function(BuildContext) builder,
+  @required SlidingSheetDialog Function(BuildContext context) builder,
+  Widget Function(BuildContext context, SlidingSheet sheet) parentBuilder,
 }) {
   assert(builder != null);
   SlidingSheetDialog dialog = builder(context);
@@ -1267,7 +1235,7 @@ Future<T> showSlidingBottomSheet<T>(
               );
             }
 
-            return SlidingSheet(
+            final sheet = SlidingSheet(
               route: route,
               snapSpec: snapSpec,
               duration: dialog.duration,
@@ -1292,11 +1260,58 @@ Future<T> showSlidingBottomSheet<T>(
               scrollSpec: dialog.scrollSpec,
               maxWidth: dialog.maxWidth,
             );
+
+            if (parentBuilder != null) {
+              return parentBuilder(context, sheet);
+            }
+
+            return sheet;
           },
         );
       },
     ),
   );
+}
+
+class SlidingSheetDialog {
+  final SnapSpec snapSpec;
+  final Duration duration;
+  final Color color;
+  final Color backdropColor;
+  final Color shadowColor;
+  final double elevation;
+  final EdgeInsets padding;
+  final EdgeInsets margin;
+  final Border border;
+  final double cornerRadius;
+  final bool dismissOnBackdropTap;
+  final SheetBuilder builder;
+  final SheetBuilder headerBuilder;
+  final SheetBuilder footerBuilder;
+  final SheetListener listener;
+  final SheetController controller;
+  final ScrollSpec scrollSpec;
+  final double maxWidth;
+  const SlidingSheetDialog({
+    this.snapSpec = const SnapSpec(),
+    this.duration = const Duration(milliseconds: 800),
+    this.color,
+    this.backdropColor = Colors.black54,
+    this.shadowColor,
+    this.elevation = 0.0,
+    this.padding,
+    this.margin,
+    this.border,
+    this.cornerRadius = 0.0,
+    this.dismissOnBackdropTap = true,
+    @required this.builder,
+    this.headerBuilder,
+    this.footerBuilder,
+    this.listener,
+    this.controller,
+    this.scrollSpec = const ScrollSpec(overscroll: false),
+    this.maxWidth = double.infinity,
+  });
 }
 
 /// A custom [Container] for a [SlidingSheet].

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:example/util/util.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 import 'package:sliding_sheet/sliding_sheet.dart';
@@ -449,6 +450,20 @@ class _MyAppState extends State<MyApp> {
 
     await showSlidingBottomSheet(
       context,
+      // The parentBuilder can be used to wrap the sheet inside a parent.
+      // This can be for example a Theme or an AnnotatedRegion.
+      parentBuilder: (context, sheet) {
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle(
+            systemNavigationBarIconBrightness:
+                Theme.of(context).brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+            systemNavigationBarColor: Theme.of(context).backgroundColor,
+          ),
+          child: sheet,
+        );
+      },
+      // The builder to build the dialog. Calling rebuilder on the dialogController
+      // will call the builder, allowing react to state changes while the sheet is shown.
       builder: (context) {
         return SlidingSheetDialog(
           controller: dialogController,
