@@ -454,7 +454,7 @@ class _MyAppState extends State<MyApp> {
       // This can be for example a Theme or an AnnotatedRegion.
       parentBuilder: (context, sheet) {
         return Theme(
-          data: ThemeData.dark(),
+          data: ThemeData.light(),
           child: sheet,
         );
       },
