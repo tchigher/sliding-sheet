@@ -188,7 +188,7 @@ class SlidingSheet extends StatefulWidget {
 
   /// The route of the sheet when used in a bottom sheet dialog. This parameter
   /// is assigned internally and should not be explicitly assigned.
-  final _TransparentRoute route;
+  final _SlidingSheetRoute route;
 
   /// The [ScrollSpec] of the containing ScrollView.
   final ScrollSpec scrollSpec;
@@ -1194,28 +1194,31 @@ class SheetController {
   SheetState get state => _state;
 }
 
-/// Use this function to show the [SlidingSheet] as a bottom sheet dialog.
+/// Shows a [SlidingSheet] as a material design bottom sheet.
 ///
-/// The [builder] parameter must not be null and is used to construct a [SlidingSheetDialog].
+/// The `builder` parameter must not be null and is used to construct a [SlidingSheetDialog].
 ///
-/// The [parentBuilder] can be used to wrap the sheet inside a parent, for example a
+/// The `parentBuilder` can be used to wrap the sheet inside a parent, for example a
 /// [Theme] or [AnnotatedRegion].
-///
-/// [context] and [builder] must not be null.
 Future<T> showSlidingBottomSheet<T>(
   BuildContext context, {
   @required SlidingSheetDialog Function(BuildContext context) builder,
   Widget Function(BuildContext context, SlidingSheet sheet) parentBuilder,
+  bool useRootNavigator = false,
 }) {
   assert(builder != null);
+  assert(useRootNavigator != null);
+
   SlidingSheetDialog dialog = builder(context);
 
-  ValueNotifier<bool> rebuilder = ValueNotifier(false);
-
   final theme = Theme.of(context);
-  return Navigator.push(
+  final ValueNotifier<bool> rebuilder = ValueNotifier(false);
+
+  return Navigator.of(
     context,
-    _TransparentRoute(
+    rootNavigator: useRootNavigator,
+  ).push(
+    _SlidingSheetRoute(
       duration: dialog.duration,
       builder: (context, animation, route) {
         return ValueListenableBuilder(
@@ -1376,10 +1379,10 @@ class _SheetContainer extends StatelessWidget {
 }
 
 /// A transparent route for a bottom sheet dialog.
-class _TransparentRoute<T> extends PageRoute<T> {
-  final Widget Function(BuildContext, Animation<double>, _TransparentRoute<T>) builder;
+class _SlidingSheetRoute<T> extends PageRoute<T> {
+  final Widget Function(BuildContext, Animation<double>, _SlidingSheetRoute<T>) builder;
   final Duration duration;
-  _TransparentRoute({
+  _SlidingSheetRoute({
     @required this.builder,
     @required this.duration,
     RouteSettings settings,

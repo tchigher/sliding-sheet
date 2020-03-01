@@ -13,7 +13,7 @@ Click <a href="https://github.com/BendixMa/sliding-sheet/blob/master/example/lib
 Add it to your `pubspec.yaml` file:
 ```yaml
 dependencies:
-  sliding_sheet: ^0.2.7
+  sliding_sheet: ^0.2.8
 ```
 Install packages from the command line
 ```
@@ -236,3 +236,7 @@ The children of a `SlidingSheet` are not allowed to have an inifinite (unbounded
 To improve performace, the children of a `SlidingSheet` are not rebuild when it slides or gets scrolled. You can however pass a callback function to the `listener` parameter of a `SlidingSheet`, that gets called with the current `SheetState` whenever the `SlidingSheet` slides or gets scrolled. You can then rebuild your UI by calling `setState(() {})`, `(instance of SheetController).rebuild()` or by a different state management solution to rebuild the sheet. The example for instance decreases the corner radius of the `SlidingSheet` as it gets dragged to the top and increases the headers top padding by the status bar height. When using the `SlidingSheet` as a `bottomSheetDialog` you can also use `(instance of SheetController).rebuild()` to rebuild the sheet.
 
 <img width="205px" alt="Example on how to reflect changes in the SlidingSheet" src="https://raw.githubusercontent.com/BendixMa/sliding-sheet/master/assets/example_reflecting_changes.gif"/>
+
+### Contribution
+
+If you like this package, consider giving it a star on [GitHub](https://github.com/BendixMa/sliding-sheet) and a like on [pub.dev](https://pub.dev/packages/sliding_sheet).
