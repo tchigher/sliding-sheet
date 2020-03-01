@@ -8,9 +8,9 @@ import 'package:flutter/rendering.dart';
 
 import 'util.dart';
 
-typedef SheetBuilder = Widget Function(BuildContext, SheetState);
+typedef SheetBuilder = Widget Function(BuildContext context, SheetState state);
 
-typedef SheetListener = void Function(SheetState);
+typedef SheetListener = void Function(SheetState state);
 
 /// How the snaps will be positioned.
 enum SnapPositioning {
