@@ -164,6 +164,9 @@ class SlidingSheet extends StatefulWidget {
   /// The radius of the corners of this sheet.
   final double cornerRadius;
 
+  /// The radius of the corners of this sheet when at fullscreen.
+  final double cornerRadiusOnFullscreen;
+
   /// If true, will collapse the sheet when the sheets backdrop was tapped.
   final bool closeOnBackdropTap;
 
@@ -211,6 +214,7 @@ class SlidingSheet extends StatefulWidget {
     this.color = Colors.white,
     this.backdropColor,
     this.cornerRadius = 0.0,
+    this.cornerRadiusOnFullscreen = 0.0,
     this.elevation = 0.0,
     this.shadowColor = Colors.black54,
     this.closeOnBackdropTap = false,
@@ -626,7 +630,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                           elevation: widget.elevation,
                           shadowColor: widget.shadowColor,
                           customBorders: BorderRadius.vertical(
-                            top: Radius.circular(widget.cornerRadius),
+                            top: Radius.circular(currentExtent == 1 ? widget.cornerRadiusOnFullscreen : widget.cornerRadius),
                           ),
                           child: Stack(
                             children: <Widget>[
@@ -1254,6 +1258,7 @@ Future<T> showSlidingBottomSheet<T>(
               margin: dialog.margin,
               border: dialog.border,
               cornerRadius: dialog.cornerRadius,
+              cornerRadiusOnFullscreen: dialog.cornerRadiusOnFullscreen,
               closeOnBackdropTap: dialog.dismissOnBackdropTap,
               builder: dialog.builder,
               headerBuilder: dialog.headerBuilder,
@@ -1287,6 +1292,7 @@ class SlidingSheetDialog {
   final EdgeInsets margin;
   final Border border;
   final double cornerRadius;
+  final double cornerRadiusOnFullscreen;
   final bool dismissOnBackdropTap;
   final SheetBuilder builder;
   final SheetBuilder headerBuilder;
@@ -1306,6 +1312,7 @@ class SlidingSheetDialog {
     this.margin,
     this.border,
     this.cornerRadius = 0.0,
+    this.cornerRadiusOnFullscreen = 0.0,
     this.dismissOnBackdropTap = true,
     @required this.builder,
     this.headerBuilder,
