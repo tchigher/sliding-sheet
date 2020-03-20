@@ -1198,16 +1198,21 @@ class SheetController {
 ///
 /// The `builder` parameter must not be null and is used to construct a [SlidingSheetDialog].
 ///
-/// The `parentBuilder` can be used to wrap the sheet inside a parent, for example a
+/// The `parentBuilder` parameter can be used to wrap the sheet inside a parent, for example a
 /// [Theme] or [AnnotatedRegion].
+///
+/// The `resizeToAvoidBottomInset` parameter can be used to avoid the keyboard from obscuring
+/// the content bottom sheet.
 Future<T> showSlidingBottomSheet<T>(
   BuildContext context, {
   @required SlidingSheetDialog Function(BuildContext context) builder,
   Widget Function(BuildContext context, SlidingSheet sheet) parentBuilder,
   bool useRootNavigator = false,
+  bool resizeToAvoidBottomInset = true,
 }) {
   assert(builder != null);
   assert(useRootNavigator != null);
+  assert(resizeToAvoidBottomInset != null);
 
   SlidingSheetDialog dialog = builder(context);
 
@@ -1263,6 +1268,13 @@ Future<T> showSlidingBottomSheet<T>(
               scrollSpec: dialog.scrollSpec,
               maxWidth: dialog.maxWidth,
             );
+
+            if (resizeToAvoidBottomInset) {
+              return Padding(
+                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                child: sheet,
+              );
+            }
 
             if (parentBuilder != null) {
               return parentBuilder(context, sheet);

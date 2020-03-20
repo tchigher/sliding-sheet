@@ -54,6 +54,7 @@ class _MyAppState extends State<MyApp> {
               return true;
             },
             child: Scaffold(
+              resizeToAvoidBottomInset: false,
               body: Stack(
                 children: <Widget>[
                   buildMap(),
@@ -543,15 +544,20 @@ class _MyAppState extends State<MyApp> {
             return Container(
               color: Colors.white,
               child: Material(
-                child: ListView(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: List.generate(10, (i) => i).map((i) {
-                    return Container(
-                      padding: const EdgeInsets.all(48),
-                      child: Text('Item $i'),
-                    );
-                  }).toList(),
+                child: Column(
+                  children: <Widget>[
+                    TextField(),
+                    ListView(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: List.generate(10, (i) => i).map((i) {
+                        return Container(
+                          padding: const EdgeInsets.all(48),
+                          child: Text('Item $i'),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                 ),
               ),
             );
