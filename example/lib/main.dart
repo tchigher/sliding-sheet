@@ -88,7 +88,8 @@ class _MyAppState extends State<MyApp> {
     return SlidingSheet(
       controller: controller,
       color: Colors.white,
-      elevation: 16,
+      shadowColor: Colors.black26,
+      elevation: 12,
       maxWidth: 500,
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top * interval(.7, 1.0, progress),

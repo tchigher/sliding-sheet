@@ -218,8 +218,8 @@ class SlidingSheet extends StatefulWidget {
     this.controller,
     this.scrollSpec = const ScrollSpec(overscroll: false),
     this.maxWidth = double.infinity,
-  })  : assert(duration != null),
-        assert(builder != null),
+  })  : assert(builder != null),
+        assert(duration != null),
         assert(snapSpec != null),
         assert(snapSpec.snappings.length >= 2, 'There must be at least two snappings to snap in between.'),
         assert(snapSpec.minSnap != snapSpec.maxSnap || route != null, 'The min and max snaps cannot be equal.'),
@@ -1217,7 +1217,7 @@ Future<T> showSlidingBottomSheet<T>(
   SlidingSheetDialog dialog = builder(context);
 
   final theme = Theme.of(context);
-  final ValueNotifier<bool> rebuilder = ValueNotifier(false);
+  final ValueNotifier<int> rebuilder = ValueNotifier(0);
 
   return Navigator.of(
     context,
@@ -1232,7 +1232,7 @@ Future<T> showSlidingBottomSheet<T>(
             dialog = builder(context);
             if (dialog.controller != null) {
               dialog.controller._rebuild = () {
-                rebuilder.value = !rebuilder.value;
+                rebuilder.value++;
               };
             }
 
