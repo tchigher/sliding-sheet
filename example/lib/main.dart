@@ -22,7 +22,10 @@ class _MyAppState extends State<MyApp> {
     fontSize: 15,
   );
 
-  SheetState state;
+  ValueNotifier<SheetState> sheetState = ValueNotifier(SheetState.inital());
+  SheetState get state => sheetState.value;
+  set state(SheetState value) => sheetState.value = value;
+
   BuildContext context;
   SheetController controller;
 
@@ -45,38 +48,29 @@ class _MyAppState extends State<MyApp> {
         builder: (context) {
           this.context = context;
 
-          return WillPopScope(
-            onWillPop: () async {
-              if (state?.isCollapsed == false) {
-                controller?.collapse();
-                return false;
-              }
-              return true;
-            },
-            child: Scaffold(
-              resizeToAvoidBottomInset: false,
-              body: Stack(
-                children: <Widget>[
-                  buildMap(),
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + 16, 16, 0),
-                      child: FloatingActionButton(
-                        child: Icon(
-                          Icons.layers,
-                          color: mapsBlue,
-                        ),
-                        backgroundColor: Colors.white,
-                        onPressed: () async {
-                          await showBottomSheet(context);
-                        },
+          return Scaffold(
+            resizeToAvoidBottomInset: false,
+            body: Stack(
+              children: <Widget>[
+                buildMap(),
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + 16, 16, 0),
+                    child: FloatingActionButton(
+                      child: Icon(
+                        Icons.layers,
+                        color: mapsBlue,
                       ),
+                      backgroundColor: Colors.white,
+                      onPressed: () async {
+                        await showBottomSheet(context);
+                      },
                     ),
                   ),
-                  buildSheet(),
-                ],
-              ),
+                ),
+                buildSheet(),
+              ],
             ),
           );
         },
@@ -91,10 +85,10 @@ class _MyAppState extends State<MyApp> {
       shadowColor: Colors.black26,
       elevation: 12,
       maxWidth: 500,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top * interval(.7, 1.0, progress),
-      ),
-      cornerRadius: 16 * (1 - interval(0.7, 1.0, progress)),
+      cornerRadius: 16,
+      cornerRadiusOnFullscreen: 0.0,
+      closeSheetOnBackButtonPressed: true,
+      addTopViewPaddingOnFullscreen: true,
       border: Border.all(
         color: Colors.grey.shade300,
         width: 3,
@@ -113,8 +107,15 @@ class _MyAppState extends State<MyApp> {
       ),
       scrollSpec: ScrollSpec.bouncingScroll(),
       listener: (state) {
+        final needsRebuild = (this.state?.isCollapsed != state.isCollapsed) ||
+            (this.state.isExpanded != state.isExpanded) ||
+            (this.state.isAtTop != state.isAtTop) ||
+            (this.state.isAtBottom != state.isAtBottom);
         this.state = state;
-        setState(() {});
+
+        if (needsRebuild) {
+          setState(() {});
+        }
       },
       headerBuilder: buildHeader,
       footerBuilder: buildFooter,
@@ -136,11 +137,16 @@ class _MyAppState extends State<MyApp> {
           SizedBox(height: 2),
           Align(
             alignment: Alignment.topCenter,
-            child: CustomContainer(
-              width: 16,
-              height: 4,
-              borderRadius: 2,
-              color: Colors.grey.withOpacity(.5 * (1 - interval(0.7, 1.0, progress))),
+            child: ValueListenableBuilder(
+              valueListenable: sheetState,
+              builder: (context, state, _) {
+                return CustomContainer(
+                  width: 16,
+                  height: 4,
+                  borderRadius: 2,
+                  color: Colors.grey.withOpacity(.5 * (1 - interval(0.7, 1.0, state.progress))),
+                );
+              },
             ),
           ),
           SizedBox(height: 8),
@@ -318,7 +324,7 @@ class _MyAppState extends State<MyApp> {
         divider,
         SizedBox(height: 32),
         Icon(
-          MdiIcons.githubCircle,
+          MdiIcons.github,
           color: Colors.grey.shade900,
           size: 48,
         ),

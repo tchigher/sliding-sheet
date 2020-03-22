@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -134,94 +135,159 @@ class ScrollSpec {
 ///
 /// The [builder] parameter must not be null.
 class SlidingSheet extends StatefulWidget {
+  /// {@template sliding_sheet.builder}
+  /// The builder for the main content of the sheet that will be scrolled if
+  /// the content is bigger than the height that the sheet can expand to.
+  /// {@endtemplate}
+  final SheetBuilder builder;
+
+  /// {@template sliding_sheet.headerBuilder}
+  /// The builder for a header that will be displayed at the top of the sheet
+  /// that wont be scrolled.
+  /// {@endtemplate}
+  final SheetBuilder headerBuilder;
+
+  /// {@template sliding_sheet.footerBuilder}
+  /// The builder for a footer that will be displayed at the bottom of the sheet
+  /// that wont be scrolled.
+  /// {@endtemplate}
+  final SheetBuilder footerBuilder;
+
+  /// {@template sliding_sheet.snapSpec}
   /// The [SnapSpec] that defines how the sheet should snap or if it should at all.
+  /// {@endtemplate}
   final SnapSpec snapSpec;
 
+  /// {@template sliding_sheet.duration}
   /// The base animation duration for the sheet. Swipes and flings may have a different duration.
+  /// {@endtemplate}
   final Duration duration;
 
+  /// {@template sliding_sheet.color}
   /// The background color of the sheet.
+  /// {@endtemplate}
   final Color color;
 
+  /// {@template sliding_sheet.backdropColor}
   /// The color of the shadow that is displayed behind the sheet.
+  /// {@endtemplate}
   final Color backdropColor;
 
+  /// {@template sliding_sheet.shadowColor}
   /// The color of the drop shadow of the sheet when [elevation] is > 0.
+  /// {@endtemplate}
   final Color shadowColor;
 
+  /// {@template sliding_sheet.elevation}
   /// The elevation of the sheet.
+  /// {@endtemplate}
   final double elevation;
 
+  /// {@template sliding_sheet.padding}
   /// The amount to inset the children of the sheet.
+  /// {@endtemplate}
   final EdgeInsets padding;
 
+  /// {@template sliding_sheet.addTopViewPaddingWhenAtFullscreen}
+  /// If true, adds the top padding returned by
+  /// `MediaQuery.of(context).viewPadding.top` to the [padding] when taking
+  /// up the full screen.
+  ///
+  /// This can be used to easily avoid the content of the sheet from being
+  /// under the statusbar, which is especially useful when having a header.
+  /// {@endtemplate}
+  final bool addTopViewPaddingOnFullscreen;
+
+  /// {@template sliding_sheet.margin}
   /// The amount of the empty space surrounding the sheet.
+  /// {@endtemplate}
   final EdgeInsets margin;
 
+  /// {@template sliding_sheet.border}
   /// A border that will be drawn around the sheet.
+  /// {@endtemplate}
   final Border border;
 
-  /// The radius of the corners of this sheet.
+  /// {@template sliding_sheet.cornerRadius}
+  /// The radius of the top corners of this sheet.
+  /// {@endtemplate}
   final double cornerRadius;
 
-  /// The radius of the corners of this sheet when at fullscreen.
+  /// {@template sliding_sheet.cornerRadiusOnFullscreen}
+  /// The radius of the top corners of this sheet when expanded to fullscreen.
+  ///
+  /// This parameter can be used to easily implement the common Material
+  /// behaviour of sheets to go from rounded corners to sharp corners when
+  /// taking up the full screen.
+  /// {@endtemplate}
   final double cornerRadiusOnFullscreen;
 
   /// If true, will collapse the sheet when the sheets backdrop was tapped.
   final bool closeOnBackdropTap;
 
-  /// The builder for the main content of the sheet that will be scrolled if
-  /// the content is bigger than the height that the sheet can expand to.
-  final SheetBuilder builder;
-
-  /// The builder for a header that will be displayed at the top of the sheet
-  /// that wont be scrolled.
-  final SheetBuilder headerBuilder;
-
-  /// The builder for a footer that will be displayed at the bottom of the sheet
-  /// that wont be scrolled.
-  final SheetBuilder footerBuilder;
-
+  /// {@template sliding_sheet.listener}
   /// A callback that will be invoked when the sheet gets dragged or scrolled
   /// with current state information.
+  /// {@endtemplate}
   final SheetListener listener;
 
+  /// {@template sliding_sheet.controller}
   /// A controller to control the state of the sheet.
+  /// {@endtemplate}
   final SheetController controller;
 
   /// The route of the sheet when used in a bottom sheet dialog. This parameter
   /// is assigned internally and should not be explicitly assigned.
   final _SlidingSheetRoute route;
 
+  /// {@template sliding_sheet.scrollSpec}
   /// The [ScrollSpec] of the containing ScrollView.
+  /// {@endtemplate}
   final ScrollSpec scrollSpec;
 
+  /// {@template sliding_sheet.maxWidth}
   /// The maximum width of the sheet.
+  ///
   /// Usually set for large screens. By default the [SlidingSheet]
   /// expands to the total available width.
+  /// {@endtemplate}
   final double maxWidth;
+
+  /// {@template sliding_sheet.maxWidth}
+  /// The minimum height of the sheet.
+  ///
+  /// By default, the sheet sizes itself as big as its children.
+  /// {@endtemplate}
+  final double minHeight;
+
+  /// If true, closes the sheet when it is open and prevents the route
+  /// from being popped.
+  final bool closeSheetOnBackButtonPressed;
   SlidingSheet({
     Key key,
     @required this.builder,
-    this.duration = const Duration(milliseconds: 800),
-    this.snapSpec = const SnapSpec(),
-    this.padding,
-    this.margin,
-    this.border,
     this.headerBuilder,
     this.footerBuilder,
-    this.route,
+    this.snapSpec = const SnapSpec(),
+    this.duration = const Duration(milliseconds: 800),
     this.color = Colors.white,
     this.backdropColor,
-    this.cornerRadius = 0.0,
-    this.cornerRadiusOnFullscreen = 0.0,
-    this.elevation = 0.0,
     this.shadowColor = Colors.black54,
+    this.elevation = 0.0,
+    this.padding,
+    this.addTopViewPaddingOnFullscreen = false,
+    this.margin,
+    this.border,
+    this.cornerRadius = 0.0,
+    this.cornerRadiusOnFullscreen,
     this.closeOnBackdropTap = false,
     this.listener,
     this.controller,
+    this.route,
     this.scrollSpec = const ScrollSpec(overscroll: false),
     this.maxWidth = double.infinity,
+    this.minHeight,
+    this.closeSheetOnBackButtonPressed = false,
   })  : assert(builder != null),
         assert(duration != null),
         assert(snapSpec != null),
@@ -242,6 +308,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   Widget child;
   Widget header;
   Widget footer;
+
+  List<double> snappings;
 
   double childHeight = 0;
   double headerHeight = 0;
@@ -276,10 +344,34 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   ScrollSpec get scrollSpec => widget.scrollSpec;
   SnapSpec get snapSpec => widget.snapSpec;
   SnapPositioning get snapPositioning => snapSpec.positioning;
-  List<double> get snappings => snapSpec.snappings.map(_normalizeSnap).toList()..sort();
 
-  EdgeInsets get padding => widget.padding ?? const EdgeInsets.all(0);
   double get borderHeight => (widget.border?.top?.width ?? 0) * 2;
+  EdgeInsets get padding {
+    final begin = widget.padding ?? const EdgeInsets.all(0);
+
+    if (!widget.addTopViewPaddingOnFullscreen || !isLaidOut) {
+      return begin;
+    }
+
+    final statusBarHeight = 24;
+    final end = begin.copyWith(top: begin.top + statusBarHeight);
+    return EdgeInsets.lerp(begin, end, lerpFactor);
+  }
+
+  double get cornerRadius {
+    if (widget.cornerRadiusOnFullscreen == null) return widget.cornerRadius;
+    return lerpDouble(widget.cornerRadius, widget.cornerRadiusOnFullscreen, lerpFactor);
+  }
+
+  double get lerpFactor {
+    if (maxExtent != 1.0 && isLaidOut) return 0.0;
+
+    final snap = snappings[math.max(snappings.length - 2, 0)];
+    return Interval(
+      snap >= 0.7 ? snap : 0.85,
+      1.0,
+    ).transform(currentExtent);
+  }
 
   // The current state of this sheet.
   SheetState get state => SheetState(
@@ -299,6 +391,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     headerKey = GlobalKey();
     footerKey = GlobalKey();
     parentKey = GlobalKey();
+
+    _calculateSnappings();
 
     // Call the listener when the extent or scroll position changes.
     final listener = () {
@@ -333,7 +427,10 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
         // to the minExtent.
         widget.route.popped.then(
           (_) {
-            if (!dismissUnderway) controller.snapToExtent(0.0, this, clamp: false);
+            if (!dismissUnderway) {
+              controller.jumpTo(controller.offset);
+              controller.snapToExtent(0.0, this, clamp: false);
+            }
           },
         );
       } else {
@@ -361,6 +458,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
       final isParentLaidOut = parent?.hasSize == true;
       availableHeight = isParentLaidOut ? parent.size.height : 0;
+
+      _calculateSnappings();
 
       extent
         ..snappings = snappings
@@ -456,6 +555,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     }
   }
 
+  void _calculateSnappings() => snappings = snapSpec.snappings.map(_normalizeSnap).toList()..sort();
+
   // Assign the controller functions to actual methods.
   void _assignSheetController() {
     final controller = widget.controller;
@@ -544,7 +645,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     rebuild();
 
     // ValueListenableBuilder is used to update the sheet irrespective of its children.
-    return ValueListenableBuilder(
+    final sheet = ValueListenableBuilder(
       valueListenable: extent._currentExtent,
       builder: (context, value, _) {
         // Wrap the scrollView in a ScrollConfiguration to
@@ -601,7 +702,10 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
               Align(
                 alignment: Alignment.bottomCenter,
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: widget.maxWidth ?? double.infinity),
+                  constraints: BoxConstraints(
+                    minHeight: widget.minHeight ?? 0.0,
+                    maxWidth: widget.maxWidth ?? double.infinity,
+                  ),
                   child: SizedBox.expand(
                     // Fractionally size the box until the header/footer would get clipped.
                     // Then translate the header/footer in and out of the view.
@@ -624,13 +728,13 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                           padding: EdgeInsets.fromLTRB(
                             padding.left,
                             header != null ? padding.top : 0.0,
-                            padding.left,
+                            padding.right,
                             footer != null ? padding.bottom : 0.0,
                           ),
                           elevation: widget.elevation,
                           shadowColor: widget.shadowColor,
                           customBorders: BorderRadius.vertical(
-                            top: Radius.circular(currentExtent == 1 ? widget.cornerRadiusOnFullscreen : widget.cornerRadius),
+                            top: Radius.circular(cornerRadius),
                           ),
                           child: Stack(
                             children: <Widget>[
@@ -668,6 +772,22 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
             ],
           ),
         );
+      },
+    );
+
+    if (widget.closeSheetOnBackButtonPressed == false) {
+      return sheet;
+    }
+
+    return WillPopScope(
+      child: sheet,
+      onWillPop: () async {
+        if (!state.isCollapsed) {
+          snapToExtent(minExtent);
+          return false;
+        }
+
+        return true;
       },
     );
   }
@@ -1093,8 +1213,6 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
 
 /// A data class containing state information about the [_SlidingSheetState].
 class SheetState {
-  final _SheetExtent _extent;
-
   /// The current extent the sheet covers.
   final double extent;
 
@@ -1108,43 +1226,51 @@ class SheetState {
   /// Whether the sheet has finished measuring its children and computed
   /// the correct extents. This takes until the first frame was drawn.
   final bool isLaidOut;
+
+  /// The progress between [minExtent] and [maxExtent] of the current [extent].
+  /// A progress of 1 means the sheet is fully expanded, while
+  /// a progress of 0 means the sheet is fully collapsed.
+  final double progress;
+
+  /// The scroll offset when the content is bigger than the available space.
+  final double scrollOffset;
+
+  /// Whether the [SlidingSheet] has reached its maximum extent.
+  final bool isExpanded;
+
+  /// Whether the [SlidingSheet] has reached its minimum extent.
+  final bool isCollapsed;
+
+  /// Whether the [SlidingSheet] has a [scrollOffset] of zero.
+  final bool isAtTop;
+
+  /// Whether the [SlidingSheet] has reached its maximum scroll extent.
+  final bool isAtBottom;
+
+  /// Whether the sheet is hidden to the user.
+  final bool isHidden;
+
+  /// Whether the sheet is visible to the user.
+  final bool isShown;
   SheetState(
-    this._extent, {
+    _SheetExtent _extent, {
     @required this.extent,
     @required this.isLaidOut,
     @required this.maxExtent,
     @required double minExtent,
     // On Bottomsheets it is possible for min and maxExtents to be the same (when you only set one snap).
     // Thus we have to account for this and set the minExtent to be zero.
-  }) : minExtent = minExtent != maxExtent ? minExtent : 0.0;
+  })  : minExtent = minExtent != maxExtent ? minExtent : 0.0,
+        progress = isLaidOut ? ((extent - minExtent) / (maxExtent - minExtent)).clamp(0.0, 1.0) : 0.0,
+        scrollOffset = _extent?.scrollOffset ?? 0,
+        isExpanded = extent >= maxExtent,
+        isCollapsed = extent <= minExtent,
+        isAtTop = _extent?.isAtTop ?? true,
+        isAtBottom = _extent?.isAtBottom ?? false,
+        isHidden = extent <= 0.0,
+        isShown = extent > 0.0;
 
   factory SheetState.inital() => SheetState(null, extent: 0.0, minExtent: 0.0, maxExtent: 1.0, isLaidOut: false);
-
-  /// The progress between [minExtent] and [maxExtent] of the current [extent].
-  /// A progress of 1 means the sheet is fully expanded, while
-  /// a progress of 0 means the sheet is fully collapsed.
-  double get progress => isLaidOut ? ((extent - minExtent) / (maxExtent - minExtent)).clamp(0.0, 1.0) : 0.0;
-
-  /// The scroll offset when the content is bigger than the available space.
-  double get scrollOffset => _extent?.scrollOffset ?? 0;
-
-  /// Whether the [SlidingSheet] has reached its maximum extent.
-  bool get isExpanded => extent >= maxExtent;
-
-  /// Whether the [SlidingSheet] has reached its minimum extent.
-  bool get isCollapsed => extent <= minExtent;
-
-  /// Whether the [SlidingSheet] has a [scrollOffset] of zero.
-  bool get isAtTop => _extent?.isAtTop ?? true;
-
-  /// Whether the [SlidingSheet] has reached its maximum scroll extent.
-  bool get isAtBottom => _extent?.isAtBottom ?? false;
-
-  /// Whether the sheet is hidden to the user.
-  bool get isHidden => extent <= 0.0;
-
-  /// Whether the sheet is visible to the user.
-  bool get isShown => !isHidden;
 }
 
 /// A controller for a [SlidingSheet].
@@ -1260,6 +1386,7 @@ Future<T> showSlidingBottomSheet<T>(
               shadowColor: dialog.shadowColor,
               elevation: dialog.elevation,
               padding: dialog.padding,
+              addTopViewPaddingOnFullscreen: dialog.addTopViewPaddingOnFullscreen,
               margin: dialog.margin,
               border: dialog.border,
               cornerRadius: dialog.cornerRadius,
@@ -1272,6 +1399,7 @@ Future<T> showSlidingBottomSheet<T>(
               controller: dialog.controller,
               scrollSpec: dialog.scrollSpec,
               maxWidth: dialog.maxWidth,
+              closeSheetOnBackButtonPressed: false,
             );
 
             if (resizeToAvoidBottomInset) {
@@ -1293,27 +1421,75 @@ Future<T> showSlidingBottomSheet<T>(
   );
 }
 
+/// A wrapper class for a [SlidingSheet] to be shown as a model bottom sheet.
 class SlidingSheetDialog {
-  final SnapSpec snapSpec;
-  final Duration duration;
-  final Color color;
-  final Color backdropColor;
-  final Color shadowColor;
-  final double elevation;
-  final EdgeInsets padding;
-  final EdgeInsets margin;
-  final Border border;
-  final double cornerRadius;
-  final double cornerRadiusOnFullscreen;
-  final bool dismissOnBackdropTap;
+  /// {@macro sliding_sheet.builder}
   final SheetBuilder builder;
+
+  /// {@macro sliding_sheet.headerBuilder}
   final SheetBuilder headerBuilder;
+
+  /// {@macro sliding_sheet.footerBuilder}
   final SheetBuilder footerBuilder;
+
+  /// {@macro sliding_sheet.snapSpec}
+  final SnapSpec snapSpec;
+
+  /// {@macro sliding_sheet.duration}
+  final Duration duration;
+
+  /// {@macro sliding_sheet.color}
+  final Color color;
+
+  /// {@macro sliding_sheet.backdropColor}
+  final Color backdropColor;
+
+  /// {@macro sliding_sheet.shadowColor}
+  final Color shadowColor;
+
+  /// {@macro sliding_sheet.elevation}
+  final double elevation;
+
+  /// {@macro sliding_sheet.padding}
+  final EdgeInsets padding;
+
+  /// {@macro sliding_sheet.addTopViewPaddingWhenAtFullscreen}
+  final bool addTopViewPaddingOnFullscreen;
+
+  /// {@macro sliding_sheet.margin}
+  final EdgeInsets margin;
+
+  /// {@macro sliding_sheet.border}
+  final Border border;
+
+  /// {@macro sliding_sheet.cornerRadius}
+  final double cornerRadius;
+
+  /// {@macro sliding_sheet.cornerRadiusOnFullscreen}
+  final double cornerRadiusOnFullscreen;
+
+  /// If true, the sheet will be dismissed the backdrop
+  /// was tapped.
+  final bool dismissOnBackdropTap;
+
+  /// {@macro sliding_sheet.listener}
   final SheetListener listener;
+
+  /// {@macro sliding_sheet.controller}
   final SheetController controller;
+
+  /// {@macro sliding_sheet.scrollSpec}
   final ScrollSpec scrollSpec;
+
+  /// {@macro sliding_sheet.maxWidth}
   final double maxWidth;
+
+  /// {@macro sliding_sheet.minHeight}
+  final double minHeight;
   const SlidingSheetDialog({
+    @required this.builder,
+    this.headerBuilder,
+    this.footerBuilder,
     this.snapSpec = const SnapSpec(),
     this.duration = const Duration(milliseconds: 800),
     this.color,
@@ -1321,18 +1497,17 @@ class SlidingSheetDialog {
     this.shadowColor,
     this.elevation = 0.0,
     this.padding,
+    this.addTopViewPaddingOnFullscreen = false,
     this.margin,
     this.border,
     this.cornerRadius = 0.0,
-    this.cornerRadiusOnFullscreen = 0.0,
+    this.cornerRadiusOnFullscreen,
     this.dismissOnBackdropTap = true,
-    @required this.builder,
-    this.headerBuilder,
-    this.footerBuilder,
     this.listener,
     this.controller,
     this.scrollSpec = const ScrollSpec(overscroll: false),
     this.maxWidth = double.infinity,
+    this.minHeight,
   });
 }
 

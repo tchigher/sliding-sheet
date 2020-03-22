@@ -115,7 +115,7 @@ packages:
       name: material_design_icons_flutter
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.3.4595"
+    version: "4.0.5045"
   meta:
     dependency: transitive
     description:
@@ -155,7 +155,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.2.9"
+    version: "0.2.10"
   source_span:
     dependency: transitive
     description:
