@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:example/util/util.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -33,6 +35,8 @@ class _MyAppState extends State<MyApp> {
   bool get isCollapsed => state?.isCollapsed ?? true;
   double get progress => state?.progress ?? 0.0;
 
+  bool tapped = false;
+
   @override
   void initState() {
     super.initState();
@@ -52,7 +56,10 @@ class _MyAppState extends State<MyApp> {
             resizeToAvoidBottomInset: false,
             body: Stack(
               children: <Widget>[
-                buildMap(),
+                GestureDetector(
+                  onTap: () => setState(() => tapped = !tapped),
+                  child: buildMap(),
+                ),
                 Align(
                   alignment: Alignment.topRight,
                   child: Padding(
@@ -69,7 +76,21 @@ class _MyAppState extends State<MyApp> {
                     ),
                   ),
                 ),
-                buildSheet(),
+                Column(
+                  children: <Widget>[
+                    GestureDetector(
+                      onTap: () => setState(() => tapped = !tapped),
+                      child: AnimatedContainer(
+                        duration: const Duration(seconds: 1),
+                        height: tapped ? 200 : 0,
+                        color: Colors.red,
+                      ),
+                    ),
+                    Expanded(
+                      child: buildSheet(),
+                    ),
+                  ],
+                )
               ],
             ),
           );
@@ -80,6 +101,7 @@ class _MyAppState extends State<MyApp> {
 
   Widget buildSheet() {
     return SlidingSheet(
+      duration: const Duration(milliseconds: 1100),
       controller: controller,
       color: Colors.white,
       shadowColor: Colors.black26,
@@ -98,7 +120,7 @@ class _MyAppState extends State<MyApp> {
         positioning: SnapPositioning.relativeToAvailableSpace,
         snappings: const [
           SnapSpec.headerFooterSnap,
-          0.8,
+          0.6,
           SnapSpec.expanded,
         ],
         onSnap: (state, snap) {
@@ -451,7 +473,11 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future showBottomSheet(BuildContext context) async {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
     final dialogController = SheetController();
+    double extent = 0;
     double progress = 0;
     double multiple = 1;
 
@@ -470,7 +496,7 @@ class _MyAppState extends State<MyApp> {
       builder: (context) {
         return SlidingSheetDialog(
           controller: dialogController,
-          duration: const Duration(milliseconds: 900),
+          duration: const Duration(milliseconds: 800),
           snapSpec: const SnapSpec(
             snappings: const [
               0.4,
@@ -481,19 +507,18 @@ class _MyAppState extends State<MyApp> {
           scrollSpec: ScrollSpec.bouncingScroll(),
           maxWidth: 500,
           color: Colors.white,
-          cornerRadius: 16 * multiple,
+          cornerRadius: 16,
+          cornerRadiusOnFullscreen: 0,
           listener: (state) {
+            extent = state.extent;
             progress = state.progress;
-            multiple = 1 - interval(0.7, 1.0, progress);
+            multiple = 1 - interval(0.7, 1.0, extent);
 
-            if (progress >= 0.6 || (state.isExpanded && state.scrollOffset < 8.0)) {
+            if (state.progress >= 0.6 || (state.isExpanded && state.scrollOffset < 8.0)) {
               dialogController.rebuild();
             }
           },
           headerBuilder: (context, state) {
-            final theme = Theme.of(context);
-            final textTheme = theme.textTheme;
-
             return Material(
               elevation: interval(0.0, 8.0, state.scrollOffset) * 4,
               shadowColor: Colors.black,
@@ -512,30 +537,13 @@ class _MyAppState extends State<MyApp> {
                       'Header',
                       style: textTheme.headline5,
                     ),
-                    Stack(
-                      children: <Widget>[
-                        IgnorePointer(
-                          ignoring: progress > 0.7,
-                          child: Opacity(
-                            opacity: 1 - interval(0.7, 0.85, progress),
-                            child: IconButton(
-                              icon: Icon(Icons.keyboard_arrow_up),
-                              onPressed: dialogController.expand,
-                            ),
-                          ),
-                        ),
-                        IgnorePointer(
-                          ignoring: progress < 1.0,
-                          child: Opacity(
-                            opacity: interval(0.85, 1.0, progress),
-                            child: IconButton(
-                              icon: Icon(Icons.keyboard_arrow_down),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
+                    Transform.rotate(
+                      angle: pi * interval(0.7, 0.85, progress),
+                      child: IconButton(
+                        icon: Icon(Icons.keyboard_arrow_up),
+                        onPressed: () => progress != 1.0 ? dialogController.expand() : dialogController.collapse(),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -545,6 +553,14 @@ class _MyAppState extends State<MyApp> {
             return Container(
               height: 56,
               color: Colors.black,
+              padding: const EdgeInsets.all(16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Footer',
+                  style: textTheme.headline5.copyWith(color: Colors.white),
+                ),
+              ),
             );
           },
           builder: (context, state) {
@@ -553,6 +569,10 @@ class _MyAppState extends State<MyApp> {
               child: Material(
                 child: Column(
                   children: <Widget>[
+                    Container(
+                      color: Colors.red,
+                      height: 200,
+                    ),
                     TextField(),
                     ListView(
                       shrinkWrap: true,
