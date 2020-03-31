@@ -140,9 +140,9 @@ class SlidingSheet extends StatefulWidget {
   final double maxWidth;
 
   /// {@template sliding_sheet.maxWidth}
-  /// The minimum height of the sheet.
+  /// The minimum height of the sheet the child return by the `builder`.
   ///
-  /// By default, the sheet sizes itself as big as its children.
+  /// By default, the sheet sizes itself as big as its child.
   /// {@endtemplate}
   final double minHeight;
 
@@ -334,9 +334,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     // is currently not interacted with.
     if (oldWidget.snapSpec != snapSpec) {
       _updateSnappingsAndExtent();
-      if (!controller.inInteraction) {
-        controller.imitateFling();
-      }
+      _nudgeToNextSnap();
     }
   }
 
@@ -502,6 +500,12 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     );
   }
 
+  void _nudgeToNextSnap() {
+    if (!controller.inInteraction) {
+      controller.imitateFling();
+    }
+  }
+
   void _pop(double velocity) {
     if (fromBottomSheet && !dismissUnderway && Navigator.canPop(context)) {
       dismissUnderway = true;
@@ -555,7 +559,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     rebuild();
 
     // ValueListenableBuilder is used to update the sheet irrespective of its children.
-    final sheet = LayoutBuilder(
+    Widget sheet = LayoutBuilder(
       builder: (context, constrainst) {
         final previousHeight = availableHeight;
         availableHeight = constrainst.biggest.height;
@@ -575,9 +579,12 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                   top: header == null ? padding.top : 0.0,
                   bottom: footer == null ? padding.bottom : 0.0,
                 ),
-                child: Container(
-                  key: childKey,
-                  child: child,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: widget.minHeight ?? 0.0),
+                  child: SizeChangedLayoutNotifier(
+                    key: childKey,
+                    child: child,
+                  ),
                 ),
               ),
             );
@@ -618,12 +625,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                     alignment: Alignment.bottomCenter,
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
-                        minHeight: widget.minHeight ?? 0.0,
                         maxWidth: widget.maxWidth ?? double.infinity,
                       ),
                       child: SizedBox.expand(
-                        // Fractionally size the box until the header/footer would get clipped.
-                        // Then translate the header/footer in and out of the view.
                         child: FractionallySizedBox(
                           heightFactor: isLaidOut ? currentExtent.clamp(headerFooterExtent, 1.0) : 1.0,
                           alignment: Alignment.bottomCenter,
@@ -638,8 +642,6 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                               color: widget.color ?? Colors.white,
                               border: widget.border,
                               margin: widget.margin,
-                              // Add the vertical padding to the scrollView when header or footer is
-                              // not null in order to not clip the scrolling child.
                               padding: EdgeInsets.fromLTRB(
                                 padding.left,
                                 header != null ? padding.top : 0.0,
@@ -663,7 +665,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                                   if (header != null)
                                     Align(
                                       alignment: Alignment.topCenter,
-                                      child: Container(
+                                      child: SizeChangedLayoutNotifier(
                                         key: headerKey,
                                         child: header,
                                       ),
@@ -671,7 +673,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                                   if (footer != null)
                                     Align(
                                       alignment: Alignment.bottomCenter,
-                                      child: Container(
+                                      child: SizeChangedLayoutNotifier(
                                         key: footerKey,
                                         child: footer,
                                       ),
@@ -692,12 +694,23 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       },
     );
 
+    sheet = NotificationListener<SizeChangedLayoutNotification>(
+      onNotification: (notification) {
+        _measure();
+        postFrame(() {
+          currentExtent = currentExtent.clamp(minExtent, maxExtent);
+          _nudgeToNextSnap();
+        });
+        return true;
+      },
+      child: sheet,
+    );
+
     if (widget.closeSheetOnBackButtonPressed == false) {
       return sheet;
     }
 
     return WillPopScope(
-      child: sheet,
       onWillPop: () async {
         if (!state.isCollapsed) {
           snapToExtent(minExtent);
@@ -706,6 +719,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
         return true;
       },
+      child: sheet,
     );
   }
 
@@ -887,19 +901,21 @@ class _SheetContainer extends StatelessWidget {
   final Color shadowColor;
   final List<BoxShadow> boxShadows;
   final AlignmentGeometry alignment;
+  final BoxConstraints constraints;
   _SheetContainer({
     Key key,
-    this.child,
-    this.border,
-    this.color = Colors.transparent,
     this.borderRadius = 0.0,
     this.elevation = 0.0,
-    this.shadowColor = Colors.black12,
-    this.margin,
+    this.border,
     this.customBorders,
-    this.alignment,
-    this.boxShadows,
+    this.margin,
     this.padding = const EdgeInsets.all(0),
+    this.child,
+    this.color = Colors.transparent,
+    this.shadowColor = Colors.black12,
+    this.boxShadows,
+    this.alignment,
+    this.constraints,
   }) : super(key: key);
 
   @override
@@ -920,6 +936,7 @@ class _SheetContainer extends StatelessWidget {
       margin: margin,
       padding: padding,
       alignment: alignment,
+      constraints: constraints,
       decoration: BoxDecoration(
         color: color,
         borderRadius: br,

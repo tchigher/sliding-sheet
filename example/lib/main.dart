@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:example/test.dart';
 import 'package:example/util/util.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -51,6 +52,8 @@ class _MyAppState extends State<MyApp> {
       home: Builder(
         builder: (context) {
           this.context = context;
+
+          return Test();
 
           return Scaffold(
             resizeToAvoidBottomInset: false,
