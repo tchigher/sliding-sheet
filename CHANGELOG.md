@@ -1,4 +1,4 @@
-### 0.2.1 - 0.2.11
+### 0.2.1 - 0.2.12
 - Various bug fixes and performance improvements.
 
 ## 0.2.0
