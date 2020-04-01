@@ -481,9 +481,6 @@ class _MyAppState extends State<MyApp> {
     final textTheme = theme.textTheme;
 
     final controller = SheetController();
-    double extent = 0;
-    double progress = 0;
-    double multiple = 1;
     bool isDismissable = false;
 
     await showSlidingBottomSheet(
@@ -512,22 +509,13 @@ class _MyAppState extends State<MyApp> {
           ),
           color: Colors.teal,
           maxWidth: 500,
-          cornerRadius: 16,
-          cornerRadiusOnFullscreen: 0,
-          listener: (state) {
-            extent = state.extent;
-            progress = state.progress;
-            multiple = 1 - interval(0.7, 1.0, extent);
-
-            if (state.progress >= 0.6 || (state.isExpanded && state.scrollOffset < 8.0)) {
-              controller.rebuild();
-            }
-          },
           isDismissable: isDismissable,
-          onDismissPrevented: () => HapticFeedback.heavyImpact(),
+          onDismissPrevented: () {
+            HapticFeedback.heavyImpact();
+            print('Dismiss prevented');
+          },
           builder: (context, state) {
             return Container(
-              height: 700,
               padding: const EdgeInsets.all(32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
