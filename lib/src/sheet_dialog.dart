@@ -49,7 +49,7 @@ Future<T> showSlidingBottomSheet<T>(
               );
             }
 
-            final sheet = SlidingSheet(
+            final sheet = SlidingSheet._(
               route: route,
               snapSpec: snapSpec,
               duration: dialog.duration,
@@ -76,6 +76,9 @@ Future<T> showSlidingBottomSheet<T>(
               scrollSpec: dialog.scrollSpec,
               maxWidth: dialog.maxWidth,
               closeSheetOnBackButtonPressed: false,
+              minHeight: dialog.minHeight,
+              isDismissable: dialog.isDismissable,
+              onDismissPrevented: dialog.onDismissPrevented,
             );
 
             if (resizeToAvoidBottomInset) {
@@ -161,6 +164,12 @@ class SlidingSheetDialog {
 
   /// {@macro sliding_sheet.minHeight}
   final double minHeight;
+
+  /// {@macro sliding_sheet.isDismissable}
+  final bool isDismissable;
+
+  /// {@macro sliding_sheet.onDismissPrevented}
+  final VoidCallback onDismissPrevented;
   const SlidingSheetDialog({
     @required this.builder,
     this.headerBuilder,
@@ -183,7 +192,9 @@ class SlidingSheetDialog {
     this.scrollSpec = const ScrollSpec(overscroll: false),
     this.maxWidth = double.infinity,
     this.minHeight,
-  });
+    this.isDismissable = true,
+    this.onDismissPrevented,
+  }) : assert(isDismissable != null);
 }
 
 /// A transparent route for a bottom sheet dialog.

@@ -53,7 +53,7 @@ class _MyAppState extends State<MyApp> {
         builder: (context) {
           this.context = context;
 
-          return Test();
+          // return Test();
 
           return Scaffold(
             resizeToAvoidBottomInset: false,
@@ -68,14 +68,14 @@ class _MyAppState extends State<MyApp> {
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + 16, 16, 0),
                     child: FloatingActionButton(
-                      child: Icon(
-                        Icons.layers,
-                        color: mapsBlue,
-                      ),
                       backgroundColor: Colors.white,
                       onPressed: () async {
                         await showBottomSheet(context);
                       },
+                      child: Icon(
+                        Icons.layers,
+                        color: mapsBlue,
+                      ),
                     ),
                   ),
                 ),
@@ -159,7 +159,7 @@ class _MyAppState extends State<MyApp> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          SizedBox(height: 2),
+          const SizedBox(height: 2),
           Align(
             alignment: Alignment.topCenter,
             child: ValueListenableBuilder(
@@ -174,17 +174,17 @@ class _MyAppState extends State<MyApp> {
               },
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Row(
             children: <Widget>[
               Text(
                 '5h 36m',
                 style: textStyle.copyWith(
-                  color: Color(0xFFF0BA64),
+                  color: const Color(0xFFF0BA64),
                   fontSize: 22,
                 ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 '(353 mi)',
                 style: textStyle.copyWith(
@@ -194,7 +194,7 @@ class _MyAppState extends State<MyApp> {
               ),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Fastest route now due to traffic conditions.',
             style: textStyle.copyWith(
@@ -202,7 +202,7 @@ class _MyAppState extends State<MyApp> {
               fontSize: 16,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -215,12 +215,12 @@ class _MyAppState extends State<MyApp> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           icon,
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           text,
         ],
       );
 
-      final shape = RoundedRectangleBorder(
+      const shape = RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(18)),
       );
 
@@ -229,15 +229,15 @@ class _MyAppState extends State<MyApp> {
               color: color,
               onPressed: onTap,
               elevation: 2,
-              child: child,
               shape: shape,
+              child: child,
             )
           : OutlineButton(
               color: color,
               onPressed: onTap,
-              child: child,
               borderSide: border,
               shape: shape,
+              child: child,
             );
     }
 
@@ -270,7 +270,7 @@ class _MyAppState extends State<MyApp> {
             },
             color: mapsBlue,
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           button(
             Icon(
               !isExpanded ? Icons.list : Icons.map,
@@ -305,13 +305,13 @@ class _MyAppState extends State<MyApp> {
       fontWeight: FontWeight.w600,
     );
 
-    final padding = const EdgeInsets.symmetric(horizontal: 16);
+    const padding = EdgeInsets.symmetric(horizontal: 16);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         divider,
-        SizedBox(height: 32),
+        const SizedBox(height: 32),
         Padding(
           padding: padding,
           child: Column(
@@ -322,14 +322,14 @@ class _MyAppState extends State<MyApp> {
                 'Traffic',
                 style: titleStyle,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               buildChart(context),
             ],
           ),
         ),
-        SizedBox(height: 32),
+        const SizedBox(height: 32),
         divider,
-        SizedBox(height: 32),
+        const SizedBox(height: 32),
         Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -341,19 +341,19 @@ class _MyAppState extends State<MyApp> {
                 style: titleStyle,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             buildSteps(context),
           ],
         ),
-        SizedBox(height: 32),
+        const SizedBox(height: 32),
         divider,
-        SizedBox(height: 32),
+        const SizedBox(height: 32),
         Icon(
           MdiIcons.github,
           color: Colors.grey.shade900,
           size: 48,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         Align(
           alignment: Alignment.center,
           child: Text(
@@ -364,7 +364,7 @@ class _MyAppState extends State<MyApp> {
             textAlign: TextAlign.center,
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Align(
           alignment: Alignment.center,
           child: Text(
@@ -375,7 +375,7 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
         ),
-        SizedBox(height: 32),
+        const SizedBox(height: 32),
       ],
     );
   }
@@ -390,7 +390,7 @@ class _MyAppState extends State<MyApp> {
 
     return ListView.builder(
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: steps.length,
       itemBuilder: (context, i) {
         final step = steps[i];
@@ -407,7 +407,7 @@ class _MyAppState extends State<MyApp> {
                   fontSize: 16,
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Row(
                 children: <Widget>[
                   Text(
@@ -417,7 +417,7 @@ class _MyAppState extends State<MyApp> {
                       fontSize: 15,
                     ),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Container(
                       height: 1,
@@ -426,7 +426,7 @@ class _MyAppState extends State<MyApp> {
                   )
                 ],
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
             ],
           ),
         );
@@ -499,9 +499,11 @@ class _MyAppState extends State<MyApp> {
       builder: (context) {
         return SlidingSheetDialog(
           controller: dialogController,
+          isDismissable: false,
           duration: const Duration(milliseconds: 800),
           snapSpec: const SnapSpec(
-            snappings: const [
+            snap: false,
+            snappings: [
               0.4,
               0.7,
               1.0,
@@ -572,11 +574,6 @@ class _MyAppState extends State<MyApp> {
               child: Material(
                 child: Column(
                   children: <Widget>[
-                    Container(
-                      color: Colors.red,
-                      height: 200,
-                    ),
-                    TextField(),
                     ListView(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),

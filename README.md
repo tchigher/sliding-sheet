@@ -60,7 +60,7 @@ Widget build(BuildContext context) {
             // scrolled, if the content is bigger than the available
             // height of the sheet.
             return Container(
-              height: MediaQuery.of(context).size.height,
+              height: 500,
               child: Center(
                 child: Text('This is the content of the sheet'),
               ),
@@ -95,7 +95,7 @@ void showAsBottomSheet() async {
         ),
         builder: (context, state) {
           return Container(
-            height: MediaQuery.of(context).size.height,
+            height: 400,
             child: Center(
               child: Material(
                 child: InkWell(

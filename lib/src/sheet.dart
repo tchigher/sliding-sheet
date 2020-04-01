@@ -122,10 +122,6 @@ class SlidingSheet extends StatefulWidget {
   /// {@endtemplate}
   final SheetController controller;
 
-  /// The route of the sheet when used in a bottom sheet dialog. This parameter
-  /// is assigned internally and should not be explicitly assigned.
-  final _SlidingSheetRoute route;
-
   /// {@template sliding_sheet.scrollSpec}
   /// The [ScrollSpec] of the containing ScrollView.
   /// {@endtemplate}
@@ -146,39 +142,157 @@ class SlidingSheet extends StatefulWidget {
   /// {@endtemplate}
   final double minHeight;
 
+  /// {@template sliding_sheet.closeSheetOnBackButtonPressed}
   /// If true, closes the sheet when it is open and prevents the route
   /// from being popped.
+  /// {@endtemplate}
   final bool closeSheetOnBackButtonPressed;
+
+  // * BottomSheet fields
+
+  final _SlidingSheetRoute route;
+
+  /// {@template sliding_sheet.isDismissable}
+  /// If false, the `SlidingSheetDialog` will not be dismissable.
+  ///
+  /// That means that the user wont be able to close the sheet using gestures or back button.
+  /// {@endtemplate}
+  final bool isDismissable;
+
+  /// {@template sliding_sheet.onDismissPrevented}
+  /// A callback that gets invoked when a user tried to dismiss the dialog
+  /// while [isDimissable] is `true`.
+  /// {@endtemplate}
+  final VoidCallback onDismissPrevented;
+
+  /// Constructs a new `SlidingSheet` to be placed inside your widget tree.
   SlidingSheet({
     Key key,
+
+    /// {@macro sliding_sheet.builder}
+    @required SheetBuilder builder,
+
+    /// {@macro sliding_sheet.headerBuilder}
+    SheetBuilder headerBuilder,
+
+    /// {@macro sliding_sheet.footerBuilder}
+    SheetBuilder footerBuilder,
+
+    /// {@macro sliding_sheet.snapSpec}
+    SnapSpec snapSpec = const SnapSpec(),
+
+    /// {@macro sliding_sheet.duration}
+    Duration duration = const Duration(milliseconds: 1000),
+
+    /// {@macro sliding_sheet.color}
+    Color color = Colors.white,
+
+    /// {@macro sliding_sheet.backdropColor}
+    Color backdropColor,
+
+    /// {@macro sliding_sheet.shadowColor}
+    Color shadowColor = Colors.black54,
+
+    /// {@macro sliding_sheet.elevation}
+    double elevation = 0.0,
+
+    /// {@macro sliding_sheet.padding}
+    EdgeInsets padding,
+
+    /// {@macro sliding_sheet.addTopViewPaddingWhenAtFullscreen}
+    bool addTopViewPaddingOnFullscreen = false,
+
+    /// {@macro sliding_sheet.margin}
+    EdgeInsets margin,
+
+    /// {@macro sliding_sheet.border}
+    Border border,
+
+    /// {@macro sliding_sheet.cornerRadius}
+    double cornerRadius = 0.0,
+
+    /// {@macro sliding_sheet.cornerRadiusOnFullscreen}
+    double cornerRadiusOnFullscreen,
+
+    /// {@macro sliding_sheet.closeOnBackdropTap}
+    bool closeOnBackdropTap = false,
+
+    /// {@macro sliding_sheet.listener}
+    SheetListener listener,
+
+    /// {@macro sliding_sheet.controller}
+    SheetController controller,
+
+    /// {@macro sliding_sheet.scrollSpec}
+    ScrollSpec scrollSpec = const ScrollSpec(overscroll: false),
+
+    /// {@macro sliding_sheet.maxWidth}
+    double maxWidth = double.infinity,
+
+    /// {@macro sliding_sheet.minHeight}
+    double minHeight,
+
+    /// {@macro sliding_sheet.closeSheetOnBackButtonPressed}
+    bool closeSheetOnBackButtonPressed = false,
+  }) : this._(
+          key: key,
+          builder: builder,
+          headerBuilder: headerBuilder,
+          footerBuilder: footerBuilder,
+          snapSpec: snapSpec,
+          duration: duration,
+          color: color,
+          backdropColor: backdropColor,
+          shadowColor: shadowColor,
+          elevation: elevation,
+          padding: padding,
+          addTopViewPaddingOnFullscreen: addTopViewPaddingOnFullscreen,
+          margin: margin,
+          border: border,
+          cornerRadius: cornerRadius,
+          cornerRadiusOnFullscreen: cornerRadiusOnFullscreen,
+          closeOnBackdropTap: closeOnBackdropTap,
+          listener: listener,
+          controller: controller,
+          scrollSpec: scrollSpec,
+          maxWidth: maxWidth,
+          minHeight: minHeight,
+          closeSheetOnBackButtonPressed: closeSheetOnBackButtonPressed,
+        );
+
+  SlidingSheet._({
+    Key key,
     @required this.builder,
-    this.headerBuilder,
-    this.footerBuilder,
-    this.snapSpec = const SnapSpec(),
-    this.duration = const Duration(milliseconds: 1000),
-    this.color = Colors.white,
-    this.backdropColor,
-    this.shadowColor = Colors.black54,
-    this.elevation = 0.0,
-    this.padding,
-    this.addTopViewPaddingOnFullscreen = false,
-    this.margin,
-    this.border,
-    this.cornerRadius = 0.0,
-    this.cornerRadiusOnFullscreen,
-    this.closeOnBackdropTap = false,
-    this.listener,
-    this.controller,
+    @required this.headerBuilder,
+    @required this.footerBuilder,
+    @required this.snapSpec,
+    @required this.duration,
+    @required this.color,
+    @required this.backdropColor,
+    @required this.shadowColor,
+    @required this.elevation,
+    @required this.padding,
+    @required this.addTopViewPaddingOnFullscreen,
+    @required this.margin,
+    @required this.border,
+    @required this.cornerRadius,
+    @required this.cornerRadiusOnFullscreen,
+    @required this.closeOnBackdropTap,
+    @required this.listener,
+    @required this.controller,
+    @required this.scrollSpec,
+    @required this.maxWidth,
+    @required this.minHeight,
+    @required this.closeSheetOnBackButtonPressed,
     this.route,
-    this.scrollSpec = const ScrollSpec(overscroll: false),
-    this.maxWidth = double.infinity,
-    this.minHeight,
-    this.closeSheetOnBackButtonPressed = false,
+    this.isDismissable = true,
+    this.onDismissPrevented,
   })  : assert(builder != null),
         assert(duration != null),
         assert(snapSpec != null),
         assert(snapSpec.snappings.length >= 2, 'There must be at least two snappings to snap in between.'),
         assert(snapSpec.minSnap != snapSpec.maxSnap || route != null, 'The min and max snaps cannot be equal.'),
+        assert(isDismissable != null),
         super(key: key);
 
   @override
@@ -201,6 +315,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   double footerHeight = 0;
   double availableHeight = 0;
 
+  bool didCompleteInitialRoute = false;
   // Whether a dismiss was already triggered by the sheet itself
   // and thus further route pops can be safely ignored.
   bool dismissUnderway = false;
@@ -217,7 +332,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   double get maxHeight => math.min(sheetHeight, availableHeight);
   bool get isCoveringFullExtent => sheetHeight >= availableHeight;
 
-  double get currentExtent => extent?.currentExtent ?? minExtent;
+  double get currentExtent => (extent?.currentExtent ?? minExtent).clamp(0.0, 1.0);
   set currentExtent(double value) => extent?.currentExtent = value;
   double get headerExtent => isLaidOut ? (headerHeight + (borderHeight / 2)) / availableHeight : 0.0;
   double get footerExtent => isLaidOut ? (footerHeight + (borderHeight / 2)) / availableHeight : 0.0;
@@ -279,7 +394,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     _updateSnappingsAndExtent();
 
     // Call the listener when the extent or scroll position changes.
-    final listener = () {
+    void listener() {
       if (isLaidOut) {
         postFrame(() {
           final state = this.state;
@@ -287,7 +402,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
           widget.controller?._state = state;
         });
       }
-    };
+    }
 
     controller = _DragableScrollableSheetController(
       this,
@@ -303,25 +418,34 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     _assignSheetController();
 
     _measure();
-    postFrame(() {
-      if (fromBottomSheet) {
-        // Snap to the initial snap with a one frame delay when the
-        // extents have been correctly calculated.
-        snapToExtent(minExtent);
 
-        // When the route gets popped we animate fully out - not just
-        // to the minExtent.
-        widget.route.popped.then(
-          (_) {
-            if (!dismissUnderway) {
-              controller.jumpTo(controller.offset);
-              controller.snapToExtent(0.0, this, clamp: false);
-            }
-          },
-        );
-      } else {
-        setState(() => currentExtent = minExtent);
-      }
+    if (fromBottomSheet) {
+      _initBottomSheet();
+    } else {
+      postFrame(
+        () => setState(() => currentExtent = minExtent),
+      );
+    }
+  }
+
+  void _initBottomSheet() {
+    postFrame(() {
+      // Snap to the initial snap with a one frame delay when the
+      // extents have been correctly calculated.
+      snapToExtent(minExtent);
+
+      // When the route gets popped we animate fully out - not just
+      // to the minExtent.
+      widget.route.popped.then(
+        (_) {
+          if (!dismissUnderway) {
+            controller.jumpTo(controller.offset);
+            controller.snapToExtent(0.0, this, clamp: false);
+          }
+        },
+      );
+
+      Future.delayed(widget.duration, () => didCompleteInitialRoute = true);
     });
   }
 
@@ -553,173 +677,208 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     }
   }
 
+  void _handleChangesInChildSize() {
+    _measure();
+    postFrame(() {
+      currentExtent = currentExtent.clamp(minExtent, maxExtent);
+      _nudgeToNextSnap();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     rebuild();
 
-    // ValueListenableBuilder is used to update the sheet irrespective of its children.
-    Widget sheet = LayoutBuilder(
+    final sheet = LayoutBuilder(
       builder: (context, constrainst) {
         final previousHeight = availableHeight;
         availableHeight = constrainst.biggest.height;
         _detectChangesInAvailableHeight(previousHeight);
 
-        return ValueListenableBuilder(
-          valueListenable: extent._currentExtent,
-          builder: (context, value, _) {
-            // Wrap the scrollView in a ScrollConfiguration to
-            // remove the default overscroll effect.
-            Widget scrollView = ScrollConfiguration(
-              behavior: ScrollBehavior(),
-              child: SingleChildScrollView(
-                controller: controller,
-                physics: scrollSpec.physics ?? ScrollPhysics(),
-                padding: EdgeInsets.only(
-                  top: header == null ? padding.top : 0.0,
-                  bottom: footer == null ? padding.bottom : 0.0,
-                ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: widget.minHeight ?? 0.0),
-                  child: SizeChangedLayoutNotifier(
-                    key: childKey,
-                    child: child,
-                  ),
-                ),
-              ),
-            );
-
-            // Add the overscroll if required again if required
-            if (scrollSpec.overscroll) {
-              scrollView = GlowingOverscrollIndicator(
-                axisDirection: AxisDirection.down,
-                color: scrollSpec.overscrollColor ?? theme.accentColor,
-                child: scrollView,
-              );
-            }
-
-            // Hide the sheet for the first frame until the extents are
-            // correctly measured.
-            return Visibility(
-              visible: isLaidOut,
-              maintainInteractivity: false,
-              maintainSemantics: true,
-              maintainSize: true,
-              maintainState: true,
-              maintainAnimation: true,
-              child: Stack(
-                children: <Widget>[
-                  if (widget.closeOnBackdropTap || (widget.backdropColor != null && widget.backdropColor.opacity != 0))
-                    GestureDetector(
-                      onTap: widget.closeOnBackdropTap ? () => _pop(0.0) : null,
-                      child: Opacity(
-                        opacity: currentExtent != 0 ? (currentExtent / minExtent).clamp(0.0, 1.0) : 0.0,
-                        child: Container(
-                          width: double.infinity,
-                          height: double.infinity,
-                          color: widget.backdropColor,
-                        ),
-                      ),
-                    ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: widget.maxWidth ?? double.infinity,
-                      ),
-                      child: SizedBox.expand(
-                        child: FractionallySizedBox(
-                          heightFactor: isLaidOut ? currentExtent.clamp(headerFooterExtent, 1.0) : 1.0,
-                          alignment: Alignment.bottomCenter,
-                          child: FractionalTranslation(
-                            translation: Offset(
-                              0,
-                              headerFooterExtent > 0.0
-                                  ? (1 - (currentExtent.clamp(0.0, headerFooterExtent) / headerFooterExtent))
-                                  : 0.0,
-                            ),
-                            child: _SheetContainer(
-                              color: widget.color ?? Colors.white,
-                              border: widget.border,
-                              margin: widget.margin,
-                              padding: EdgeInsets.fromLTRB(
-                                padding.left,
-                                header != null ? padding.top : 0.0,
-                                padding.right,
-                                footer != null ? padding.bottom : 0.0,
-                              ),
-                              elevation: widget.elevation,
-                              shadowColor: widget.shadowColor,
-                              customBorders: BorderRadius.vertical(
-                                top: Radius.circular(cornerRadius),
-                              ),
-                              child: Stack(
-                                children: <Widget>[
-                                  Column(
-                                    children: <Widget>[
-                                      SizedBox(height: headerHeight),
-                                      Expanded(child: scrollView),
-                                      SizedBox(height: footerHeight),
-                                    ],
-                                  ),
-                                  if (header != null)
-                                    Align(
-                                      alignment: Alignment.topCenter,
-                                      child: SizeChangedLayoutNotifier(
-                                        key: headerKey,
-                                        child: header,
-                                      ),
-                                    ),
-                                  if (footer != null)
-                                    Align(
-                                      alignment: Alignment.bottomCenter,
-                                      child: SizeChangedLayoutNotifier(
-                                        key: footerKey,
-                                        child: footer,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
+        return NotificationListener<SizeChangedLayoutNotification>(
+          onNotification: (notification) {
+            _handleChangesInChildSize();
+            return true;
           },
+          // ValueListenableBuilder is used to update the sheet irrespective of its children.
+          child: ValueListenableBuilder(
+            valueListenable: extent._currentExtent,
+            builder: (context, value, _) {
+              // Hide the sheet for the first frame until the extents are
+              // correctly measured.
+              return Visibility(
+                visible: isLaidOut,
+                maintainInteractivity: false,
+                maintainSemantics: true,
+                maintainSize: true,
+                maintainState: true,
+                maintainAnimation: true,
+                child: Stack(
+                  children: <Widget>[
+                    _buildBackdrop(),
+                    _buildSheet(),
+                  ],
+                ),
+              );
+            },
+          ),
         );
       },
     );
 
-    sheet = NotificationListener<SizeChangedLayoutNotification>(
-      onNotification: (notification) {
-        _measure();
-        postFrame(() {
-          currentExtent = currentExtent.clamp(minExtent, maxExtent);
-          _nudgeToNextSnap();
-        });
-        return true;
-      },
-      child: sheet,
-    );
-
-    if (widget.closeSheetOnBackButtonPressed == false) {
+    if (!widget.closeSheetOnBackButtonPressed && !fromBottomSheet) {
       return sheet;
     }
 
     return WillPopScope(
       onWillPop: () async {
-        if (!state.isCollapsed) {
-          snapToExtent(minExtent);
-          return false;
+        if (fromBottomSheet) {
+          if (!widget.isDismissable) {
+            widget.onDismissPrevented?.call();
+            return false;
+          }
+        } else {
+          if (!state.isCollapsed) {
+            snapToExtent(minExtent);
+            return false;
+          }
         }
 
         return true;
       },
       child: sheet,
+    );
+  }
+
+  Widget _buildSheet() {
+    final theme = Theme.of(context);
+
+    // Wrap the scrollView in a ScrollConfiguration to
+    // remove the default overscroll effect.
+    Widget scrollView = ScrollConfiguration(
+      behavior: const ScrollBehavior(),
+      child: SingleChildScrollView(
+        controller: controller,
+        physics: scrollSpec.physics ?? const ScrollPhysics(),
+        padding: EdgeInsets.only(
+          top: header == null ? padding.top : 0.0,
+          bottom: footer == null ? padding.bottom : 0.0,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: widget.minHeight ?? 0.0),
+          child: SizeChangedLayoutNotifier(
+            key: childKey,
+            child: child,
+          ),
+        ),
+      ),
+    );
+
+    // Add the overscroll if required again if required
+    if (scrollSpec.overscroll) {
+      scrollView = GlowingOverscrollIndicator(
+        axisDirection: AxisDirection.down,
+        color: scrollSpec.overscrollColor ?? theme.accentColor,
+        child: scrollView,
+      );
+    }
+
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: widget.maxWidth ?? double.infinity,
+        ),
+        child: SizedBox.expand(
+          child: FractionallySizedBox(
+            heightFactor: isLaidOut ? currentExtent.clamp(headerFooterExtent, 1.0) : 1.0,
+            alignment: Alignment.bottomCenter,
+            child: FractionalTranslation(
+              translation: Offset(
+                0,
+                headerFooterExtent > 0.0
+                    ? (1 - (currentExtent.clamp(0.0, headerFooterExtent) / headerFooterExtent))
+                    : 0.0,
+              ),
+              child: _SheetContainer(
+                color: widget.color ?? Colors.white,
+                border: widget.border,
+                margin: widget.margin,
+                padding: EdgeInsets.fromLTRB(
+                  padding.left,
+                  header != null ? padding.top : 0.0,
+                  padding.right,
+                  footer != null ? padding.bottom : 0.0,
+                ),
+                elevation: widget.elevation,
+                shadowColor: widget.shadowColor,
+                customBorders: BorderRadius.vertical(
+                  top: Radius.circular(cornerRadius),
+                ),
+                child: Stack(
+                  children: <Widget>[
+                    Column(
+                      children: <Widget>[
+                        SizedBox(height: headerHeight),
+                        Expanded(child: scrollView),
+                        SizedBox(height: footerHeight),
+                      ],
+                    ),
+                    if (header != null)
+                      Align(
+                        alignment: Alignment.topCenter,
+                        child: SizeChangedLayoutNotifier(
+                          key: headerKey,
+                          child: header,
+                        ),
+                      ),
+                    if (footer != null)
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: SizeChangedLayoutNotifier(
+                          key: footerKey,
+                          child: footer,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackdrop() {
+    double opacity = 0.0;
+    if (!widget.isDismissable && didCompleteInitialRoute) {
+      opacity = 1.0;
+    } else if (currentExtent != 0.0) {
+      opacity = (currentExtent / minExtent).clamp(0.0, 1.0);
+    }
+
+    return Visibility(
+      visible: widget.closeOnBackdropTap,
+      child: GestureDetector(
+        onTap: widget.closeOnBackdropTap
+            ? () {
+                if (widget.isDismissable) {
+                  _pop(0.0);
+                } else {
+                  widget.onDismissPrevented?.call();
+                }
+              }
+            : null,
+        child: Opacity(
+          opacity: opacity,
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: widget.backdropColor,
+          ),
+        ),
+      ),
     );
   }
 
@@ -746,7 +905,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       },
       onVerticalDragUpdate: (details) {
         end = details.localPosition.dy;
-        final delta = swapSign(details.delta.dy);
+        final delta = details.delta.dy;
         controller.imitiateDrag(delta);
       },
       onVerticalDragEnd: (details) {
