@@ -476,7 +476,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Future showBottomSheet(BuildContext context) async {
+  Future<void> showBottomSheet(BuildContext context) async {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
