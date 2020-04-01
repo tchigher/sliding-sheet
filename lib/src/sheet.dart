@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:flutter/rendering.dart';
 
 part 'scrolling.dart';
@@ -755,20 +756,30 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
     // Wrap the scrollView in a ScrollConfiguration to
     // remove the default overscroll effect.
-    Widget scrollView = ScrollConfiguration(
-      behavior: const ScrollBehavior(),
-      child: SingleChildScrollView(
-        controller: controller,
-        physics: scrollSpec.physics ?? const ScrollPhysics(),
-        padding: EdgeInsets.only(
-          top: header == null ? padding.top : 0.0,
-          bottom: footer == null ? padding.bottom : 0.0,
-        ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: widget.minHeight ?? 0.0),
-          child: SizeChangedLayoutNotifier(
-            key: childKey,
-            child: child,
+    Widget scrollView = Listener(
+      onPointerUp: (_) {
+        // didEndScroll doesn't work reliably in ScrollPosition. There
+        // should be a better solution to this problem.
+        if (currentExtent < minExtent && fromBottomSheet && !widget.isDismissable) {
+          snapToExtent(minExtent);
+          widget.onDismissPrevented?.call();
+        }
+      },
+      child: ScrollConfiguration(
+        behavior: const ScrollBehavior(),
+        child: SingleChildScrollView(
+          controller: controller,
+          physics: scrollSpec.physics ?? const ScrollPhysics(),
+          padding: EdgeInsets.only(
+            top: header == null ? padding.top : 0.0,
+            bottom: footer == null ? padding.bottom : 0.0,
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: widget.minHeight ?? 0.0),
+            child: SizeChangedLayoutNotifier(
+              key: childKey,
+              child: child,
+            ),
           ),
         ),
       ),
@@ -907,10 +918,12 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
         end = details.localPosition.dy;
         final delta = details.delta.dy;
         controller.imitiateDrag(delta);
+        print('update');
       },
       onVerticalDragEnd: (details) {
         final velocity = swapSign(details.velocity.pixelsPerSecond.dy);
         onDragEnd(velocity);
+        print('end');
       },
       onVerticalDragCancel: onDragEnd,
       child: child,

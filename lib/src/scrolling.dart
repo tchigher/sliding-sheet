@@ -199,7 +199,6 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
   bool get fromBottomSheet => extent.isFromBottomSheet;
   bool get snap => snapBehavior.snap;
   bool get isDismissable => sheet.widget.isDismissable;
-  VoidCallback get onDismissPrevented => scrollController.widget.onDismissPrevented ?? () {};
 
   double get availableHeight => extent.targetHeight;
   double get currentExtent => extent.currentExtent;
@@ -261,14 +260,8 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
 
     final canSnapToNextExtent = snap && !extent.isAtMax && !extent.isAtMin && !shouldScroll;
     if (inDrag && (canSnapToNextExtent || isBottomSheetBelowMinExtent)) {
-      if (shouldMakeSheetNonDismissable) {
-        goSnapped(0.0, snap: minExtent);
-      } else {
-        goSnapped(0.0);
-      }
+      goSnapped(0.0);
     }
-
-    inDrag = false;
   }
 
   @override
@@ -287,8 +280,8 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
     }
 
     if (shouldMakeSheetNonDismissable) {
-      goNonDissmiable(velocity);
-      print('Go dismissable');
+      disposeDragCancelCallback();
+      goNonDismissable(velocity);
       return;
     }
 
@@ -299,8 +292,6 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
 
     disposeDragCancelCallback();
 
-    print('Go snapped');
-
     snap ? goSnapped(velocity) : goUnsnapped(velocity);
   }
 
@@ -308,12 +299,18 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
     velocity = velocity.abs();
     const flingThreshold = 1700;
 
+    void snapTo(double snap) => scrollController.snapToExtent(snap, context.vsync, velocity: velocity);
+
     if (velocity > flingThreshold) {
       if (!isMovingUp) {
-        // Pop from the navigator on down fling.
-        onPop(velocity);
+        if (isDismissable) {
+          // Pop from the navigator on down fling.
+          onPop(velocity);
+        } else {
+          snapTo(minExtent);
+        }
       } else if (currentExtent > 0.0) {
-        scrollController.snapToExtent(maxExtent, context.vsync, velocity: velocity);
+        snapTo(maxExtent);
       }
     } else {
       const snapToNextThreshold = 300;
@@ -347,16 +344,14 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
       if (targetSnap == null) findSnap();
       if (targetSnap == null) findSnap(greaterThanCurrent: false);
 
-      print(targetSnap);
+      if (!isDismissable) {
+        targetSnap = math.max(minExtent, targetSnap);
+      }
 
       if (targetSnap == 0.0) {
         onPop(velocity);
       } else if (targetSnap != extent.currentExtent && currentExtent > 0) {
-        scrollController.snapToExtent(
-          targetSnap.clamp(minExtent, maxExtent),
-          context.vsync,
-          velocity: velocity,
-        );
+        snapTo(targetSnap.clamp(minExtent, maxExtent));
       }
     }
   }
@@ -369,10 +364,8 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
     }
   }
 
-  Future<void> goNonDissmiable(double velocity) async {
-    await runScrollSimulation(velocity, friction: 0.5);
-    goSnapped(minExtent);
-    onDismissPrevented();
+  Future<void> goNonDismissable(double velocity) async {
+    await runScrollSimulation(velocity, friction: 0.75);
   }
 
   Future<void> runScrollSimulation(double velocity, {double friction = 0.015, VoidCallback onTick}) async {

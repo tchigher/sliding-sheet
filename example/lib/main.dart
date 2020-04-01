@@ -6,6 +6,7 @@ import 'package:example/test.dart';
 import 'package:example/util/util.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 import 'package:sliding_sheet/sliding_sheet.dart';
@@ -479,10 +480,11 @@ class _MyAppState extends State<MyApp> {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
-    final dialogController = SheetController();
+    final controller = SheetController();
     double extent = 0;
     double progress = 0;
     double multiple = 1;
+    bool isDismissable = false;
 
     await showSlidingBottomSheet(
       context,
@@ -490,7 +492,7 @@ class _MyAppState extends State<MyApp> {
       // This can be for example a Theme or an AnnotatedRegion.
       parentBuilder: (context, sheet) {
         return Theme(
-          data: ThemeData.light(),
+          data: ThemeData.dark(),
           child: sheet,
         );
       },
@@ -498,20 +500,18 @@ class _MyAppState extends State<MyApp> {
       // will call the builder, allowing react to state changes while the sheet is shown.
       builder: (context) {
         return SlidingSheetDialog(
-          controller: dialogController,
-          isDismissable: false,
+          controller: controller,
           duration: const Duration(milliseconds: 800),
           snapSpec: const SnapSpec(
-            snap: false,
+            snap: true,
             snappings: [
+              0.0,
               0.4,
-              0.7,
               1.0,
             ],
           ),
-          scrollSpec: ScrollSpec.bouncingScroll(),
+          color: Colors.teal,
           maxWidth: 500,
-          color: Colors.white,
           cornerRadius: 16,
           cornerRadiusOnFullscreen: 0,
           listener: (state) {
@@ -520,72 +520,85 @@ class _MyAppState extends State<MyApp> {
             multiple = 1 - interval(0.7, 1.0, extent);
 
             if (state.progress >= 0.6 || (state.isExpanded && state.scrollOffset < 8.0)) {
-              dialogController.rebuild();
+              controller.rebuild();
             }
           },
-          headerBuilder: (context, state) {
-            return Material(
-              elevation: interval(0.0, 8.0, state.scrollOffset) * 4,
-              shadowColor: Colors.black,
-              color: Colors.white,
-              child: Container(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  16 + (MediaQuery.of(context).viewPadding.top * (1 - multiple)),
-                  16,
-                  16,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Text(
-                      'Header',
-                      style: textTheme.headline5,
+          isDismissable: isDismissable,
+          onDismissPrevented: () => HapticFeedback.heavyImpact(),
+          builder: (context, state) {
+            return Container(
+              height: 700,
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Confirm purchase',
+                    style: textTheme.headline4.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
-                    Transform.rotate(
-                      angle: pi * interval(0.7, 0.85, progress),
-                      child: IconButton(
-                        icon: Icon(Icons.keyboard_arrow_up),
-                        onPressed: () => progress != 1.0 ? dialogController.expand() : dialogController.collapse(),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent sagittis tellus lacus, et pulvinar orci eleifend in.',
+                          style: textTheme.subtitle1.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 24),
+                      Icon(
+                        isDismissable ? Icons.check : Icons.error,
+                        color: Colors.white,
+                        size: 56,
+                      ),
+                    ],
+                  )
+                ],
               ),
             );
           },
           footerBuilder: (context, state) {
             return Container(
-              height: 56,
-              color: Colors.black,
+              color: Colors.teal.shade700,
               padding: const EdgeInsets.all(16),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Footer',
-                  style: textTheme.headline5.copyWith(color: Colors.white),
-                ),
-              ),
-            );
-          },
-          builder: (context, state) {
-            return Container(
-              color: Colors.white,
-              child: Material(
-                child: Column(
-                  children: <Widget>[
-                    ListView(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: List.generate(10, (i) => i).map((i) {
-                        return Container(
-                          padding: const EdgeInsets.all(48),
-                          child: Text('Item $i'),
-                        );
-                      }).toList(),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  FlatButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Cancel',
+                      style: textTheme.subtitle1.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 16),
+                  FlatButton(
+                    onPressed: () {
+                      if (!isDismissable) {
+                        isDismissable = true;
+                        controller.rebuild();
+                      } else {
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: Text(
+                      'Approve',
+                      style: textTheme.subtitle1.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             );
           },
@@ -606,7 +619,7 @@ class _MyAppState extends State<MyApp> {
             fit: BoxFit.cover,
           ),
         ),
-        SizedBox(height: 56),
+        const SizedBox(height: 56),
       ],
     );
   }
