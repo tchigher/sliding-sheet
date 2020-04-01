@@ -166,74 +166,29 @@ class SlidingSheet extends StatefulWidget {
   /// {@endtemplate}
   final VoidCallback onDismissPrevented;
 
-  /// Constructs a new `SlidingSheet` to be placed inside your widget tree.
   SlidingSheet({
     Key key,
-
-    /// {@macro sliding_sheet.builder}
     @required SheetBuilder builder,
-
-    /// {@macro sliding_sheet.headerBuilder}
     SheetBuilder headerBuilder,
-
-    /// {@macro sliding_sheet.footerBuilder}
     SheetBuilder footerBuilder,
-
-    /// {@macro sliding_sheet.snapSpec}
     SnapSpec snapSpec = const SnapSpec(),
-
-    /// {@macro sliding_sheet.duration}
     Duration duration = const Duration(milliseconds: 1000),
-
-    /// {@macro sliding_sheet.color}
     Color color = Colors.white,
-
-    /// {@macro sliding_sheet.backdropColor}
     Color backdropColor,
-
-    /// {@macro sliding_sheet.shadowColor}
     Color shadowColor = Colors.black54,
-
-    /// {@macro sliding_sheet.elevation}
     double elevation = 0.0,
-
-    /// {@macro sliding_sheet.padding}
     EdgeInsets padding,
-
-    /// {@macro sliding_sheet.addTopViewPaddingWhenAtFullscreen}
     bool addTopViewPaddingOnFullscreen = false,
-
-    /// {@macro sliding_sheet.margin}
     EdgeInsets margin,
-
-    /// {@macro sliding_sheet.border}
     Border border,
-
-    /// {@macro sliding_sheet.cornerRadius}
     double cornerRadius = 0.0,
-
-    /// {@macro sliding_sheet.cornerRadiusOnFullscreen}
     double cornerRadiusOnFullscreen,
-
-    /// {@macro sliding_sheet.closeOnBackdropTap}
     bool closeOnBackdropTap = false,
-
-    /// {@macro sliding_sheet.listener}
     SheetListener listener,
-
-    /// {@macro sliding_sheet.controller}
     SheetController controller,
-
-    /// {@macro sliding_sheet.scrollSpec}
     ScrollSpec scrollSpec = const ScrollSpec(overscroll: false),
-
-    /// {@macro sliding_sheet.maxWidth}
     double maxWidth = double.infinity,
-
-    /// {@macro sliding_sheet.minHeight}
     double minHeight,
-
-    /// {@macro sliding_sheet.closeSheetOnBackButtonPressed}
     bool closeSheetOnBackButtonPressed = false,
   }) : this._(
           key: key,
