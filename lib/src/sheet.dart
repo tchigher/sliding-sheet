@@ -5,7 +5,6 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 import 'package:flutter/rendering.dart';
 
 part 'scrolling.dart';
@@ -16,6 +15,8 @@ part 'util.dart';
 typedef SheetBuilder = Widget Function(BuildContext context, SheetState state);
 
 typedef SheetListener = void Function(SheetState state);
+
+typedef OnDismissPreventedCallback = void Function(bool backButton);
 
 /// A widget that can be dragged and scrolled in a single gesture and snapped
 /// to a list of extents.
@@ -164,7 +165,7 @@ class SlidingSheet extends StatefulWidget {
   /// A callback that gets invoked when a user tried to dismiss the dialog
   /// while [isDimissable] is `true`.
   /// {@endtemplate}
-  final VoidCallback onDismissPrevented;
+  final OnDismissPreventedCallback onDismissPrevented;
 
   SlidingSheet({
     Key key,
@@ -527,7 +528,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       // Assign the controller functions to the state functions.
       if (!fromBottomSheet) controller._rebuild = rebuild;
       controller._scrollTo = scrollTo;
-      controller._snapToExtent = (snap, {duration}) => snapToExtent(_normalizeSnap(snap), duration: duration);
+      controller._snapToExtent =
+          (snap, {duration, clamp}) => snapToExtent(_normalizeSnap(snap), duration: duration, clamp: clamp);
       controller._expand = () => snapToExtent(maxExtent);
       controller._collapse = () => snapToExtent(minExtent);
       controller._show = () async {
@@ -690,17 +692,19 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       onWillPop: () async {
         if (fromBottomSheet) {
           if (!widget.isDismissable) {
-            widget.onDismissPrevented?.call();
+            widget.onDismissPrevented?.call(true);
             return false;
+          } else {
+            return true;
           }
         } else {
           if (!state.isCollapsed) {
             snapToExtent(minExtent);
             return false;
+          } else {
+            return true;
           }
         }
-
-        return true;
       },
       child: sheet,
     );
@@ -715,9 +719,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       onPointerUp: (_) {
         // didEndScroll doesn't work reliably in ScrollPosition. There
         // should be a better solution to this problem.
-        if (currentExtent < minExtent && fromBottomSheet && !widget.isDismissable) {
+        if (fromBottomSheet && !widget.isDismissable && currentExtent < minExtent) {
           snapToExtent(minExtent);
-          widget.onDismissPrevented?.call();
+          widget.onDismissPrevented?.call(false);
         }
       },
       child: ScrollConfiguration(
@@ -832,7 +836,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                 if (widget.isDismissable) {
                   _pop(0.0);
                 } else {
-                  widget.onDismissPrevented?.call();
+                  widget.onDismissPrevented?.call(false);
                 }
               }
             : null,
@@ -971,8 +975,9 @@ class SheetController {
   /// The [extent] will be clamped to the minimum and maximum extent.
   /// If the scrolling child is not at the top, it will scroll to the top
   /// first and then animate to the specified extent.
-  Future snapToExtent(double extent, {Duration duration}) => _snapToExtent?.call(extent, duration: duration);
-  Future Function(double extent, {Duration duration}) _snapToExtent;
+  Future snapToExtent(double extent, {Duration duration, bool clamp = true}) =>
+      _snapToExtent?.call(extent, duration: duration, clamp: clamp);
+  Future Function(double extent, {Duration duration, bool clamp}) _snapToExtent;
 
   /// Animates the scrolling child to a specified offset.
   ///
@@ -1029,7 +1034,7 @@ class _SheetContainer extends StatelessWidget {
   final List<BoxShadow> boxShadows;
   final AlignmentGeometry alignment;
   final BoxConstraints constraints;
-  _SheetContainer({
+  const _SheetContainer({
     Key key,
     this.borderRadius = 0.0,
     this.elevation = 0.0,

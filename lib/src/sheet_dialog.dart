@@ -169,7 +169,7 @@ class SlidingSheetDialog {
   final bool isDismissable;
 
   /// {@macro sliding_sheet.onDismissPrevented}
-  final VoidCallback onDismissPrevented;
+  final OnDismissPreventedCallback onDismissPrevented;
   const SlidingSheetDialog({
     @required this.builder,
     this.headerBuilder,

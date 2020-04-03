@@ -90,16 +90,19 @@ class _DragableScrollableSheetController extends ScrollController {
   TickerFuture snapToExtent(
     double snap,
     TickerProvider vsync, {
-    double velocity = 0,
+    double velocity = 0.0,
     Duration duration,
     bool clamp = true,
   }) {
     _dispose();
 
     if (clamp) snap = snap.clamp(extent.minExtent, extent.maxExtent);
-    final speedFactor = (math.max((currentExtent - snap).abs(), .25) / maxExtent) *
-        (1 - ((velocity.abs() / 2000) * 0.3).clamp(.0, 0.3));
-    duration = this.duration * speedFactor;
+
+    // Adjust the animation duration for a snap to give it a more
+    // realistic feel.
+    final distanceFactor = ((currentExtent - snap).abs() / (maxExtent - minExtent)).clamp(0.33, 1.0);
+    final speedFactor = 1.0 - ((velocity.abs() / 2500) * 0.33).clamp(0.0, 0.66);
+    duration ??= this.duration * (distanceFactor * speedFactor);
 
     controller = AnimationController(duration: duration, vsync: vsync);
     final tween = Tween(begin: extent.currentExtent, end: snap).animate(
@@ -124,7 +127,6 @@ class _DragableScrollableSheetController extends ScrollController {
   void imitiateDrag(double delta) {
     inDrag = true;
     _currentPosition?.applyUserOffset(delta);
-    // extent.addPixelDelta(delta);
   }
 
   void imitateFling([double velocity = 0.0]) {
@@ -198,7 +200,7 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
   List<double> get snappings => extent.snappings;
   bool get fromBottomSheet => extent.isFromBottomSheet;
   bool get snap => snapBehavior.snap;
-  bool get isDismissable => sheet.widget.isDismissable;
+  bool get isDismissable => sheet.widget.isDismissable && fromBottomSheet;
 
   double get availableHeight => extent.targetHeight;
   double get currentExtent => extent.currentExtent;

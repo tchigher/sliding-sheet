@@ -105,7 +105,7 @@ class _MyAppState extends State<MyApp> {
 
   Widget buildSheet() {
     return SlidingSheet(
-      duration: const Duration(milliseconds: 1100),
+      duration: const Duration(milliseconds: 800),
       controller: controller,
       color: Colors.white,
       shadowColor: Colors.black26,
@@ -510,8 +510,15 @@ class _MyAppState extends State<MyApp> {
           color: Colors.teal,
           maxWidth: 500,
           isDismissable: isDismissable,
-          onDismissPrevented: () {
+          onDismissPrevented: (backButton) async {
             HapticFeedback.heavyImpact();
+
+            if (backButton) {
+              const duration = Duration(milliseconds: 300);
+              await controller.snapToExtent(0.2, duration: duration, clamp: false);
+              await controller.snapToExtent(0.4, duration: duration);
+            }
+
             print('Dismiss prevented');
           },
           builder: (context, state) {
