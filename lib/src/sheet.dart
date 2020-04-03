@@ -16,7 +16,7 @@ typedef SheetBuilder = Widget Function(BuildContext context, SheetState state);
 
 typedef SheetListener = void Function(SheetState state);
 
-typedef OnDismissPreventedCallback = void Function(bool backButton);
+typedef OnDismissPreventedCallback = void Function(bool backButton, bool backDrop);
 
 /// A widget that can be dragged and scrolled in a single gesture and snapped
 /// to a list of extents.
@@ -163,7 +163,11 @@ class SlidingSheet extends StatefulWidget {
 
   /// {@template sliding_sheet.onDismissPrevented}
   /// A callback that gets invoked when a user tried to dismiss the dialog
-  /// while [isDimissable] is `true`.
+  /// while [isDimissable] is set to `true`.
+  ///
+  /// The `backButton` flag indicates whether the user tried to dismiss the sheet
+  /// using the backButton, while the `backDrop` flag indicates whether the user tried
+  /// to dismiss the sheet by tapping the backdrop.
   /// {@endtemplate}
   final OnDismissPreventedCallback onDismissPrevented;
 
@@ -643,6 +647,10 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     });
   }
 
+  void _onDismissPrevented({bool backButton = false, bool backDrop = false}) {
+    widget.onDismissPrevented?.call(backButton, backDrop);
+  }
+
   @override
   Widget build(BuildContext context) {
     rebuild();
@@ -692,7 +700,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       onWillPop: () async {
         if (fromBottomSheet) {
           if (!widget.isDismissable) {
-            widget.onDismissPrevented?.call(true);
+            _onDismissPrevented(backButton: true);
             return false;
           } else {
             return true;
@@ -721,7 +729,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
         // should be a better solution to this problem.
         if (fromBottomSheet && !widget.isDismissable && currentExtent < minExtent) {
           snapToExtent(minExtent);
-          widget.onDismissPrevented?.call(false);
+          _onDismissPrevented();
         }
       },
       child: ScrollConfiguration(
@@ -828,25 +836,18 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       opacity = (currentExtent / minExtent).clamp(0.0, 1.0);
     }
 
-    return Visibility(
-      visible: widget.closeOnBackdropTap,
-      child: GestureDetector(
-        onTap: widget.closeOnBackdropTap
-            ? () {
-                if (widget.isDismissable) {
-                  _pop(0.0);
-                } else {
-                  widget.onDismissPrevented?.call(false);
-                }
-              }
-            : null,
-        child: Opacity(
-          opacity: opacity,
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: widget.backdropColor,
-          ),
+    return GestureDetector(
+      onTap: widget.closeOnBackdropTap
+          ? () {
+              widget.isDismissable ? _pop(0.0) : _onDismissPrevented(backDrop: true);
+            }
+          : null,
+      child: Opacity(
+        opacity: opacity,
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: widget.backdropColor,
         ),
       ),
     );

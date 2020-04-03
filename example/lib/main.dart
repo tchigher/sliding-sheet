@@ -510,14 +510,20 @@ class _MyAppState extends State<MyApp> {
           color: Colors.teal,
           maxWidth: 500,
           isDismissable: isDismissable,
-          onDismissPrevented: (backButton) async {
+          onDismissPrevented: (backButton, backDrop) async {
             HapticFeedback.heavyImpact();
 
-            if (backButton) {
+            if (backButton || backDrop) {
               const duration = Duration(milliseconds: 300);
               await controller.snapToExtent(0.2, duration: duration, clamp: false);
               await controller.snapToExtent(0.4, duration: duration);
+              // or Navigator.pop(context);
             }
+
+            // Or pop the route
+            // if (backButton) {
+            //   Navigator.pop(context);
+            // }
 
             print('Dismiss prevented');
           },
