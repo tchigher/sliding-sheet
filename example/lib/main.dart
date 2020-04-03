@@ -112,8 +112,10 @@ class _MyAppState extends State<MyApp> {
       elevation: 12,
       maxWidth: 500,
       cornerRadius: 16,
+      backdropColor: Colors.black26,
       cornerRadiusOnFullscreen: 0.0,
-      closeSheetOnBackButtonPressed: true,
+      closeOnBackdropTap: true,
+      closeOnBackButtonPressed: true,
       addTopViewPaddingOnFullscreen: true,
       border: Border.all(
         color: Colors.grey.shade300,

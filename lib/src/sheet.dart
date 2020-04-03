@@ -194,7 +194,7 @@ class SlidingSheet extends StatefulWidget {
     ScrollSpec scrollSpec = const ScrollSpec(overscroll: false),
     double maxWidth = double.infinity,
     double minHeight,
-    bool closeSheetOnBackButtonPressed = false,
+    bool closeOnBackButtonPressed = false,
   }) : this._(
           key: key,
           builder: builder,
@@ -218,7 +218,7 @@ class SlidingSheet extends StatefulWidget {
           scrollSpec: scrollSpec,
           maxWidth: maxWidth,
           minHeight: minHeight,
-          closeSheetOnBackButtonPressed: closeSheetOnBackButtonPressed,
+          closeSheetOnBackButtonPressed: closeOnBackButtonPressed,
         );
 
   SlidingSheet._({
@@ -251,7 +251,7 @@ class SlidingSheet extends StatefulWidget {
   })  : assert(builder != null),
         assert(duration != null),
         assert(snapSpec != null),
-        assert(snapSpec.snappings.length >= 2, 'There must be at least two snappings to snap in between.'),
+        assert(snapSpec.snappings.length >= 2, 'There must be at least two snapping extents to snap in between.'),
         assert(snapSpec.minSnap != snapSpec.maxSnap || route != null, 'The min and max snaps cannot be equal.'),
         assert(isDismissable != null),
         super(key: key);
@@ -596,9 +596,13 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     if (fromBottomSheet && !dismissUnderway && Navigator.canPop(context)) {
       dismissUnderway = true;
       Navigator.pop(context);
+    } else if (fromBottomSheet) {
+      snapToExtent(0.0, velocity: velocity);
+    } else {
+      final fraction = 1.0 - (((currentExtent - minExtent) / (maxExtent - minExtent)).clamp(0.0, 1.0) * 0.5);
+      print(fraction);
+      snapToExtent(minExtent, duration: widget.duration * fraction);
     }
-
-    snapToExtent(fromBottomSheet ? 0.0 : minExtent, velocity: velocity);
   }
 
   void rebuild() {
@@ -833,21 +837,29 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     if (!widget.isDismissable && didCompleteInitialRoute) {
       opacity = 1.0;
     } else if (currentExtent != 0.0) {
-      opacity = (currentExtent / minExtent).clamp(0.0, 1.0);
+      if (fromBottomSheet) {
+        opacity = (currentExtent / minExtent).clamp(0.0, 1.0);
+      } else {
+        final secondSnap = snappings.length > 2 ? snappings[1] : maxExtent;
+        opacity = ((currentExtent - minExtent) / (secondSnap - minExtent)).clamp(0.0, 1.0);
+      }
     }
 
     return GestureDetector(
-      onTap: widget.closeOnBackdropTap
+      onTap: opacity > 0.0 && widget.closeOnBackdropTap
           ? () {
               widget.isDismissable ? _pop(0.0) : _onDismissPrevented(backDrop: true);
             }
           : null,
-      child: Opacity(
-        opacity: opacity,
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          color: widget.backdropColor,
+      child: IgnorePointer(
+        ignoring: opacity == 0.0,
+        child: Opacity(
+          opacity: opacity,
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: widget.backdropColor,
+          ),
         ),
       ),
     );
