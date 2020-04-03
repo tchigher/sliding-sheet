@@ -840,28 +840,32 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       if (fromBottomSheet) {
         opacity = (currentExtent / minExtent).clamp(0.0, 1.0);
       } else {
-        final secondSnap = snappings.length > 2 ? snappings[1] : maxExtent;
-        opacity = ((currentExtent - minExtent) / (secondSnap - minExtent)).clamp(0.0, 1.0);
+        final secondarySnap = snappings.length > 2 ? snappings[1] : maxExtent;
+        opacity = ((currentExtent - minExtent) / (secondarySnap - minExtent)).clamp(0.0, 1.0);
       }
     }
 
-    return GestureDetector(
-      onTap: opacity > 0.0 && widget.closeOnBackdropTap
-          ? () {
-              widget.isDismissable ? _pop(0.0) : _onDismissPrevented(backDrop: true);
-            }
-          : null,
-      child: IgnorePointer(
-        ignoring: opacity == 0.0,
-        child: Opacity(
-          opacity: opacity,
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: widget.backdropColor,
-          ),
+    final detectDismiss = opacity > 0.05 && (widget.closeOnBackdropTap || fromBottomSheet);
+
+    final backDrop = IgnorePointer(
+      ignoring: !detectDismiss,
+      child: Opacity(
+        opacity: opacity,
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: widget.backdropColor,
         ),
       ),
+    );
+
+    if (!detectDismiss) {
+      return backDrop;
+    }
+
+    return GestureDetector(
+      onTap: () => widget.isDismissable ? _pop(0.0) : _onDismissPrevented(backDrop: true),
+      child: backDrop,
     );
   }
 
