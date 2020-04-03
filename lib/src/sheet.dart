@@ -596,9 +596,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     if (fromBottomSheet && !dismissUnderway && Navigator.canPop(context)) {
       dismissUnderway = true;
       Navigator.pop(context);
-    } else if (fromBottomSheet) {
       snapToExtent(0.0, velocity: velocity);
-    } else {
+    } else if (!fromBottomSheet) {
       final fraction = 1.0 - (((currentExtent - minExtent) / (maxExtent - minExtent)).clamp(0.0, 1.0) * 0.5);
       print(fraction);
       snapToExtent(minExtent, duration: widget.duration * fraction);

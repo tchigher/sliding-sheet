@@ -500,7 +500,7 @@ class _MyAppState extends State<MyApp> {
       builder: (context) {
         return SlidingSheetDialog(
           controller: controller,
-          duration: const Duration(milliseconds: 800),
+          duration: const Duration(milliseconds: 500),
           snapSpec: const SnapSpec(
             snap: true,
             snappings: [
