@@ -150,6 +150,17 @@ class SlidingSheet extends StatefulWidget {
   /// {@endtemplate}
   final bool closeSheetOnBackButtonPressed;
 
+  final bool isBackdropInteractable;
+
+  final Widget body;
+
+  /// A [ParallaxSpec] to create a parallax effect.
+  ///
+  /// The parallax effect is an effect that appears when different layers of backgrounds
+  /// are moved at different speeds and thereby create the effect of motion and depth. By moving
+  /// the [SlidingSheet] faster than the [body] the depth effect is achieved.
+  final ParallaxSpec parallaxSpec;
+
   // * BottomSheet fields
 
   final _SlidingSheetRoute route;
@@ -195,6 +206,9 @@ class SlidingSheet extends StatefulWidget {
     double maxWidth = double.infinity,
     double minHeight,
     bool closeOnBackButtonPressed = false,
+    bool isBackdropInteractable = false,
+    Widget body,
+    ParallaxSpec parallaxSpec,
   }) : this._(
           key: key,
           builder: builder,
@@ -219,6 +233,9 @@ class SlidingSheet extends StatefulWidget {
           maxWidth: maxWidth,
           minHeight: minHeight,
           closeSheetOnBackButtonPressed: closeOnBackButtonPressed,
+          isBackdropInteractable: isBackdropInteractable,
+          body: body,
+          parallaxSpec: parallaxSpec,
         );
 
   SlidingSheet._({
@@ -245,6 +262,9 @@ class SlidingSheet extends StatefulWidget {
     @required this.maxWidth,
     @required this.minHeight,
     @required this.closeSheetOnBackButtonPressed,
+    @required this.isBackdropInteractable,
+    this.body,
+    this.parallaxSpec,
     this.route,
     this.isDismissable = true,
     this.onDismissPrevented,
@@ -254,6 +274,7 @@ class SlidingSheet extends StatefulWidget {
         assert(snapSpec.snappings.length >= 2, 'There must be at least two snapping extents to snap in between.'),
         assert(snapSpec.minSnap != snapSpec.maxSnap || route != null, 'The min and max snaps cannot be equal.'),
         assert(isDismissable != null),
+        assert(isBackdropInteractable != null),
         super(key: key);
 
   @override
@@ -661,6 +682,15 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     widget.onDismissPrevented?.call(backButton, backDrop);
   }
 
+  void _handleNonDismissableSnapBack() {
+    // didEndScroll doesn't work reliably in ScrollPosition. There
+    // should be a better solution to this problem.
+    if (fromBottomSheet && !widget.isDismissable && currentExtent < minExtent) {
+      snapToExtent(minExtent);
+      _onDismissPrevented();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final sheet = Builder(
@@ -709,8 +739,19 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       },
     );
 
+    Widget result = sheet;
+
+    if (widget.body != null) {
+      result = Stack(
+        children: <Widget>[
+          _buildBody(),
+          sheet,
+        ],
+      );
+    }
+
     if (!widget.closeSheetOnBackButtonPressed && !fromBottomSheet) {
-      return sheet;
+      return result;
     }
 
     return WillPopScope(
@@ -731,7 +772,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
           }
         }
       },
-      child: sheet,
+      child: result,
     );
   }
 
@@ -741,14 +782,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     // Wrap the scrollView in a ScrollConfiguration to
     // remove the default overscroll effect.
     Widget scrollView = Listener(
-      onPointerUp: (_) {
-        // didEndScroll doesn't work reliably in ScrollPosition. There
-        // should be a better solution to this problem.
-        if (fromBottomSheet && !widget.isDismissable && currentExtent < minExtent) {
-          snapToExtent(minExtent);
-          _onDismissPrevented();
-        }
-      },
+      onPointerUp: (_) => _handleNonDismissableSnapBack(),
       child: ScrollConfiguration(
         behavior: const ScrollBehavior(),
         child: SingleChildScrollView(
@@ -845,6 +879,31 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     );
   }
 
+  Widget _buildBody() {
+    final spec = widget.parallaxSpec;
+    if (spec == null || !spec.enabled || spec.amount <= 0.0) {
+      return widget.body;
+    }
+
+    return ValueListenableBuilder(
+      valueListenable: extent._currentExtent,
+      // ignore: sort_child_properties_last
+      child: widget.body,
+      builder: (context, _, body) {
+        final amount = spec.amount;
+        final maxExtent = spec.endExtent != null ? _normalizeSnap(spec.endExtent) : this.maxExtent;
+        assert(maxExtent > minExtent, 'The endExtent must be greater than the min snap extent you set on the SnapSpec');
+        final maxOffset = (maxExtent - minExtent) * availableHeight;
+        final fraction = ((currentExtent - minExtent) / (maxExtent - minExtent)).clamp(0.0, 1.0);
+
+        return Padding(
+          padding: EdgeInsets.only(bottom: (amount * maxOffset) * fraction),
+          child: body,
+        );
+      },
+    );
+  }
+
   Widget _buildBackdrop() {
     double opacity = 0.0;
     if (!widget.isDismissable && didCompleteInitialRoute) {
@@ -876,13 +935,19 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       return backDrop;
     }
 
-    return GestureDetector(
-      onTap: () => widget.isDismissable ? _pop(0.0) : _onDismissPrevented(backDrop: true),
-      child: backDrop,
-    );
+    void onTap() => widget.isDismissable ? _pop(0.0) : _onDismissPrevented(backDrop: true);
+
+    if (widget.isBackdropInteractable) {
+      return _delegateInteractions(backDrop, onTap: onTap);
+    } else {
+      return GestureDetector(
+        onTap: onTap,
+        child: backDrop,
+      );
+    }
   }
 
-  Widget _delegateInteractions(Widget child) {
+  Widget _delegateInteractions(Widget child, {VoidCallback onTap}) {
     if (child == null) return child;
 
     double start = 0;
@@ -896,9 +961,12 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       if (!state.isAtTop && (start - end).abs() > 5) {
         controller.animateTo(0.0, duration: widget.duration * .5, curve: Curves.ease);
       }
+
+      _handleNonDismissableSnapBack();
     }
 
     return GestureDetector(
+      onTap: onTap,
       onVerticalDragStart: (details) {
         start = details.localPosition.dy;
         end = start;

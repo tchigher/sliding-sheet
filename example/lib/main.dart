@@ -58,43 +58,19 @@ class _MyAppState extends State<MyApp> {
 
           return Scaffold(
             resizeToAvoidBottomInset: false,
-            body: Stack(
+            body: Column(
               children: <Widget>[
                 GestureDetector(
                   onTap: () => setState(() => tapped = !tapped),
-                  child: buildMap(),
-                ),
-                Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + 16, 16, 0),
-                    child: FloatingActionButton(
-                      backgroundColor: Colors.white,
-                      onPressed: () async {
-                        await showBottomSheet(context);
-                      },
-                      child: Icon(
-                        Icons.layers,
-                        color: mapsBlue,
-                      ),
-                    ),
+                  child: AnimatedContainer(
+                    duration: const Duration(seconds: 1),
+                    height: tapped ? 200 : 0,
+                    color: Colors.red,
                   ),
                 ),
-                Column(
-                  children: <Widget>[
-                    GestureDetector(
-                      onTap: () => setState(() => tapped = !tapped),
-                      child: AnimatedContainer(
-                        duration: const Duration(seconds: 1),
-                        height: tapped ? 200 : 0,
-                        color: Colors.red,
-                      ),
-                    ),
-                    Expanded(
-                      child: buildSheet(),
-                    ),
-                  ],
-                )
+                Expanded(
+                  child: buildSheet(),
+                ),
               ],
             ),
           );
@@ -112,11 +88,12 @@ class _MyAppState extends State<MyApp> {
       elevation: 12,
       maxWidth: 500,
       cornerRadius: 16,
-      backdropColor: Colors.black26,
       cornerRadiusOnFullscreen: 0.0,
       closeOnBackdropTap: true,
       closeOnBackButtonPressed: true,
       addTopViewPaddingOnFullscreen: true,
+      isBackdropInteractable: true,
+      body: _buildBody(),
       border: Border.all(
         color: Colors.grey.shade300,
         width: 3,
@@ -132,6 +109,11 @@ class _MyAppState extends State<MyApp> {
         onSnap: (state, snap) {
           print('Snapped to $snap');
         },
+      ),
+      parallaxSpec: const ParallaxSpec(
+        enabled: true,
+        amount: 0.66,
+        endExtent: 0.6,
       ),
       scrollSpec: ScrollSpec.bouncingScroll(),
       listener: (state) {
@@ -513,7 +495,8 @@ class _MyAppState extends State<MyApp> {
           maxWidth: 500,
           minHeight: 800,
           isDismissable: isDismissable,
-          dismissOnBackdropTap: false,
+          dismissOnBackdropTap: true,
+          isBackdropInteractable: true,
           onDismissPrevented: (backButton, backDrop) async {
             HapticFeedback.heavyImpact();
 
@@ -612,20 +595,47 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Widget buildMap() {
-    return Column(
+  Widget _buildBody() {
+    return Stack(
       children: <Widget>[
-        Expanded(
-          child: Image.asset(
-            'assets/maps_screenshot.png',
-            width: double.infinity,
-            height: double.infinity,
-            alignment: Alignment.center,
-            fit: BoxFit.cover,
+        buildMap(),
+        Align(
+          alignment: Alignment.topRight,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + 16, 16, 0),
+            child: FloatingActionButton(
+              backgroundColor: Colors.white,
+              onPressed: () async {
+                await showBottomSheet(context);
+              },
+              child: Icon(
+                Icons.layers,
+                color: mapsBlue,
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 56),
       ],
+    );
+  }
+
+  Widget buildMap() {
+    return GestureDetector(
+      onTap: () => setState(() => tapped = !tapped),
+      child: Column(
+        children: <Widget>[
+          Expanded(
+            child: Image.asset(
+              'assets/maps_screenshot.png',
+              width: double.infinity,
+              height: double.infinity,
+              alignment: Alignment.center,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(height: 56),
+        ],
+      ),
     );
   }
 }

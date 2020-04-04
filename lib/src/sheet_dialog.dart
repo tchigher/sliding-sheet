@@ -82,6 +82,8 @@ Future<T> showSlidingBottomSheet<T>(
               minHeight: dialog.minHeight,
               isDismissable: dialog.isDismissable,
               onDismissPrevented: dialog.onDismissPrevented,
+              isBackdropInteractable: dialog.isBackdropInteractable,
+              body: null,
             );
 
             if (resizeToAvoidBottomInset) {
@@ -173,6 +175,9 @@ class SlidingSheetDialog {
 
   /// {@macro sliding_sheet.onDismissPrevented}
   final OnDismissPreventedCallback onDismissPrevented;
+
+  final bool isBackdropInteractable;
+
   const SlidingSheetDialog({
     @required this.builder,
     this.headerBuilder,
@@ -197,6 +202,7 @@ class SlidingSheetDialog {
     this.minHeight,
     this.isDismissable = true,
     this.onDismissPrevented,
+    this.isBackdropInteractable = false,
   }) : assert(isDismissable != null);
 }
 

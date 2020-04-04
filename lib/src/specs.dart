@@ -58,7 +58,7 @@ class SnapSpec {
   static const double footerSnap = -3;
   // The snap extent that expands the whole [SlidingSheet]
   static const double expanded = double.infinity;
-  static _isSnap(double snap) =>
+  static bool _isSnap(double snap) =>
       snap == expanded || snap == headerFooterSnap || snap == headerSnap || snap == footerSnap;
 
   double get minSnap => snappings.first;
@@ -114,5 +114,47 @@ class ScrollSpec {
 
   factory ScrollSpec.overscroll({Color color}) => ScrollSpec(overscrollColor: color);
 
-  factory ScrollSpec.bouncingScroll() => ScrollSpec(physics: BouncingScrollPhysics());
+  factory ScrollSpec.bouncingScroll() => const ScrollSpec(physics: BouncingScrollPhysics());
+}
+
+class ParallaxSpec {
+  /// If true, the parallax effect will be applied
+  /// to the body of the [SlidingSheet].
+  final bool enabled;
+
+  /// A fractional ([0..1]) value that determines the intensity of
+  /// the parallax effect.
+  ///
+  /// For example, a value of 0.5 would mean that the body of the [SlidingSheet]
+  /// would be moved with half the speed of the [SlidingSheet].
+  final double amount;
+
+  /// The parallax effect will be applied between [minExtent..endExtent] where the minExtent
+  /// is defined by the lowest snap in the `snappings` array on the [SnapSpec].
+  ///
+  /// If endExtent is null, the [SlidingSheet] will use the maxExtent as defined
+  /// on the [SnapSpec].
+  ///
+  /// **Note that the [SnapPositioning] you set on the [SnapSpec] will be applied
+  /// to this extent aswell**
+  final double endExtent;
+  const ParallaxSpec({
+    this.enabled = true,
+    this.amount = 0.15,
+    this.endExtent,
+  })  : assert(enabled != null),
+        assert(amount >= 0.0 && amount <= 1.0);
+
+  @override
+  String toString() => 'ParallaxSpec(enabled: $enabled, amount: $amount, extent: $endExtent)';
+
+  @override
+  bool operator ==(Object o) {
+    if (identical(this, o)) return true;
+
+    return o is ParallaxSpec && o.enabled == enabled && o.amount == amount && o.endExtent == endExtent;
+  }
+
+  @override
+  int get hashCode => enabled.hashCode ^ amount.hashCode ^ endExtent.hashCode;
 }
