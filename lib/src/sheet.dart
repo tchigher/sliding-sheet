@@ -395,7 +395,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
         postFrame(() {
           final state = this.state;
           widget.listener?.call(state);
-          widget.controller?._state = state;
+          sheetController?._state = state;
         });
       }
     }
@@ -789,23 +789,20 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   Widget _buildSheet() {
     // Wrap the scrollView in a ScrollConfiguration to
     // remove the default overscroll effect.
-    Widget scrollView = Listener(
-      onPointerUp: (_) => _handleNonDismissableSnapBack(),
-      child: ScrollConfiguration(
-        behavior: const ScrollBehavior(),
-        child: SingleChildScrollView(
-          controller: controller,
-          physics: scrollSpec.physics ?? const ScrollPhysics(),
-          padding: EdgeInsets.only(
-            top: header == null ? padding.top : 0.0,
-            bottom: footer == null ? padding.bottom : 0.0,
-          ),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: widget.minHeight ?? 0.0),
-            child: SizeChangedLayoutNotifier(
-              key: childKey,
-              child: child,
-            ),
+    Widget scrollView = ScrollConfiguration(
+      behavior: const ScrollBehavior(),
+      child: SingleChildScrollView(
+        controller: controller,
+        physics: scrollSpec.physics ?? const ScrollPhysics(),
+        padding: EdgeInsets.only(
+          top: header == null ? padding.top : 0.0,
+          bottom: footer == null ? padding.bottom : 0.0,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: widget.minHeight ?? 0.0),
+          child: SizeChangedLayoutNotifier(
+            key: childKey,
+            child: child,
           ),
         ),
       ),
