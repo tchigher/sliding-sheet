@@ -93,7 +93,6 @@ class _MyAppState extends State<MyApp> {
       closeOnBackButtonPressed: true,
       addTopViewPaddingOnFullscreen: true,
       isBackdropInteractable: true,
-      body: _buildBody(),
       border: Border.all(
         color: Colors.grey.shade300,
         width: 3,
@@ -127,6 +126,7 @@ class _MyAppState extends State<MyApp> {
           setState(() {});
         }
       },
+      body: _buildBody(),
       headerBuilder: buildHeader,
       footerBuilder: buildFooter,
       builder: buildChild,
@@ -493,7 +493,6 @@ class _MyAppState extends State<MyApp> {
           ),
           color: Colors.teal,
           maxWidth: 500,
-          minHeight: 800,
           isDismissable: isDismissable,
           dismissOnBackdropTap: true,
           isBackdropInteractable: true,

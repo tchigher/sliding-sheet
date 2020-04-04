@@ -154,11 +154,13 @@ class SlidingSheet extends StatefulWidget {
 
   final Widget body;
 
+  /// {@template sliding_sheet.parallaxSpec}
   /// A [ParallaxSpec] to create a parallax effect.
   ///
   /// The parallax effect is an effect that appears when different layers of backgrounds
   /// are moved at different speeds and thereby create the effect of motion and depth. By moving
   /// the [SlidingSheet] faster than the [body] the depth effect is achieved.
+  /// {@endtemplate}
   final ParallaxSpec parallaxSpec;
 
   // * BottomSheet fields

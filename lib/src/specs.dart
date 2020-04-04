@@ -117,6 +117,7 @@ class ScrollSpec {
   factory ScrollSpec.bouncingScroll() => const ScrollSpec(physics: BouncingScrollPhysics());
 }
 
+/// {@macro sliding_sheet.parallaxSpec}
 class ParallaxSpec {
   /// If true, the parallax effect will be applied
   /// to the body of the [SlidingSheet].
