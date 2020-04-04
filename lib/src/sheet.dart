@@ -150,8 +150,17 @@ class SlidingSheet extends StatefulWidget {
   /// {@endtemplate}
   final bool closeSheetOnBackButtonPressed;
 
+  /// {@template sliding_sheet.isBackDropInteractable}
+  /// If true, the backDrop will also be interactable so any gesture
+  /// that is applied to the backDrop will be delegated to the sheet
+  /// itself.
+  /// {@endtemplate}
   final bool isBackdropInteractable;
 
+  /// A widget that is placed behind the sheet.
+  ///
+  /// You can apply a parallax effect to this widget by
+  /// setting the [parallaxSpec] parameter.
   final Widget body;
 
   /// {@template sliding_sheet.parallaxSpec}

@@ -176,6 +176,7 @@ class SlidingSheetDialog {
   /// {@macro sliding_sheet.onDismissPrevented}
   final OnDismissPreventedCallback onDismissPrevented;
 
+  /// {@macro sliding_sheet.isBackDropInteractable}
   final bool isBackdropInteractable;
 
   const SlidingSheetDialog({
