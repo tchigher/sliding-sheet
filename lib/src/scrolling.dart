@@ -80,7 +80,7 @@ class _SlidingSheetScrollController extends ScrollController {
   double get minExtent => extent.minExtent;
 
   bool inDrag = false;
-  bool animating = false;
+  bool get animating => controller?.isAnimating == true;
   bool get inInteraction => inDrag || animating;
 
   _SlidingSheetScrollPosition _currentPosition;
@@ -109,12 +109,14 @@ class _SlidingSheetScrollController extends ScrollController {
       CurvedAnimation(parent: controller, curve: velocity.abs() > 300 ? Curves.easeOutCubic : Curves.ease),
     );
 
-    animating = true;
     controller.addListener(() => extent.currentExtent = tween.value);
     return controller.forward()
       ..whenComplete(() {
         controller.dispose();
-        animating = false;
+
+        // Needed because otherwise the scrollController
+        // thinks were still dragging.
+        jumpTo(offset);
 
         // Invoke the snap callback.
         snapSpec?.onSnap?.call(
@@ -125,7 +127,7 @@ class _SlidingSheetScrollController extends ScrollController {
   }
 
   void stopAnyRunningSnapAnimation() {
-    if (controller?.isAnimating == true) {
+    if (animating) {
       controller.stop();
     }
   }
@@ -417,6 +419,10 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
     ballisticController.addListener(_tick);
     await ballisticController.animateWith(simulation);
     ballisticController.dispose();
+
+    // Needed because otherwise the scrollController
+    // thinks were still dragging.
+    jumpTo(offset);
   }
 
   @override
