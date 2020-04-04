@@ -493,7 +493,6 @@ class _MyAppState extends State<MyApp> {
           ),
           color: Colors.teal,
           maxWidth: 500,
-          minHeight: 700,
           isDismissable: isDismissable,
           dismissOnBackdropTap: true,
           isBackdropInteractable: true,
@@ -512,7 +511,7 @@ class _MyAppState extends State<MyApp> {
             //   Navigator.pop(context);
             // }
 
-            // print('Dismiss prevented');
+            print('Dismiss prevented');
           },
           builder: (context, state) {
             return Container(
@@ -558,7 +557,7 @@ class _MyAppState extends State<MyApp> {
               ),
             );
           },
-          footerBuilder: (context, state) {
+          /* footerBuilder: (context, state) {
             return Container(
               color: Colors.teal.shade700,
               padding: const EdgeInsets.all(16),
@@ -596,7 +595,7 @@ class _MyAppState extends State<MyApp> {
                 ],
               ),
             );
-          },
+          }, */
         );
       },
     );
