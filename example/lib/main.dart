@@ -491,7 +491,7 @@ class _MyAppState extends State<MyApp> {
               1.0,
             ],
           ),
-          color: Colors.teal,
+          color: Colors.transparent,
           maxWidth: 500,
           isDismissable: isDismissable,
           dismissOnBackdropTap: true,

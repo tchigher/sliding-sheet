@@ -435,6 +435,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       widget.route.popped.then(
         (_) {
           if (!dismissUnderway) {
+            dismissUnderway = true;
             controller.jumpTo(controller.offset);
             controller.snapToExtent(0.0, this, clamp: false);
           }
@@ -917,7 +918,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
   Widget _buildBackdrop() {
     double opacity = 0.0;
-    if (!widget.isDismissable && didCompleteInitialRoute) {
+    if (!widget.isDismissable && !dismissUnderway && didCompleteInitialRoute) {
       opacity = 1.0;
     } else if (currentExtent != 0.0) {
       if (fromBottomSheet) {
