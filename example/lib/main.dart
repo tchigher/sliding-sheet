@@ -124,7 +124,7 @@ class _MyAppState extends State<MyApp> {
         this.state = state;
 
         if (needsRebuild) {
-          setState(() {});
+          postFrame(() => setState(() {}));
         }
       },
       body: _buildBody(),

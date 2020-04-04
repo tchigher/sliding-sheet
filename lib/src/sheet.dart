@@ -707,7 +707,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    Widget sheet = Builder(
+    final result = Builder(
       builder: (context) {
         // The context used for the builders to allow
         // the children to inherit the SheetController
@@ -720,7 +720,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
             availableHeight = constrainst.biggest.height;
             _detectChangesInAvailableHeight(previousHeight);
 
-            return NotificationListener<SizeChangedLayoutNotification>(
+            final sheet = NotificationListener<SizeChangedLayoutNotification>(
               onNotification: (notification) {
                 _handleChangesInChildSize();
                 return true;
@@ -748,22 +748,24 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                 },
               ),
             );
+
+            if (widget.body == null) {
+              return sheet;
+            } else {
+              return Stack(
+                children: <Widget>[
+                  _buildBody(),
+                  sheet,
+                ],
+              );
+            }
           },
         );
       },
     );
 
-    if (widget.body != null) {
-      sheet = Stack(
-        children: <Widget>[
-          _buildBody(),
-          sheet,
-        ],
-      );
-    }
-
     if (!widget.closeSheetOnBackButtonPressed && !fromBottomSheet) {
-      return sheet;
+      return result;
     }
 
     return WillPopScope(
@@ -784,7 +786,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
           }
         }
       },
-      child: sheet,
+      child: result,
     );
   }
 
@@ -927,10 +929,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       }
     }
 
-    final detectDismiss = opacity > 0.05 && (widget.closeOnBackdropTap ?? true);
-
     final backDrop = IgnorePointer(
-      ignoring: !detectDismiss,
+      ignoring: opacity < 0.05,
       child: Opacity(
         opacity: opacity,
         child: Container(
@@ -941,7 +941,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       ),
     );
 
-    if (!detectDismiss) {
+    if (!widget.closeOnBackdropTap) {
       return backDrop;
     }
 
