@@ -486,8 +486,8 @@ class _MyAppState extends State<MyApp> {
           snapSpec: const SnapSpec(
             snap: true,
             snappings: [
-              0.0,
               0.4,
+              0.7,
               1.0,
             ],
           ),
