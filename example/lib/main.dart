@@ -98,7 +98,7 @@ class _MyAppState extends State<MyApp> {
         width: 3,
       ),
       snapSpec: SnapSpec(
-        snap: true,
+        snap: false,
         positioning: SnapPositioning.relativeToAvailableSpace,
         snappings: const [
           SnapSpec.headerFooterSnap,

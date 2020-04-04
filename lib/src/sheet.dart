@@ -705,7 +705,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    final sheet = Builder(
+    Widget sheet = Builder(
       builder: (context) {
         // The context used for the builders to allow
         // the children to inherit the SheetController
@@ -751,10 +751,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       },
     );
 
-    Widget result = sheet;
-
     if (widget.body != null) {
-      result = Stack(
+      sheet = Stack(
         children: <Widget>[
           _buildBody(),
           sheet,
@@ -763,7 +761,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     }
 
     if (!widget.closeSheetOnBackButtonPressed && !fromBottomSheet) {
-      return result;
+      return sheet;
     }
 
     return WillPopScope(
@@ -784,13 +782,11 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
           }
         }
       },
-      child: result,
+      child: sheet,
     );
   }
 
   Widget _buildSheet() {
-    final theme = Theme.of(context);
-
     // Wrap the scrollView in a ScrollConfiguration to
     // remove the default overscroll effect.
     Widget scrollView = Listener(
@@ -819,7 +815,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     if (scrollSpec.overscroll) {
       scrollView = GlowingOverscrollIndicator(
         axisDirection: AxisDirection.down,
-        color: scrollSpec.overscrollColor ?? theme.accentColor,
+        color: scrollSpec.overscrollColor ?? Theme.of(context).accentColor,
         child: scrollView,
       );
     }
