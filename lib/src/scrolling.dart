@@ -2,7 +2,7 @@ part of 'sheet.dart';
 
 class _SheetExtent {
   final bool isFromBottomSheet;
-  final _DragableScrollableSheetController controller;
+  final _SlidingSheetScrollController controller;
   List<double> snappings;
   double targetHeight = 0;
   double childHeight = 0;
@@ -64,9 +64,9 @@ class _SheetExtent {
   }
 }
 
-class _DragableScrollableSheetController extends ScrollController {
+class _SlidingSheetScrollController extends ScrollController {
   final _SlidingSheetState sheet;
-  _DragableScrollableSheetController(this.sheet);
+  _SlidingSheetScrollController(this.sheet);
 
   SlidingSheet get widget => sheet.widget;
 
@@ -83,7 +83,7 @@ class _DragableScrollableSheetController extends ScrollController {
   bool animating = false;
   bool get inInteraction => inDrag || animating;
 
-  _DraggableScrollableSheetScrollPosition _currentPosition;
+  _SlidingSheetScrollPosition _currentPosition;
 
   AnimationController controller;
 
@@ -124,6 +124,12 @@ class _DragableScrollableSheetController extends ScrollController {
       });
   }
 
+  void stopAnyRunningSnapAnimation() {
+    if (controller?.isAnimating == true) {
+      controller.stop();
+    }
+  }
+
   void imitiateDrag(double delta) {
     inDrag = true;
     _currentPosition?.applyUserOffset(delta);
@@ -139,12 +145,12 @@ class _DragableScrollableSheetController extends ScrollController {
   }
 
   @override
-  _DraggableScrollableSheetScrollPosition createScrollPosition(
+  _SlidingSheetScrollPosition createScrollPosition(
     ScrollPhysics physics,
     ScrollContext context,
     ScrollPosition oldPosition,
   ) {
-    _currentPosition = _DraggableScrollableSheetScrollPosition(
+    _currentPosition = _SlidingSheetScrollPosition(
       physics: physics,
       context: context,
       oldPosition: oldPosition,
@@ -168,9 +174,9 @@ class _DragableScrollableSheetController extends ScrollController {
   }
 }
 
-class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleContext {
-  final _DragableScrollableSheetController scrollController;
-  _DraggableScrollableSheetScrollPosition({
+class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
+  final _SlidingSheetScrollController scrollController;
+  _SlidingSheetScrollPosition({
     @required ScrollPhysics physics,
     @required ScrollContext context,
     ScrollPosition oldPosition,
@@ -227,6 +233,8 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
 
   @override
   void applyUserOffset(double delta) {
+    scrollController.stopAnyRunningSnapAnimation();
+
     isMovingUp = delta.isNegative;
     inDrag = true;
 
@@ -261,7 +269,7 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
     super.didEndScroll();
 
     final canSnapToNextExtent = snap && !extent.isAtMax && !extent.isAtMin && !shouldScroll;
-    if (inDrag && (canSnapToNextExtent || isBottomSheetBelowMinExtent)) {
+    if (inDrag && !shouldMakeSheetNonDismissable && (canSnapToNextExtent || isBottomSheetBelowMinExtent)) {
       goSnapped(0.0);
     }
   }
@@ -283,7 +291,7 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
 
     if (shouldMakeSheetNonDismissable) {
       disposeDragCancelCallback();
-      goNonDismissable(velocity);
+      print('go non');
       return;
     }
 
@@ -364,10 +372,6 @@ class _DraggableScrollableSheetScrollPosition extends ScrollPositionWithSingleCo
     if (isBottomSheetBelowMinExtent && currentExtent > 0.0) {
       goSnapped(0.0);
     }
-  }
-
-  Future<void> goNonDismissable(double velocity) async {
-    await runScrollSimulation(velocity, friction: 0.75);
   }
 
   Future<void> runScrollSimulation(double velocity, {double friction = 0.015, VoidCallback onTick}) async {

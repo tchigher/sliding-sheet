@@ -153,6 +153,8 @@ SnapSpec.expanded | The snap extent that expands the whole `SlidingSheet`.
 
 The `SheetController` can be used to change the state of a `SlidingSheet` manually, simply passing an instance of `SheetController` to a `SlidingSheet`. Note that the methods can only be used after the `SlidingSheet` has been rendered, however calling them before wont throw an exception.
 
+Note that you can also use the static `SheetController.of(context)` method to obtain an instance of the `SheetController` of the closest `SlidingSheet`. This also works if you didn't assign a `SheetController` explicitly on the `SlidingSheet`.
+
  Method | Description 
 --- | ---
 `expand()` | Expands the `SlidingSheet` to the maximum extent.
@@ -160,6 +162,8 @@ The `SheetController` can be used to change the state of a `SlidingSheet` manual
 `snapToExtent()` | Snaps the `SlidingSheet` to an arbitrary extent. The extent will be clamped to the minimum and maximum extent. If the scroll offset is > 0, the `SlidingSheet` will first scroll to the top and then slide to the extent.
 `scrollTo()` | Scrolls the `SlidingSheet` to the given offset. If the `SlidingSheet` is not yet at its maximum extent, it will first snap to the maximum extent and then scroll to the given offset.
 `rebuild()` | Calls all builders of the `SlidingSheet` to rebuild their children. This method can be used to reflect changes in the `SlidingSheet`s children without calling `setState(() {});` on the parent widget to improve performance.
+`show()` | Visually shows the `SlidingSheet` if it was previously hidden. Note that calling this method wont have an effect for `SlidingSheetDialogs`.
+`hide()` | Visually hides the `SlidingSheet` until you call `show()` again. Note that calling this method wont have an effect for `SlidingSheetDialogs`.
 
 ### Headers and Footers
 

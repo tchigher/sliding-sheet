@@ -21,6 +21,7 @@ Future<T> showSlidingBottomSheet<T>(
   assert(resizeToAvoidBottomInset != null);
 
   SlidingSheetDialog dialog = builder(context);
+  final SheetController controller = dialog.controller ?? SheetController();
 
   final theme = Theme.of(context);
   final ValueNotifier<int> rebuilder = ValueNotifier(0);
@@ -36,11 +37,13 @@ Future<T> showSlidingBottomSheet<T>(
           valueListenable: rebuilder,
           builder: (context, value, _) {
             dialog = builder(context);
-            if (dialog.controller != null) {
-              dialog.controller._rebuild = () {
-                rebuilder.value++;
-              };
-            }
+
+            // Assign the rebuild function in order to
+            // be able to change the dialogs parameters
+            // inside a dialog.
+            controller._rebuild = () {
+              rebuilder.value++;
+            };
 
             var snapSpec = dialog.snapSpec;
             if (snapSpec.snappings.first != 0.0) {
@@ -51,6 +54,7 @@ Future<T> showSlidingBottomSheet<T>(
 
             final sheet = SlidingSheet._(
               route: route,
+              controller: controller,
               snapSpec: snapSpec,
               duration: dialog.duration,
               color: dialog.color ??
@@ -72,7 +76,6 @@ Future<T> showSlidingBottomSheet<T>(
               headerBuilder: dialog.headerBuilder,
               footerBuilder: dialog.footerBuilder,
               listener: dialog.listener,
-              controller: dialog.controller,
               scrollSpec: dialog.scrollSpec,
               maxWidth: dialog.maxWidth,
               closeSheetOnBackButtonPressed: false,

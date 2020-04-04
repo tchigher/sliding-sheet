@@ -268,6 +268,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   Widget child;
   Widget header;
   Widget footer;
+  BuildContext _context;
 
   List<double> snappings;
 
@@ -282,8 +283,10 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   bool dismissUnderway = false;
   // The current sheet extent.
   _SheetExtent extent;
+  // The currently assigned SheetController
+  SheetController sheetController;
   // The ScrollController for the sheet.
-  _DragableScrollableSheetController controller;
+  _SlidingSheetScrollController controller;
 
   // Whether the sheet has drawn its first frame.
   bool get isLaidOut => availableHeight > 0 && childHeight > 0;
@@ -365,7 +368,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       }
     }
 
-    controller = _DragableScrollableSheetController(
+    controller = _SlidingSheetScrollController(
       this,
     )..addListener(listener);
 
@@ -527,26 +530,30 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
   // Assign the controller functions to actual methods.
   void _assignSheetController() {
-    final controller = widget.controller;
-    if (controller != null) {
-      // Assign the controller functions to the state functions.
-      if (!fromBottomSheet) controller._rebuild = rebuild;
-      controller._scrollTo = scrollTo;
-      controller._snapToExtent =
-          (snap, {duration, clamp}) => snapToExtent(_normalizeSnap(snap), duration: duration, clamp: clamp);
-      controller._expand = () => snapToExtent(maxExtent);
-      controller._collapse = () => snapToExtent(minExtent);
-      controller._show = () async {
+    // Always assing a SheetController to be able to inherit from it
+    sheetController = widget.controller ?? SheetController();
+
+    // Assign the controller functions to the state functions.
+    sheetController._scrollTo = scrollTo;
+    sheetController._snapToExtent = (snap, {duration, clamp}) {
+      return snapToExtent(_normalizeSnap(snap), duration: duration, clamp: clamp);
+    };
+    sheetController._expand = () => snapToExtent(maxExtent);
+    sheetController._collapse = () => snapToExtent(minExtent);
+
+    if (!fromBottomSheet) {
+      sheetController._rebuild = rebuild;
+      sheetController._show = () async {
         if (state.isHidden) return snapToExtent(minExtent, clamp: false);
       };
-      controller._hide = () async {
+      sheetController._hide = () async {
         if (state.isShown) return snapToExtent(0.0, clamp: false);
       };
     }
   }
 
-  Future snapToExtent(double snap, {Duration duration, double velocity = 0, bool clamp}) async {
-    if (!isLaidOut) return null;
+  Future<void> snapToExtent(double snap, {Duration duration, double velocity = 0, bool clamp}) async {
+    if (!isLaidOut) return;
 
     duration ??= widget.duration;
     if (!state.isAtTop) {
@@ -567,8 +574,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     );
   }
 
-  Future scrollTo(double offset, {Duration duration, Curve curve}) async {
-    if (!isLaidOut) return null;
+  Future<void> scrollTo(double offset, {Duration duration, Curve curve}) async {
+    if (!isLaidOut) return;
 
     duration ??= widget.duration;
     if (!extent.isAtMax) {
@@ -610,10 +617,10 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   }
 
   void _callBuilders() {
-    if (context != null) {
-      header = _delegateInteractions(widget.headerBuilder?.call(context, state));
-      footer = _delegateInteractions(widget.footerBuilder?.call(context, state));
-      child = widget.builder?.call(context, state);
+    if (_context != null) {
+      header = _delegateInteractions(widget.headerBuilder?.call(_context, state));
+      footer = _delegateInteractions(widget.footerBuilder?.call(_context, state));
+      child = widget.builder?.call(_context, state);
     }
   }
 
@@ -656,41 +663,48 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    rebuild();
+    final sheet = Builder(
+      builder: (context) {
+        // The context used for the builders to allow
+        // the children to inherit the SheetController
+        _context = context;
+        rebuild();
 
-    final sheet = LayoutBuilder(
-      builder: (context, constrainst) {
-        final previousHeight = availableHeight;
-        availableHeight = constrainst.biggest.height;
-        _detectChangesInAvailableHeight(previousHeight);
+        return LayoutBuilder(
+          builder: (context, constrainst) {
+            final previousHeight = availableHeight;
+            availableHeight = constrainst.biggest.height;
+            _detectChangesInAvailableHeight(previousHeight);
 
-        return NotificationListener<SizeChangedLayoutNotification>(
-          onNotification: (notification) {
-            _handleChangesInChildSize();
-            return true;
+            return NotificationListener<SizeChangedLayoutNotification>(
+              onNotification: (notification) {
+                _handleChangesInChildSize();
+                return true;
+              },
+              // ValueListenableBuilder is used to update the sheet irrespective of its children.
+              child: ValueListenableBuilder(
+                valueListenable: extent._currentExtent,
+                builder: (context, value, _) {
+                  // Hide the sheet for the first frame until the extents are
+                  // correctly measured.
+                  return Visibility(
+                    visible: isLaidOut,
+                    maintainInteractivity: false,
+                    maintainSemantics: true,
+                    maintainSize: true,
+                    maintainState: true,
+                    maintainAnimation: true,
+                    child: Stack(
+                      children: <Widget>[
+                        _buildBackdrop(),
+                        _buildSheet(),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            );
           },
-          // ValueListenableBuilder is used to update the sheet irrespective of its children.
-          child: ValueListenableBuilder(
-            valueListenable: extent._currentExtent,
-            builder: (context, value, _) {
-              // Hide the sheet for the first frame until the extents are
-              // correctly measured.
-              return Visibility(
-                visible: isLaidOut,
-                maintainInteractivity: false,
-                maintainSemantics: true,
-                maintainSize: true,
-                maintainState: true,
-                maintainAnimation: true,
-                child: Stack(
-                  children: <Widget>[
-                    _buildBackdrop(),
-                    _buildSheet(),
-                  ],
-                ),
-              );
-            },
-          ),
         );
       },
     );
@@ -844,7 +858,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       }
     }
 
-    final detectDismiss = opacity > 0.05 && (widget.closeOnBackdropTap || fromBottomSheet);
+    final detectDismiss = opacity > 0.05 && (widget.closeOnBackdropTap ?? true);
 
     final backDrop = IgnorePointer(
       ignoring: !detectDismiss,
@@ -893,12 +907,10 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
         end = details.localPosition.dy;
         final delta = details.delta.dy;
         controller.imitiateDrag(delta);
-        print('update');
       },
       onVerticalDragEnd: (details) {
         final velocity = swapSign(details.velocity.pixelsPerSecond.dy);
         onDragEnd(velocity);
-        print('end');
       },
       onVerticalDragCancel: onDragEnd,
       child: child,
@@ -986,22 +998,31 @@ class SheetState {
 
 /// A controller for a [SlidingSheet].
 class SheetController {
+  /// Inherit the [SheetController] from the closest [SlidingSheet].
+  ///
+  /// Every [SlidingSheet] has a [SheetController], even if you didn't assign
+  /// one explicitly. This allows you to call functions on the controller from child
+  /// widgets without having to pass a [SheetController] around.
+  static SheetController of(BuildContext context) {
+    return context.findAncestorStateOfType<_SlidingSheetState>()?.sheetController;
+  }
+
   /// Animates the sheet to the [extent].
   ///
   /// The [extent] will be clamped to the minimum and maximum extent.
   /// If the scrolling child is not at the top, it will scroll to the top
   /// first and then animate to the specified extent.
-  Future snapToExtent(double extent, {Duration duration, bool clamp = true}) =>
+  Future<void> snapToExtent(double extent, {Duration duration, bool clamp = true}) =>
       _snapToExtent?.call(extent, duration: duration, clamp: clamp);
-  Future Function(double extent, {Duration duration, bool clamp}) _snapToExtent;
+  Future<void> Function(double extent, {Duration duration, bool clamp}) _snapToExtent;
 
   /// Animates the scrolling child to a specified offset.
   ///
   /// If the sheet is not fully expanded it will expand first and then
   /// animate to the given [offset].
-  Future scrollTo(double offset, {Duration duration, Curve curve}) =>
+  Future<void> scrollTo(double offset, {Duration duration, Curve curve}) =>
       _scrollTo?.call(offset, duration: duration, curve: curve);
-  Future Function(double offset, {Duration duration, Curve curve}) _scrollTo;
+  Future<void> Function(double offset, {Duration duration, Curve curve}) _scrollTo;
 
   /// Calls every builder function of the sheet to rebuild the widgets with
   /// the current [SheetState].
@@ -1015,22 +1036,22 @@ class SheetController {
   /// Fully collapses the sheet.
   ///
   /// Short-hand for calling `snapToExtent(minExtent)`.
-  Future collapse() => _collapse?.call();
-  Future Function() _collapse;
+  Future<void> collapse() => _collapse?.call();
+  Future<void> Function() _collapse;
 
   /// Fully expands the sheet.
   ///
   /// Short-hand for calling `snapToExtent(maxExtent)`.
-  Future expand() => _expand?.call();
-  Future Function() _expand;
+  Future<void> expand() => _expand?.call();
+  Future<void> Function() _expand;
 
   /// Reveals the [SlidingSheet] if it is currently hidden.
-  Future show() => _show?.call();
-  Future Function() _show;
+  Future<void> show() => _show?.call();
+  Future<void> Function() _show;
 
   /// Slides the sheet off to the bottom and hides it.
-  Future hide() => _hide?.call();
-  Future Function() _hide;
+  Future<void> hide() => _hide?.call();
+  Future<void> Function() _hide;
 
   SheetState _state;
   SheetState get state => _state;

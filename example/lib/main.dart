@@ -266,7 +266,7 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
             () async {
-              await controller.hide();
+              await SheetController.of(context).hide();
               Future.delayed(const Duration(milliseconds: 1500), () {
                 controller.show();
               });
@@ -511,7 +511,9 @@ class _MyAppState extends State<MyApp> {
           ),
           color: Colors.teal,
           maxWidth: 500,
+          minHeight: 800,
           isDismissable: isDismissable,
+          dismissOnBackdropTap: false,
           onDismissPrevented: (backButton, backDrop) async {
             HapticFeedback.heavyImpact();
 
@@ -527,7 +529,7 @@ class _MyAppState extends State<MyApp> {
             //   Navigator.pop(context);
             // }
 
-            print('Dismiss prevented');
+            // print('Dismiss prevented');
           },
           builder: (context, state) {
             return Container(
@@ -588,7 +590,7 @@ class _MyAppState extends State<MyApp> {
                     onPressed: () {
                       if (!isDismissable) {
                         isDismissable = true;
-                        controller.rebuild();
+                        SheetController.of(context).rebuild();
                       } else {
                         Navigator.pop(context);
                       }
