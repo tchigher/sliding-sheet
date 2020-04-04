@@ -291,7 +291,6 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
 
     if (shouldMakeSheetNonDismissable) {
       disposeDragCancelCallback();
-      print('go non');
       return;
     }
 

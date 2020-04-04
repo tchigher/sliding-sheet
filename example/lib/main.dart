@@ -491,9 +491,10 @@ class _MyAppState extends State<MyApp> {
               1.0,
             ],
           ),
-          color: Colors.transparent,
+          color: Colors.teal,
           maxWidth: 500,
-          isDismissable: isDismissable,
+          minHeight: 700,
+          isDismissable: true,
           dismissOnBackdropTap: true,
           isBackdropInteractable: true,
           onDismissPrevented: (backButton, backDrop) async {
@@ -545,7 +546,17 @@ class _MyAppState extends State<MyApp> {
                         size: 56,
                       ),
                     ],
-                  )
+                  ),
+                  FloatingActionButton(
+                    onPressed: () => print('klsjdf'),
+                  ),
+                  FlatButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
                 ],
               ),
             );
