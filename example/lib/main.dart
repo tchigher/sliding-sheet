@@ -93,6 +93,7 @@ class _MyAppState extends State<MyApp> {
       closeOnBackButtonPressed: true,
       addTopViewPaddingOnFullscreen: true,
       isBackdropInteractable: true,
+      backdropColor: Colors.black38,
       border: Border.all(
         color: Colors.grey.shade300,
         width: 3,
@@ -557,7 +558,7 @@ class _MyAppState extends State<MyApp> {
               ),
             );
           },
-          /* footerBuilder: (context, state) {
+          footerBuilder: (context, state) {
             return Container(
               color: Colors.teal.shade700,
               padding: const EdgeInsets.all(16),
@@ -595,7 +596,7 @@ class _MyAppState extends State<MyApp> {
                 ],
               ),
             );
-          }, */
+          },
         );
       },
     );

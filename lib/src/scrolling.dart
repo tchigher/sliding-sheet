@@ -17,7 +17,10 @@ class _SheetExtent {
   }) {
     maxExtent = snappings.last.clamp(0.0, 1.0);
     minExtent = snappings.first.clamp(0.0, 1.0);
-    _currentExtent = ValueNotifier(minExtent)..addListener(() => listener(currentExtent));
+    _currentExtent = ValueNotifier(minExtent)
+      ..addListener(
+        () => listener(currentExtent),
+      );
   }
 
   ValueNotifier<double> _currentExtent;
@@ -127,23 +130,26 @@ class _SlidingSheetScrollController extends ScrollController {
       });
   }
 
-  void stopAnyRunningSnapAnimation() {
-    if (animating) {
-      controller.stop();
-    }
-  }
-
-  void imitiateDrag(double delta) {
+  void delegateDrag(double delta) {
     inDrag = true;
-    _currentPosition?.applyUserOffset(delta);
+    stopAnyRunningSnapAnimation();
+
+    final adjustedDelta = _currentPosition?.adjustDelta(-delta) ?? -delta;
+    extent.addPixelDelta(adjustedDelta);
   }
 
-  void imitateFling([double velocity = 0.0]) {
+  void delegateFling([double velocity = 0.0]) {
     if (velocity != 0.0) {
       _currentPosition?.goBallistic(velocity);
     } else {
       inDrag = true;
       _currentPosition?.didEndScroll();
+    }
+  }
+
+  void stopAnyRunningSnapAnimation() {
+    if (animating) {
+      controller.stop();
     }
   }
 

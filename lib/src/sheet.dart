@@ -6,11 +6,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:sliding_sheet/sliding_sheet.dart';
+
+import 'util.dart';
 
 part 'scrolling.dart';
 part 'sheet_dialog.dart';
 part 'specs.dart';
-part 'util.dart';
 
 typedef SheetBuilder = Widget Function(BuildContext context, SheetState state);
 
@@ -628,7 +630,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
   void _nudgeToNextSnap() {
     if (!controller.inInteraction) {
-      controller.imitateFling();
+      controller.delegateFling();
     }
   }
 
@@ -962,11 +964,11 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     double end = 0;
 
     void onDragEnd([double velocity = 0.0]) {
-      controller.imitateFling(velocity);
+      controller.delegateFling(velocity);
 
       // If a header was dragged, but the scroll view is not at the top
       // animate to the top when the drag has ended.
-      if (!state.isAtTop && (start - end).abs() > 5) {
+      if (!state.isAtTop && (start - end).abs() > 15) {
         controller.animateTo(0.0, duration: widget.duration * .5, curve: Curves.ease);
       }
 
@@ -986,11 +988,11 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
         final delta = details.delta.dy;
 
         controller.isDelegatingInteractions = true;
-        controller.imitiateDrag(delta);
+        controller.delegateDrag(delta);
       },
       onVerticalDragEnd: (details) {
         final velocity = swapSign(details.velocity.pixelsPerSecond.dy);
-        
+
         controller.isDelegatingInteractions = false;
         onDragEnd(velocity);
       },
@@ -1058,17 +1060,12 @@ class SheetState {
   })  : minExtent = minExtent != maxExtent ? minExtent : 0.0,
         progress = isLaidOut ? ((extent - minExtent) / (maxExtent - minExtent)).clamp(0.0, 1.0) : 0.0,
         scrollOffset = _extent?.scrollOffset ?? 0,
-        isExpanded = _toPrecision(extent) >= _toPrecision(maxExtent),
-        isCollapsed = _toPrecision(extent) <= _toPrecision(minExtent),
+        isExpanded = toPrecision(extent) >= toPrecision(maxExtent),
+        isCollapsed = toPrecision(extent) <= toPrecision(minExtent),
         isAtTop = _extent?.isAtTop ?? true,
         isAtBottom = _extent?.isAtBottom ?? false,
         isHidden = extent <= 0.0,
         isShown = extent > 0.0;
-
-  // Allow for a slight deviation.
-  static double _toPrecision(double value, [int precision = 3]) {
-    return double.parse(value.toStringAsFixed(precision));
-  }
 
   factory SheetState.inital() => SheetState(null, extent: 0.0, minExtent: 0.0, maxExtent: 1.0, isLaidOut: false);
 
