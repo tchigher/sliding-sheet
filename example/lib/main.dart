@@ -98,7 +98,7 @@ class _MyAppState extends State<MyApp> {
         width: 3,
       ),
       snapSpec: SnapSpec(
-        snap: false,
+        snap: true,
         positioning: SnapPositioning.relativeToAvailableSpace,
         snappings: const [
           SnapSpec.headerFooterSnap,
@@ -494,7 +494,7 @@ class _MyAppState extends State<MyApp> {
           color: Colors.teal,
           maxWidth: 500,
           minHeight: 700,
-          isDismissable: true,
+          isDismissable: isDismissable,
           dismissOnBackdropTap: true,
           isBackdropInteractable: true,
           onDismissPrevented: (backButton, backDrop) async {
@@ -546,9 +546,6 @@ class _MyAppState extends State<MyApp> {
                         size: 56,
                       ),
                     ],
-                  ),
-                  FloatingActionButton(
-                    onPressed: () => print('klsjdf'),
                   ),
                   FlatButton(
                     onPressed: () => Navigator.pop(context),
