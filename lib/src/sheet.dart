@@ -978,14 +978,20 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       onVerticalDragStart: (details) {
         start = details.localPosition.dy;
         end = start;
+
+        controller.isDelegatingInteractions = true;
       },
       onVerticalDragUpdate: (details) {
         end = details.localPosition.dy;
         final delta = details.delta.dy;
+
+        controller.isDelegatingInteractions = true;
         controller.imitiateDrag(delta);
       },
       onVerticalDragEnd: (details) {
         final velocity = swapSign(details.velocity.pixelsPerSecond.dy);
+        
+        controller.isDelegatingInteractions = false;
         onDragEnd(velocity);
       },
       onVerticalDragCancel: onDragEnd,
