@@ -1,4 +1,4 @@
-### 0.3.0
+### 0.3.0 - 0.3.1
 - added `isDismissable` option for the `SlidingSheetDialog`
 - changed the `closeSheetOnBackButtonPressed` field to `closeOnBackButtonPressed`
 - added `body` and `parallaxSpec` field for the `SlidingSheet`
