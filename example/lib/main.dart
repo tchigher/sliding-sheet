@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:charts_flutter/flutter.dart' as charts;
-import 'package:example/test.dart';
 import 'package:example/util/util.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -83,7 +81,6 @@ class _MyAppState extends State<MyApp> {
     return SlidingSheet(
       duration: const Duration(milliseconds: 800),
       controller: controller,
-      color: Colors.white,
       shadowColor: Colors.black26,
       elevation: 12,
       maxWidth: 500,
@@ -137,7 +134,6 @@ class _MyAppState extends State<MyApp> {
   Widget buildHeader(BuildContext context, SheetState state) {
     return CustomContainer(
       animate: true,
-      color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       elevation: !state.isAtTop ? 4 : 0,
       shadowColor: Colors.black12,
@@ -549,7 +545,7 @@ class _MyAppState extends State<MyApp> {
                   ),
                   FlatButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text(
+                    child: const Text(
                       'Cancel',
                       style: TextStyle(fontSize: 18),
                     ),
