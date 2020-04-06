@@ -6,13 +6,13 @@ This is a list of features that I am working on or planning to implement in futu
 
 - [ ] Add top-down scroll direction support. 
 
-- [ ] Add an option to make the backDrop interactable for gestures
-
-- [ ] Add `body` field on the `SlidingSheet` and add parallax effect
-
 ### Done
 
 ### Added in version 0.3.0
+
+- [x] Add an option to make the backDrop interactable for gestures
+
+- [x] Add `body` field on the `SlidingSheet` and add parallax effect
 
 - [x] allow child widgets to inherit a `SheetController` using `SlidingSheet.
 
