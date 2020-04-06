@@ -1,4 +1,4 @@
-part of 'sheet.dart';
+import 'package:flutter/material.dart';
 
 void postFrame(VoidCallback callback) {
   assert(callback != null);
@@ -6,8 +6,9 @@ void postFrame(VoidCallback callback) {
 }
 
 T swapSign<T extends num>(T value) {
-  if (value.isNegative)
-    return value.abs();
-  else
-    return value * -1;
+  return value.isNegative ? value.abs() : value * -1;
+}
+
+double toPrecision(double value, [int precision = 3]) {
+  return double.parse(value.toStringAsFixed(precision));
 }

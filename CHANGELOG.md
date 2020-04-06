@@ -1,3 +1,9 @@
+### 0.3.0
+- added `isDismissable` option for the `SlidingSheetDialog`
+- changed the `closeSheetOnBackButtonPressed` field to `closeOnBackButtonPressed`
+- added `body` and `parallaxSpec` field for the `SlidingSheet`
+- bug fixes
+
 ### 0.2.1 - 0.2.12
 - Various bug fixes and performance improvements.
 
