@@ -3,7 +3,7 @@
 A widget that can be dragged and scrolled in a single gesture and snapped to a list of extents.
 
 <a href="https://github.com/BendixMa/sliding-sheet/blob/master/example/lib/main.dart">
-  <img width="205px" alt="Example of a SlidingSheet" src="https://raw.githubusercontent.com/BendixMa/sliding-sheet/master/assets/example.gif"/>
+  <img width="205px" alt="Example of a SlidingSheet" src="https://raw.githubusercontent.com/BendixMa/sliding-sheet/master/assets/example_parallax.gif"/>
 </a>
 
 Click <a href="https://github.com/BendixMa/sliding-sheet/blob/master/example/lib/main.dart">here</a> to view the full example.
