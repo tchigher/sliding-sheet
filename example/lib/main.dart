@@ -36,6 +36,7 @@ class _MyAppState extends State<MyApp> {
   double get progress => state?.progress ?? 0.0;
 
   bool tapped = false;
+  bool show = false;
 
   @override
   void initState() {
@@ -90,7 +91,6 @@ class _MyAppState extends State<MyApp> {
       closeOnBackButtonPressed: true,
       addTopViewPaddingOnFullscreen: true,
       isBackdropInteractable: true,
-      backdropColor: Colors.black38,
       border: Border.all(
         color: Colors.grey.shade300,
         width: 3,
@@ -109,7 +109,7 @@ class _MyAppState extends State<MyApp> {
       ),
       parallaxSpec: const ParallaxSpec(
         enabled: true,
-        amount: 0.66,
+        amount: 0.35,
         endExtent: 0.6,
       ),
       scrollSpec: ScrollSpec.bouncingScroll(),
@@ -134,6 +134,7 @@ class _MyAppState extends State<MyApp> {
   Widget buildHeader(BuildContext context, SheetState state) {
     return CustomContainer(
       animate: true,
+      color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       elevation: !state.isAtTop ? 4 : 0,
       shadowColor: Colors.black12,
@@ -294,19 +295,22 @@ class _MyAppState extends State<MyApp> {
       children: <Widget>[
         divider,
         const SizedBox(height: 32),
-        Padding(
-          padding: padding,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                'Traffic',
-                style: titleStyle,
-              ),
-              const SizedBox(height: 16),
-              buildChart(context),
-            ],
+        InkWell(
+          onTap: () => setState(() => show = !show),
+          child: Padding(
+            padding: padding,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  'Traffic',
+                  style: titleStyle,
+                ),
+                const SizedBox(height: 16),
+                buildChart(context),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 32),
@@ -437,8 +441,10 @@ class _MyAppState extends State<MyApp> {
       ),
     ];
 
-    return Container(
-      height: 128,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      height: show ? 256 : 128,
+      color: Colors.transparent,
       child: charts.BarChart(
         series,
         animate: true,
@@ -542,13 +548,6 @@ class _MyAppState extends State<MyApp> {
                         size: 56,
                       ),
                     ],
-                  ),
-                  FlatButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(fontSize: 18),
-                    ),
                   ),
                 ],
               ),

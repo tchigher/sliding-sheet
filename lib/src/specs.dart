@@ -133,8 +133,8 @@ class ParallaxSpec {
   /// The parallax effect will be applied between [minExtent..endExtent] where the minExtent
   /// is defined by the lowest snap in the `snappings` array on the [SnapSpec].
   ///
-  /// If endExtent is null, the [SlidingSheet] will use the maxExtent as defined
-  /// on the [SnapSpec].
+  /// If endExtent is null, the [SlidingSheet] will use the penultimate extent on the `snappings` array
+  /// if there are more than 2 snaps, otherwise the `maxExtent` will be used.
   ///
   /// **Note that the [SnapPositioning] you set on the [SnapSpec] will be applied
   /// to this extent aswell**

@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:sliding_sheet/sliding_sheet.dart';
 
 import 'util.dart';
 
@@ -195,6 +194,31 @@ class SlidingSheet extends StatefulWidget {
   /// {@endtemplate}
   final OnDismissPreventedCallback onDismissPrevented;
 
+  /// Creates a sheet than can be dragged and scrolled in a single gesture to be
+  /// placed inside you widget tree.
+  ///
+  /// The `builder` callback is used to build the main content of the sheet that
+  /// will be scrolled if the content is bigger than the height that the sheet can expand to.
+  ///
+  /// The `headerBuilder` and `footerBuilder` can be used to build persistent widget on top
+  /// and bottom respectively, that wont be scrolled but will delegate the interactions on
+  /// them to the sheet.
+  ///
+  /// The `listener` callback is being invoked when the sheet gets dragged or scrolled
+  /// with current state information.
+  ///
+  /// The `snapSpec` can be used to customize the snapping behavior. There you can custom snap
+  /// extents, whether the sheet should snap at all, and how to position those snaps.
+  ///
+  /// If `addTopViewPaddingOnFullscreen` is set to true, the sheet will add the status bar height
+  /// as a top padding to it in order to avoid the status bar it it is translucent.
+  ///
+  /// The `cornerRadiusOnFullscreen` parameter can be used to easily implement the common Material
+  /// behaviour of sheets to go from rounded corners to sharp corners when
+  /// taking up the full screen.
+  ///
+  /// The `body` parameter can be used to place a widget behind the sheet and a parallax effect can
+  /// be applied to it using the `parallaxSpec` parameter.
   SlidingSheet({
     Key key,
     @required SheetBuilder builder,
@@ -903,7 +927,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       child: widget.body,
       builder: (context, _, body) {
         final amount = spec.amount;
-        final maxExtent = spec.endExtent != null ? _normalizeSnap(spec.endExtent) : this.maxExtent;
+        final defaultMaxExtent = snappings.length > 2 ? snappings[snappings.length - 2] : this.maxExtent;
+        final maxExtent = spec.endExtent != null ? _normalizeSnap(spec.endExtent) : defaultMaxExtent;
         assert(maxExtent > minExtent, 'The endExtent must be greater than the min snap extent you set on the SnapSpec');
         final maxOffset = (maxExtent - minExtent) * availableHeight;
         final fraction = ((currentExtent - minExtent) / (maxExtent - minExtent)).clamp(0.0, 1.0);
@@ -941,20 +966,21 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       ),
     );
 
-    if (!widget.closeOnBackdropTap) {
-      return backDrop;
-    }
-
     void onTap() => widget.isDismissable ? _pop(0.0) : _onDismissPrevented(backDrop: true);
 
-    if (widget.isBackdropInteractable) {
-      return _delegateInteractions(backDrop, onTap: onTap);
-    } else {
-      return GestureDetector(
-        onTap: onTap,
-        child: backDrop,
-      );
+    if (opacity >= 0.05) {
+      if (widget.isBackdropInteractable) {
+        return _delegateInteractions(backDrop, onTap: onTap);
+      } else if (widget.closeOnBackdropTap) {
+        return GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.translucent,
+          child: backDrop,
+        );
+      }
     }
+
+    return backDrop;
   }
 
   Widget _delegateInteractions(Widget child, {VoidCallback onTap}) {
@@ -977,6 +1003,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.translucent,
       onVerticalDragStart: (details) {
         start = details.localPosition.dy;
         end = start;
