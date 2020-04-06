@@ -1,11 +1,10 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:charts_flutter/flutter.dart' as charts;
-import 'package:example/test.dart';
 import 'package:example/util/util.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 import 'package:sliding_sheet/sliding_sheet.dart';
@@ -37,6 +36,7 @@ class _MyAppState extends State<MyApp> {
   double get progress => state?.progress ?? 0.0;
 
   bool tapped = false;
+  bool show = false;
 
   @override
   void initState() {
@@ -53,47 +53,23 @@ class _MyAppState extends State<MyApp> {
         builder: (context) {
           this.context = context;
 
-          return Test();
+          // return Test();
 
           return Scaffold(
             resizeToAvoidBottomInset: false,
-            body: Stack(
+            body: Column(
               children: <Widget>[
                 GestureDetector(
                   onTap: () => setState(() => tapped = !tapped),
-                  child: buildMap(),
-                ),
-                Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + 16, 16, 0),
-                    child: FloatingActionButton(
-                      child: Icon(
-                        Icons.layers,
-                        color: mapsBlue,
-                      ),
-                      backgroundColor: Colors.white,
-                      onPressed: () async {
-                        await showBottomSheet(context);
-                      },
-                    ),
+                  child: AnimatedContainer(
+                    duration: const Duration(seconds: 1),
+                    height: tapped ? 200 : 0,
+                    color: Colors.red,
                   ),
                 ),
-                Column(
-                  children: <Widget>[
-                    GestureDetector(
-                      onTap: () => setState(() => tapped = !tapped),
-                      child: AnimatedContainer(
-                        duration: const Duration(seconds: 1),
-                        height: tapped ? 200 : 0,
-                        color: Colors.red,
-                      ),
-                    ),
-                    Expanded(
-                      child: buildSheet(),
-                    ),
-                  ],
-                )
+                Expanded(
+                  child: buildSheet(),
+                ),
               ],
             ),
           );
@@ -104,16 +80,17 @@ class _MyAppState extends State<MyApp> {
 
   Widget buildSheet() {
     return SlidingSheet(
-      duration: const Duration(milliseconds: 1100),
+      duration: const Duration(milliseconds: 800),
       controller: controller,
-      color: Colors.white,
       shadowColor: Colors.black26,
       elevation: 12,
       maxWidth: 500,
       cornerRadius: 16,
       cornerRadiusOnFullscreen: 0.0,
-      closeSheetOnBackButtonPressed: true,
+      closeOnBackdropTap: true,
+      closeOnBackButtonPressed: true,
       addTopViewPaddingOnFullscreen: true,
+      isBackdropInteractable: true,
       border: Border.all(
         color: Colors.grey.shade300,
         width: 3,
@@ -130,6 +107,11 @@ class _MyAppState extends State<MyApp> {
           print('Snapped to $snap');
         },
       ),
+      parallaxSpec: const ParallaxSpec(
+        enabled: true,
+        amount: 0.35,
+        endExtent: 0.6,
+      ),
       scrollSpec: ScrollSpec.bouncingScroll(),
       listener: (state) {
         final needsRebuild = (this.state?.isCollapsed != state.isCollapsed) ||
@@ -139,9 +121,10 @@ class _MyAppState extends State<MyApp> {
         this.state = state;
 
         if (needsRebuild) {
-          setState(() {});
+          postFrame(() => setState(() {}));
         }
       },
+      body: _buildBody(),
       headerBuilder: buildHeader,
       footerBuilder: buildFooter,
       builder: buildChild,
@@ -159,7 +142,7 @@ class _MyAppState extends State<MyApp> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          SizedBox(height: 2),
+          const SizedBox(height: 2),
           Align(
             alignment: Alignment.topCenter,
             child: ValueListenableBuilder(
@@ -174,17 +157,17 @@ class _MyAppState extends State<MyApp> {
               },
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Row(
             children: <Widget>[
               Text(
                 '5h 36m',
                 style: textStyle.copyWith(
-                  color: Color(0xFFF0BA64),
+                  color: const Color(0xFFF0BA64),
                   fontSize: 22,
                 ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 '(353 mi)',
                 style: textStyle.copyWith(
@@ -194,7 +177,7 @@ class _MyAppState extends State<MyApp> {
               ),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Fastest route now due to traffic conditions.',
             style: textStyle.copyWith(
@@ -202,7 +185,7 @@ class _MyAppState extends State<MyApp> {
               fontSize: 16,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -215,12 +198,12 @@ class _MyAppState extends State<MyApp> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           icon,
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           text,
         ],
       );
 
-      final shape = RoundedRectangleBorder(
+      const shape = RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(18)),
       );
 
@@ -229,15 +212,15 @@ class _MyAppState extends State<MyApp> {
               color: color,
               onPressed: onTap,
               elevation: 2,
-              child: child,
               shape: shape,
+              child: child,
             )
           : OutlineButton(
               color: color,
               onPressed: onTap,
-              child: child,
               borderSide: border,
               shape: shape,
+              child: child,
             );
     }
 
@@ -263,14 +246,14 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
             () async {
-              await controller.hide();
+              await SheetController.of(context).hide();
               Future.delayed(const Duration(milliseconds: 1500), () {
                 controller.show();
               });
             },
             color: mapsBlue,
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           button(
             Icon(
               !isExpanded ? Icons.list : Icons.map,
@@ -305,31 +288,34 @@ class _MyAppState extends State<MyApp> {
       fontWeight: FontWeight.w600,
     );
 
-    final padding = const EdgeInsets.symmetric(horizontal: 16);
+    const padding = EdgeInsets.symmetric(horizontal: 16);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         divider,
-        SizedBox(height: 32),
-        Padding(
-          padding: padding,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                'Traffic',
-                style: titleStyle,
-              ),
-              SizedBox(height: 16),
-              buildChart(context),
-            ],
+        const SizedBox(height: 32),
+        InkWell(
+          onTap: () => setState(() => show = !show),
+          child: Padding(
+            padding: padding,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  'Traffic',
+                  style: titleStyle,
+                ),
+                const SizedBox(height: 16),
+                buildChart(context),
+              ],
+            ),
           ),
         ),
-        SizedBox(height: 32),
+        const SizedBox(height: 32),
         divider,
-        SizedBox(height: 32),
+        const SizedBox(height: 32),
         Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -341,19 +327,19 @@ class _MyAppState extends State<MyApp> {
                 style: titleStyle,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             buildSteps(context),
           ],
         ),
-        SizedBox(height: 32),
+        const SizedBox(height: 32),
         divider,
-        SizedBox(height: 32),
+        const SizedBox(height: 32),
         Icon(
           MdiIcons.github,
           color: Colors.grey.shade900,
           size: 48,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         Align(
           alignment: Alignment.center,
           child: Text(
@@ -364,7 +350,7 @@ class _MyAppState extends State<MyApp> {
             textAlign: TextAlign.center,
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Align(
           alignment: Alignment.center,
           child: Text(
@@ -375,7 +361,7 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
         ),
-        SizedBox(height: 32),
+        const SizedBox(height: 32),
       ],
     );
   }
@@ -390,7 +376,7 @@ class _MyAppState extends State<MyApp> {
 
     return ListView.builder(
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: steps.length,
       itemBuilder: (context, i) {
         final step = steps[i];
@@ -407,7 +393,7 @@ class _MyAppState extends State<MyApp> {
                   fontSize: 16,
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Row(
                 children: <Widget>[
                   Text(
@@ -417,7 +403,7 @@ class _MyAppState extends State<MyApp> {
                       fontSize: 15,
                     ),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Container(
                       height: 1,
@@ -426,7 +412,7 @@ class _MyAppState extends State<MyApp> {
                   )
                 ],
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
             ],
           ),
         );
@@ -455,8 +441,10 @@ class _MyAppState extends State<MyApp> {
       ),
     ];
 
-    return Container(
-      height: 128,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      height: show ? 256 : 128,
+      color: Colors.transparent,
       child: charts.BarChart(
         series,
         animate: true,
@@ -475,14 +463,12 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Future showBottomSheet(BuildContext context) async {
+  Future<void> showBottomSheet(BuildContext context) async {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
-    final dialogController = SheetController();
-    double extent = 0;
-    double progress = 0;
-    double multiple = 1;
+    final controller = SheetController();
+    bool isDismissable = false;
 
     await showSlidingBottomSheet(
       context,
@@ -490,7 +476,7 @@ class _MyAppState extends State<MyApp> {
       // This can be for example a Theme or an AnnotatedRegion.
       parentBuilder: (context, sheet) {
         return Theme(
-          data: ThemeData.light(),
+          data: ThemeData.dark(),
           child: sheet,
         );
       },
@@ -498,97 +484,111 @@ class _MyAppState extends State<MyApp> {
       // will call the builder, allowing react to state changes while the sheet is shown.
       builder: (context) {
         return SlidingSheetDialog(
-          controller: dialogController,
-          duration: const Duration(milliseconds: 800),
+          controller: controller,
+          duration: const Duration(milliseconds: 500),
           snapSpec: const SnapSpec(
-            snappings: const [
-              0.4,
+            snap: true,
+            snappings: [
+              0.3,
               0.7,
               1.0,
             ],
           ),
-          scrollSpec: ScrollSpec.bouncingScroll(),
+          color: Colors.teal,
           maxWidth: 500,
-          color: Colors.white,
-          cornerRadius: 16,
-          cornerRadiusOnFullscreen: 0,
-          listener: (state) {
-            extent = state.extent;
-            progress = state.progress;
-            multiple = 1 - interval(0.7, 1.0, extent);
+          isDismissable: isDismissable,
+          dismissOnBackdropTap: true,
+          isBackdropInteractable: true,
+          onDismissPrevented: (backButton, backDrop) async {
+            HapticFeedback.heavyImpact();
 
-            if (state.progress >= 0.6 || (state.isExpanded && state.scrollOffset < 8.0)) {
-              dialogController.rebuild();
+            if (backButton || backDrop) {
+              const duration = Duration(milliseconds: 300);
+              await controller.snapToExtent(0.2, duration: duration, clamp: false);
+              await controller.snapToExtent(0.4, duration: duration);
+              // or Navigator.pop(context);
             }
+
+            // Or pop the route
+            // if (backButton) {
+            //   Navigator.pop(context);
+            // }
+
+            print('Dismiss prevented');
           },
-          headerBuilder: (context, state) {
-            return Material(
-              elevation: interval(0.0, 8.0, state.scrollOffset) * 4,
-              shadowColor: Colors.black,
-              color: Colors.white,
-              child: Container(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  16 + (MediaQuery.of(context).viewPadding.top * (1 - multiple)),
-                  16,
-                  16,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Text(
-                      'Header',
-                      style: textTheme.headline5,
+          builder: (context, state) {
+            return Container(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Confirm purchase',
+                    style: textTheme.headline4.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
-                    Transform.rotate(
-                      angle: pi * interval(0.7, 0.85, progress),
-                      child: IconButton(
-                        icon: Icon(Icons.keyboard_arrow_up),
-                        onPressed: () => progress != 1.0 ? dialogController.expand() : dialogController.collapse(),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent sagittis tellus lacus, et pulvinar orci eleifend in.',
+                          style: textTheme.subtitle1.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 24),
+                      Icon(
+                        isDismissable ? Icons.check : Icons.error,
+                        color: Colors.white,
+                        size: 56,
+                      ),
+                    ],
+                  ),
+                ],
               ),
             );
           },
           footerBuilder: (context, state) {
             return Container(
-              height: 56,
-              color: Colors.black,
+              color: Colors.teal.shade700,
               padding: const EdgeInsets.all(16),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Footer',
-                  style: textTheme.headline5.copyWith(color: Colors.white),
-                ),
-              ),
-            );
-          },
-          builder: (context, state) {
-            return Container(
-              color: Colors.white,
-              child: Material(
-                child: Column(
-                  children: <Widget>[
-                    Container(
-                      color: Colors.red,
-                      height: 200,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  FlatButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Cancel',
+                      style: textTheme.subtitle1.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    TextField(),
-                    ListView(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: List.generate(10, (i) => i).map((i) {
-                        return Container(
-                          padding: const EdgeInsets.all(48),
-                          child: Text('Item $i'),
-                        );
-                      }).toList(),
+                  ),
+                  const SizedBox(width: 16),
+                  FlatButton(
+                    onPressed: () {
+                      if (!isDismissable) {
+                        isDismissable = true;
+                        SheetController.of(context).rebuild();
+                      } else {
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: Text(
+                      'Approve',
+                      style: textTheme.subtitle1.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           },
@@ -597,20 +597,47 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Widget buildMap() {
-    return Column(
+  Widget _buildBody() {
+    return Stack(
       children: <Widget>[
-        Expanded(
-          child: Image.asset(
-            'assets/maps_screenshot.png',
-            width: double.infinity,
-            height: double.infinity,
-            alignment: Alignment.center,
-            fit: BoxFit.cover,
+        buildMap(),
+        Align(
+          alignment: Alignment.topRight,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + 16, 16, 0),
+            child: FloatingActionButton(
+              backgroundColor: Colors.white,
+              onPressed: () async {
+                await showBottomSheet(context);
+              },
+              child: Icon(
+                Icons.layers,
+                color: mapsBlue,
+              ),
+            ),
           ),
         ),
-        SizedBox(height: 56),
       ],
+    );
+  }
+
+  Widget buildMap() {
+    return GestureDetector(
+      onTap: () => setState(() => tapped = !tapped),
+      child: Column(
+        children: <Widget>[
+          Expanded(
+            child: Image.asset(
+              'assets/maps_screenshot.png',
+              width: double.infinity,
+              height: double.infinity,
+              alignment: Alignment.center,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(height: 56),
+        ],
+      ),
     );
   }
 }
