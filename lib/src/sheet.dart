@@ -173,7 +173,17 @@ class SlidingSheet extends StatefulWidget {
   /// {@endtemplate}
   final ParallaxSpec parallaxSpec;
 
-  // * BottomSheet fields
+  /// {@template sliding_sheet.axisAlignment}
+  /// How to align the sheet on the horizontal axis when the available width is bigger
+  /// than the `maxWidth` of the sheet.
+  ///
+  /// The value must be in the range from `-1.0` (far left) and `1.0` (far right).
+  ///
+  /// Defaults to `0.0` (center).
+  /// {@endTemplate}
+  final double axisAlignment;
+
+  // * SlidingSheetDialog fields
 
   final _SlidingSheetRoute route;
 
@@ -219,6 +229,9 @@ class SlidingSheet extends StatefulWidget {
   ///
   /// The `body` parameter can be used to place a widget behind the sheet and a parallax effect can
   /// be applied to it using the `parallaxSpec` parameter.
+  /// 
+  /// The `axisAlignment` parameter can be used to align the sheet on the horizontal axis when the available 
+  /// width is bigger than the `maxWidth` of the sheet.
   SlidingSheet({
     Key key,
     @required SheetBuilder builder,
@@ -246,6 +259,7 @@ class SlidingSheet extends StatefulWidget {
     bool isBackdropInteractable = false,
     Widget body,
     ParallaxSpec parallaxSpec,
+    double axisAlignment = 0.0,
   }) : this._(
           key: key,
           builder: builder,
@@ -273,6 +287,7 @@ class SlidingSheet extends StatefulWidget {
           isBackdropInteractable: isBackdropInteractable,
           body: body,
           parallaxSpec: parallaxSpec,
+          axisAlignment: axisAlignment,
         );
 
   SlidingSheet._({
@@ -300,6 +315,7 @@ class SlidingSheet extends StatefulWidget {
     @required this.minHeight,
     @required this.closeSheetOnBackButtonPressed,
     @required this.isBackdropInteractable,
+    @required this.axisAlignment,
     this.body,
     this.parallaxSpec,
     this.route,
@@ -312,6 +328,7 @@ class SlidingSheet extends StatefulWidget {
         assert(snapSpec.minSnap != snapSpec.maxSnap || route != null, 'The min and max snaps cannot be equal.'),
         assert(isDismissable != null),
         assert(isBackdropInteractable != null),
+        assert(axisAlignment != null && (axisAlignment >= -1.0 && axisAlignment <= 1.0)),
         super(key: key);
 
   @override
@@ -665,7 +682,6 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       snapToExtent(0.0, velocity: velocity);
     } else if (!fromBottomSheet) {
       final fraction = 1.0 - (((currentExtent - minExtent) / (maxExtent - minExtent)).clamp(0.0, 1.0) * 0.5);
-      print(fraction);
       snapToExtent(minExtent, duration: widget.duration * fraction);
     }
   }
@@ -849,7 +865,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     }
 
     return Align(
-      alignment: Alignment.bottomCenter,
+      alignment: Alignment(widget.axisAlignment, -1.0),
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: widget.maxWidth ?? double.infinity,
@@ -1007,20 +1023,15 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       onVerticalDragStart: (details) {
         start = details.localPosition.dy;
         end = start;
-
-        controller.isDelegatingInteractions = true;
       },
       onVerticalDragUpdate: (details) {
         end = details.localPosition.dy;
         final delta = details.delta.dy;
 
-        controller.isDelegatingInteractions = true;
         controller.delegateDrag(delta);
       },
       onVerticalDragEnd: (details) {
         final velocity = swapSign(details.velocity.pixelsPerSecond.dy);
-
-        controller.isDelegatingInteractions = false;
         onDragEnd(velocity);
       },
       onVerticalDragCancel: onDragEnd,

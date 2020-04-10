@@ -83,7 +83,6 @@ class _SlidingSheetScrollController extends ScrollController {
   double get minExtent => extent.minExtent;
 
   bool inDrag = false;
-  bool isDelegatingInteractions = false;
   bool get animating => controller?.isAnimating == true;
   bool get inInteraction => inDrag || animating;
 
@@ -202,7 +201,6 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
   VoidCallback _dragCancelCallback;
   bool isMovingUp = true;
   bool isMovingDown = false;
-  double lastVelocity = 0.0;
 
   bool get inDrag => scrollController.inDrag;
   set inDrag(bool value) => scrollController.inDrag = value;
@@ -244,7 +242,8 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
   void applyUserOffset(double delta) {
     scrollController.stopAnyRunningSnapAnimation();
 
-    isMovingUp = delta.isNegative;
+    isMovingUp = delta < 0;
+    isMovingDown = delta > 0;
     inDrag = true;
 
     final isNotAtMinOrMaxExtent = !(extent.isAtMin || extent.isAtMax);
@@ -289,7 +288,6 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
 
     isMovingUp = velocity > 0;
     isMovingDown = velocity < 0;
-    lastVelocity = velocity;
 
     // There is an issue with the bouncing scroll physics that when the sheet doesn't cover the full extent
     // the bounce back of the simulation would be so fast to close the sheet again, although it was swiped
@@ -382,7 +380,7 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
     }
   }
 
-  Future<void> runScrollSimulation(double velocity, {double friction = 0.015, VoidCallback onTick}) async {
+  Future<void> runScrollSimulation(double velocity, {double friction = 0.015}) async {
     // The iOS bouncing simulation just isn't right here - once we delegate
     // the ballistic back to the ScrollView, it will use the right simulation.
     final simulation = ClampingScrollSimulation(
@@ -403,11 +401,10 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
       lastDelta = ballisticController.value;
       extent.addPixelDelta(delta);
 
-      onTick?.call();
-
       final shouldStopScrollOnBottomSheets = fromBottomSheet && (currentExtent <= 0.0 || shouldMakeSheetNonDismissable);
-      final shouldStopOnUpFling = isMovingUp && extent.isAtMax;
-      final shouldStopOnDownFling = isMovingDown && (shouldStopScrollOnBottomSheets || extent.isAtMin);
+      final shouldStopOnUpFling = velocity > 0 && extent.isAtMax;
+      final shouldStopOnDownFling = velocity < 0 && (shouldStopScrollOnBottomSheets || extent.isAtMin);
+
       if (shouldStopOnUpFling || shouldStopOnDownFling) {
         // Make sure we pass along enough velocity to keep scrolling - otherwise
         // we just "bounce" off the top making it look like the list doesn't
@@ -426,10 +423,6 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
     ballisticController.addListener(_tick);
     await ballisticController.animateWith(simulation);
     ballisticController.dispose();
-
-    // Needed because otherwise the scrollController
-    // thinks were still dragging.
-    jumpTo(offset);
   }
 
   @override

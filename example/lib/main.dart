@@ -78,7 +78,7 @@ class _MyAppState extends State<MyApp> {
 
   Widget buildSheet() {
     return SlidingSheet(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 900),
       controller: controller,
       shadowColor: Colors.black26,
       elevation: 12,
@@ -94,7 +94,7 @@ class _MyAppState extends State<MyApp> {
         width: 3,
       ),
       snapSpec: SnapSpec(
-        snap: true,
+        snap: false,
         positioning: SnapPositioning.relativeToAvailableSpace,
         snappings: const [
           SnapSpec.headerFooterSnap,
