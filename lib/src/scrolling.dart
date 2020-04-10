@@ -380,7 +380,7 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
     }
   }
 
-  Future<void> runScrollSimulation(double velocity, {double friction = 0.015, VoidCallback onTick}) async {
+  Future<void> runScrollSimulation(double velocity, {double friction = 0.015}) async {
     // The iOS bouncing simulation just isn't right here - once we delegate
     // the ballistic back to the ScrollView, it will use the right simulation.
     final simulation = ClampingScrollSimulation(
@@ -401,11 +401,10 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
       lastDelta = ballisticController.value;
       extent.addPixelDelta(delta);
 
-      onTick?.call();
-
       final shouldStopScrollOnBottomSheets = fromBottomSheet && (currentExtent <= 0.0 || shouldMakeSheetNonDismissable);
-      final shouldStopOnUpFling = isMovingUp && extent.isAtMax;
-      final shouldStopOnDownFling = isMovingDown && (shouldStopScrollOnBottomSheets || extent.isAtMin);
+      final shouldStopOnUpFling = velocity > 0 && extent.isAtMax;
+      final shouldStopOnDownFling = velocity < 0 && (shouldStopScrollOnBottomSheets || extent.isAtMin);
+
       if (shouldStopOnUpFling || shouldStopOnDownFling) {
         // Make sure we pass along enough velocity to keep scrolling - otherwise
         // we just "bounce" off the top making it look like the list doesn't
@@ -418,8 +417,6 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
         if (fromBottomSheet && currentExtent <= 0.0 && !shouldMakeSheetNonDismissable) {
           onPop(0.0);
         }
-      } else if (ballisticController.isCompleted) {
-        super.goBallistic(0.0);
       }
     }
 
@@ -430,7 +427,6 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
 
   @override
   Drag drag(DragStartDetails details, VoidCallback dragCancelCallback) {
-    print(details.localPosition);
     // Save this so we can call it later if we have to [goBallistic] on our own.
     _dragCancelCallback = dragCancelCallback;
     return super.drag(details, dragCancelCallback);

@@ -78,7 +78,7 @@ class _MyAppState extends State<MyApp> {
 
   Widget buildSheet() {
     return SlidingSheet(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 900),
       controller: controller,
       shadowColor: Colors.black26,
       elevation: 12,
