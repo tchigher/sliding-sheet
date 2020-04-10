@@ -83,7 +83,6 @@ class _SlidingSheetScrollController extends ScrollController {
   double get minExtent => extent.minExtent;
 
   bool inDrag = false;
-  bool isDelegatingInteractions = false;
   bool get animating => controller?.isAnimating == true;
   bool get inInteraction => inDrag || animating;
 
@@ -202,7 +201,6 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
   VoidCallback _dragCancelCallback;
   bool isMovingUp = true;
   bool isMovingDown = false;
-  double lastVelocity = 0.0;
 
   bool get inDrag => scrollController.inDrag;
   set inDrag(bool value) => scrollController.inDrag = value;
@@ -244,7 +242,8 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
   void applyUserOffset(double delta) {
     scrollController.stopAnyRunningSnapAnimation();
 
-    isMovingUp = delta.isNegative;
+    isMovingUp = delta < 0;
+    isMovingDown = delta > 0;
     inDrag = true;
 
     final isNotAtMinOrMaxExtent = !(extent.isAtMin || extent.isAtMax);
@@ -289,7 +288,6 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
 
     isMovingUp = velocity > 0;
     isMovingDown = velocity < 0;
-    lastVelocity = velocity;
 
     // There is an issue with the bouncing scroll physics that when the sheet doesn't cover the full extent
     // the bounce back of the simulation would be so fast to close the sheet again, although it was swiped
@@ -420,20 +418,19 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
         if (fromBottomSheet && currentExtent <= 0.0 && !shouldMakeSheetNonDismissable) {
           onPop(0.0);
         }
+      } else if (ballisticController.isCompleted) {
+        super.goBallistic(0.0);
       }
     }
 
     ballisticController.addListener(_tick);
     await ballisticController.animateWith(simulation);
     ballisticController.dispose();
-
-    // Needed because otherwise the scrollController
-    // thinks were still dragging.
-    jumpTo(offset);
   }
 
   @override
   Drag drag(DragStartDetails details, VoidCallback dragCancelCallback) {
+    print(details.localPosition);
     // Save this so we can call it later if we have to [goBallistic] on our own.
     _dragCancelCallback = dragCancelCallback;
     return super.drag(details, dragCancelCallback);
