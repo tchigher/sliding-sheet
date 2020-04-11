@@ -423,6 +423,13 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
     ballisticController.addListener(_tick);
     await ballisticController.animateWith(simulation);
     ballisticController.dispose();
+
+    // Needed because otherwise the scrollController
+    // thinks were still dragging. (User has to tap twice on a button for example)
+    if (!inDrag) {
+      print('sjf');
+      jumpTo(offset);
+    }
   }
 
   @override

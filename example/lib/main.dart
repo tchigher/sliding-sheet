@@ -110,7 +110,7 @@ class _MyAppState extends State<MyApp> {
         amount: 0.35,
         endExtent: 0.6,
       ),
-      scrollSpec: ScrollSpec.bouncingScroll(),
+      scrollSpec: ScrollSpec.overscroll(),
       listener: (state) {
         final needsRebuild = (this.state?.isCollapsed != state.isCollapsed) ||
             (this.state.isExpanded != state.isExpanded) ||
@@ -461,7 +461,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Future<void> showBottomSheet(BuildContext context) async {
+  Future<void> showBottomSheetDialog(BuildContext context) async {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
@@ -494,6 +494,7 @@ class _MyAppState extends State<MyApp> {
           ),
           color: Colors.teal,
           maxWidth: 500,
+          minHeight: 800,
           isDismissable: isDismissable,
           dismissOnBackdropTap: true,
           isBackdropInteractable: true,
@@ -520,6 +521,7 @@ class _MyAppState extends State<MyApp> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
+                  FloatingActionButton(onPressed: () {}),
                   Text(
                     'Confirm purchase',
                     style: textTheme.headline4.copyWith(
@@ -606,7 +608,7 @@ class _MyAppState extends State<MyApp> {
             child: FloatingActionButton(
               backgroundColor: Colors.white,
               onPressed: () async {
-                await showBottomSheet(context);
+                await showBottomSheetDialog(context);
               },
               child: Icon(
                 Icons.layers,
