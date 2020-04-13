@@ -106,15 +106,41 @@ class ScrollSpec {
 
   /// The physics of the containing ScrollView.
   final ScrollPhysics physics;
+
+  /// Whether to wrap the scrollable content inside a `Scrollbar` widget.
+  final bool showScrollbar;
   const ScrollSpec({
     this.overscroll = true,
     this.overscrollColor,
     this.physics,
-  });
+    this.showScrollbar = false,
+  })  : assert(overscroll != null),
+        assert(showScrollbar != null);
 
   factory ScrollSpec.overscroll({Color color}) => ScrollSpec(overscrollColor: color);
 
   factory ScrollSpec.bouncingScroll() => const ScrollSpec(physics: BouncingScrollPhysics());
+
+  @override
+  String toString() {
+    return 'ScrollSpec(overscroll: $overscroll, overscrollColor: $overscrollColor, physics: $physics, showScrollbar: $showScrollbar)';
+  }
+
+  @override
+  bool operator ==(Object o) {
+    if (identical(this, o)) return true;
+
+    return o is ScrollSpec &&
+        o.overscroll == overscroll &&
+        o.overscrollColor == overscrollColor &&
+        o.physics == physics &&
+        o.showScrollbar == showScrollbar;
+  }
+
+  @override
+  int get hashCode {
+    return overscroll.hashCode ^ overscrollColor.hashCode ^ physics.hashCode ^ showScrollbar.hashCode;
+  }
 }
 
 /// {@macro sliding_sheet.parallaxSpec}

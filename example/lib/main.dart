@@ -94,7 +94,7 @@ class _MyAppState extends State<MyApp> {
         width: 3,
       ),
       snapSpec: SnapSpec(
-        snap: false,
+        snap: true,
         positioning: SnapPositioning.relativeToAvailableSpace,
         snappings: const [
           SnapSpec.headerFooterSnap,
@@ -110,7 +110,7 @@ class _MyAppState extends State<MyApp> {
         amount: 0.35,
         endExtent: 0.6,
       ),
-      scrollSpec: ScrollSpec.bouncingScroll(),
+      scrollSpec: ScrollSpec(showScrollbar: true),
       listener: (state) {
         final needsRebuild = (this.state?.isCollapsed != state.isCollapsed) ||
             (this.state.isExpanded != state.isExpanded) ||
@@ -491,6 +491,9 @@ class _MyAppState extends State<MyApp> {
               0.7,
               1.0,
             ],
+          ),
+          scrollSpec: const ScrollSpec(
+            showScrollbar: true,
           ),
           color: Colors.teal,
           maxWidth: 500,
