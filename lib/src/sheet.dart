@@ -998,7 +998,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
     void onTap() => widget.isDismissable ? _pop(0.0) : _onDismissPrevented(backDrop: true);
 
-    if (opacity >= 0.05) {
+    // Bottom sheets should always have a backdrop
+    // see: https://github.com/BendixMa/sliding-sheet/issues/30
+    if (opacity >= 0.05 || fromBottomSheet) {
       if (widget.isBackdropInteractable) {
         return _delegateInteractions(backDrop, onTap: onTap);
       } else if (widget.closeOnBackdropTap) {

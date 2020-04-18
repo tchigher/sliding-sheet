@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:example/test.dart';
 import 'package:example/util/util.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -497,7 +498,7 @@ class _MyAppState extends State<MyApp> {
           ),
           color: Colors.teal,
           maxWidth: 500,
-          isDismissable: isDismissable,
+          isDismissable: true,
           dismissOnBackdropTap: true,
           isBackdropInteractable: true,
           onDismissPrevented: (backButton, backDrop) async {
@@ -552,6 +553,12 @@ class _MyAppState extends State<MyApp> {
                   ),
                 ],
               ),
+            );
+          },
+          headerBuilder: (context, state) {
+            return Container(
+              height: 96,
+              color: Colors.white,
             );
           },
           footerBuilder: (context, state) {

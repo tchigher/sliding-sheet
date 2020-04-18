@@ -158,14 +158,12 @@ class _SlidingSheetScrollController extends ScrollController {
     ScrollContext context,
     ScrollPosition oldPosition,
   ) {
-    _currentPosition = _SlidingSheetScrollPosition(
+    return _currentPosition = _SlidingSheetScrollPosition(
+      this,
       physics: physics,
       context: context,
       oldPosition: oldPosition,
-      scrollController: this,
     );
-
-    return _currentPosition;
   }
 
   void _dispose() {
@@ -184,12 +182,12 @@ class _SlidingSheetScrollController extends ScrollController {
 
 class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
   final _SlidingSheetScrollController scrollController;
-  _SlidingSheetScrollPosition({
+  _SlidingSheetScrollPosition(
+    this.scrollController, {
     @required ScrollPhysics physics,
     @required ScrollContext context,
     ScrollPosition oldPosition,
     String debugLabel,
-    @required this.scrollController,
   })  : assert(scrollController != null),
         super(
           physics: physics,
