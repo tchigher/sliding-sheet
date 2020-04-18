@@ -8,8 +8,6 @@ A widget that can be dragged and scrolled in a single gesture and snapped to a l
 
 Click [here](https://github.com/BendixMa/sliding-sheet/blob/master/example/lib/main.dart) to view the full example.
 
-If you like this package, consider giving it a star on [GitHub](https://github.com/BendixMa/sliding-sheet) and a like on [pub.dev](https://pub.dev/packages/sliding_sheet) :heart:
-
 ## Installing
 
 Add it to your `pubspec.yaml` file:
@@ -21,6 +19,8 @@ Install packages from the command line
 ```
 flutter packages get
 ```
+
+If you like this package, consider giving it a star on [GitHub](https://github.com/BendixMa/sliding-sheet) and a like on [pub.dev](https://pub.dev/packages/sliding_sheet) :heart:
 
 ## Usage
 
