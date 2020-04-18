@@ -3,10 +3,10 @@
 A widget that can be dragged and scrolled in a single gesture and snapped to a list of extents.
 
 <a href="https://github.com/BendixMa/sliding-sheet/blob/master/example/lib/main.dart">
-  <img width="205px" alt="Example of a SlidingSheet" src="https://raw.githubusercontent.com/BendixMa/sliding-sheet/master/assets/example_parallax.gif"/>
+  <img width="205px" alt="Example of a SlidingSheet" src="https://raw.githubusercontent.com/BendixMa/sliding-sheet/master/assets/example.gif"/>
 </a>
 
-Click [here](https://github.com/BendixMa/sliding-sheet/blob/master/example/lib/main.dart) to view the full example. If you like this package, consider giving it a star on [GitHub](https://github.com/BendixMa/sliding-sheet) and a like on [pub.dev](https://pub.dev/packages/sliding_sheet) ♥
+Click [here](https://github.com/BendixMa/sliding-sheet/blob/master/example/lib/main.dart) to view the full example. If you like this package, consider giving it a star on [GitHub](https://github.com/BendixMa/sliding-sheet) and a like on [pub.dev](https://pub.dev/packages/sliding_sheet) :heartpulse:
 
 ## Installing
 
