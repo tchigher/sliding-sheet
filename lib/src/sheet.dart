@@ -356,6 +356,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   // Whether a dismiss was already triggered by the sheet itself
   // and thus further route pops can be safely ignored.
   bool dismissUnderway = false;
+  // Whether the drag on a delegating widget (such as the backdrop)
+  // did start, when the sheet was not fully collapsed.
+  bool didStartDragWhenNotCollapsed = false;
   // The current sheet extent.
   _SheetExtent extent;
   // The currently assigned SheetController
@@ -998,11 +1001,12 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
     void onTap() => widget.isDismissable ? _pop(0.0) : _onDismissPrevented(backDrop: true);
 
-    // Bottom sheets should always have a backdrop
+    print(opacity >= 0.05 || didStartDragWhenNotCollapsed);
+
     // see: https://github.com/BendixMa/sliding-sheet/issues/30
-    if (opacity >= 0.05 || fromBottomSheet) {
+    if (opacity >= 0.05 || didStartDragWhenNotCollapsed) {
       if (widget.isBackdropInteractable) {
-        return _delegateInteractions(backDrop, onTap: onTap);
+        return _delegateInteractions(backDrop, onTap: widget.closeOnBackdropTap ? onTap : null);
       } else if (widget.closeOnBackdropTap) {
         return GestureDetector(
           onTap: onTap,
@@ -1039,6 +1043,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       onVerticalDragStart: (details) {
         start = details.localPosition.dy;
         end = start;
+
+        didStartDragWhenNotCollapsed = currentExtent > snappings.first;
       },
       onVerticalDragUpdate: (details) {
         end = details.localPosition.dy;
@@ -1049,6 +1055,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       onVerticalDragEnd: (details) {
         final velocity = swapSign(details.velocity.pixelsPerSecond.dy);
         onDragEnd(velocity);
+
+        setState(() => didStartDragWhenNotCollapsed = false);
       },
       onVerticalDragCancel: onDragEnd,
       child: child,

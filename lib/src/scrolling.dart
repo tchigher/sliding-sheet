@@ -276,6 +276,7 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
 
     final canSnapToNextExtent = snap && !extent.isAtMax && !extent.isAtMin && !shouldScroll;
     if (inDrag && !shouldMakeSheetNonDismissable && (canSnapToNextExtent || isBottomSheetBelowMinExtent)) {
+      print('go to next snap');
       goSnapped(0.0);
     }
   }

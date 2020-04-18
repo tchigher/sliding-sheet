@@ -111,7 +111,6 @@ class _MyAppState extends State<MyApp> {
         amount: 0.35,
         endExtent: 0.6,
       ),
-      scrollSpec: ScrollSpec(showScrollbar: true),
       listener: (state) {
         final needsRebuild = (this.state?.isCollapsed != state.isCollapsed) ||
             (this.state.isExpanded != state.isExpanded) ||
