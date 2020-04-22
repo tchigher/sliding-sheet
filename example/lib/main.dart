@@ -489,7 +489,6 @@ class _MyAppState extends State<MyApp> {
             snappings: [
               0.3,
               0.7,
-              1.0,
             ],
           ),
           scrollSpec: const ScrollSpec(
@@ -497,6 +496,7 @@ class _MyAppState extends State<MyApp> {
           ),
           color: Colors.teal,
           maxWidth: 500,
+          minHeight: 700,
           isDismissable: true,
           dismissOnBackdropTap: true,
           isBackdropInteractable: true,
@@ -554,13 +554,7 @@ class _MyAppState extends State<MyApp> {
               ),
             );
           },
-          headerBuilder: (context, state) {
-            return Container(
-              height: 96,
-              color: Colors.white,
-            );
-          },
-          footerBuilder: (context, state) {
+          /* footerBuilder: (context, state) {
             return Container(
               color: Colors.teal.shade700,
               padding: const EdgeInsets.all(16),
@@ -598,7 +592,7 @@ class _MyAppState extends State<MyApp> {
                 ],
               ),
             );
-          },
+          }, */
         );
       },
     );

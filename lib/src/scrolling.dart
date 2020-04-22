@@ -42,10 +42,11 @@ class _SheetExtent {
 
   void addPixelDelta(double pixelDelta) {
     if (targetHeight == 0 || availableHeight == 0) return;
-    currentExtent = currentExtent + (pixelDelta / availableHeight);
 
+    currentExtent = currentExtent + (pixelDelta / availableHeight);
+    
     // The bottom sheet should be allowed to be dragged below its min extent.
-    if (!isFromBottomSheet) currentExtent = currentExtent.clamp(minExtent, maxExtent);
+    currentExtent = currentExtent.clamp(isFromBottomSheet ? 0.0 : minExtent, maxExtent);
   }
 
   double get scrollOffset {

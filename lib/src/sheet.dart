@@ -1001,8 +1001,6 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
     void onTap() => widget.isDismissable ? _pop(0.0) : _onDismissPrevented(backDrop: true);
 
-    print(opacity >= 0.05 || didStartDragWhenNotCollapsed);
-
     // see: https://github.com/BendixMa/sliding-sheet/issues/30
     if (opacity >= 0.05 || didStartDragWhenNotCollapsed) {
       if (widget.isBackdropInteractable) {
@@ -1050,11 +1048,22 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
         end = details.localPosition.dy;
         final delta = details.delta.dy;
 
-        controller.delegateDrag(delta);
+        // Do not delegate upward drag when the sheet is fully expanded
+        // because headers or backdrops should not be able to scroll the
+        // sheet, only to drag it between min and max extent.
+        final shouldDelegate = !delta.isNegative || currentExtent < maxExtent;
+        if (shouldDelegate) {
+          controller.delegateDrag(delta);
+        }
       },
       onVerticalDragEnd: (details) {
-        final velocity = swapSign(details.velocity.pixelsPerSecond.dy);
-        onDragEnd(velocity);
+        final deltaY = details.velocity.pixelsPerSecond.dy;
+        final velocity = swapSign(deltaY);
+
+        final shouldDelegate = !deltaY.isNegative || currentExtent < maxExtent;
+        if (shouldDelegate) {
+          onDragEnd(velocity);
+        }
 
         setState(() => didStartDragWhenNotCollapsed = false);
       },
