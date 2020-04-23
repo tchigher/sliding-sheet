@@ -497,7 +497,7 @@ class _MyAppState extends State<MyApp> {
           color: Colors.teal,
           maxWidth: 500,
           minHeight: 700,
-          isDismissable: true,
+          isDismissable: isDismissable,
           dismissOnBackdropTap: true,
           isBackdropInteractable: true,
           onDismissPrevented: (backButton, backDrop) async {
@@ -554,7 +554,7 @@ class _MyAppState extends State<MyApp> {
               ),
             );
           },
-          /* footerBuilder: (context, state) {
+          footerBuilder: (context, state) {
             return Container(
               color: Colors.teal.shade700,
               padding: const EdgeInsets.all(16),
@@ -592,7 +592,7 @@ class _MyAppState extends State<MyApp> {
                 ],
               ),
             );
-          }, */
+          },
         );
       },
     );
