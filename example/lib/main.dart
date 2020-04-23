@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:charts_flutter/flutter.dart' as charts;
-import 'package:example/test.dart';
 import 'package:example/util/util.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -244,8 +243,10 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
             () async {
+              // Inherit from context...
               await SheetController.of(context).hide();
               Future.delayed(const Duration(milliseconds: 1500), () {
+                // or use the controller
                 controller.show();
               });
             },
@@ -523,7 +524,6 @@ class _MyAppState extends State<MyApp> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  FloatingActionButton(onPressed: () {}),
                   Text(
                     'Confirm purchase',
                     style: textTheme.headline4.copyWith(
