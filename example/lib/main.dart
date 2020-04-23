@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:example/test.dart';
 import 'package:example/util/util.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -94,7 +95,7 @@ class _MyAppState extends State<MyApp> {
         width: 3,
       ),
       snapSpec: SnapSpec(
-        snap: false,
+        snap: true,
         positioning: SnapPositioning.relativeToAvailableSpace,
         snappings: const [
           SnapSpec.headerFooterSnap,
@@ -110,7 +111,6 @@ class _MyAppState extends State<MyApp> {
         amount: 0.35,
         endExtent: 0.6,
       ),
-      scrollSpec: ScrollSpec.overscroll(),
       listener: (state) {
         final needsRebuild = (this.state?.isCollapsed != state.isCollapsed) ||
             (this.state.isExpanded != state.isExpanded) ||
@@ -489,12 +489,14 @@ class _MyAppState extends State<MyApp> {
             snappings: [
               0.3,
               0.7,
-              1.0,
             ],
+          ),
+          scrollSpec: const ScrollSpec(
+            showScrollbar: true,
           ),
           color: Colors.teal,
           maxWidth: 500,
-          minHeight: 800,
+          minHeight: 700,
           isDismissable: isDismissable,
           dismissOnBackdropTap: true,
           isBackdropInteractable: true,

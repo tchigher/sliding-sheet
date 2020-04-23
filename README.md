@@ -6,19 +6,21 @@ A widget that can be dragged and scrolled in a single gesture and snapped to a l
   <img width="205px" alt="Example of a SlidingSheet" src="https://raw.githubusercontent.com/BendixMa/sliding-sheet/master/assets/example.gif"/>
 </a>
 
-Click <a href="https://github.com/BendixMa/sliding-sheet/blob/master/example/lib/main.dart">here</a> to view the full example.
+Click [here](https://github.com/BendixMa/sliding-sheet/blob/master/example/lib/main.dart) to view the full example.
 
 ## Installing
 
 Add it to your `pubspec.yaml` file:
 ```yaml
 dependencies:
-  sliding_sheet: ^0.3.3
+  sliding_sheet: ^0.3.4
 ```
 Install packages from the command line
 ```
 flutter packages get
 ```
+
+If you like this package, consider giving it a star on [GitHub](https://github.com/BendixMa/sliding-sheet) and a like on [pub.dev](https://pub.dev/packages/sliding_sheet) :heart:
 
 ## Usage
 
@@ -239,7 +241,3 @@ To improve performace, the children of a `SlidingSheet` are not rebuild when it 
 The example for instance decreases the corner radius of the `SlidingSheet` as it gets dragged to the top and increases the headers top padding by the status bar height. Because this is a common behavior among Material Bottom Sheets, `SlidingSheet` supports this out of the box, which can be achieved by setting the `addTopViewPaddingOnFullscreen` parameter to `true` and the `cornerRadiusOnFullscreen` to `0`.
 
 <img width="205px" alt="Example on how to reflect changes in the SlidingSheet" src="https://raw.githubusercontent.com/BendixMa/sliding-sheet/master/assets/example_reflecting_changes.gif"/>
-
-### Contribution
-
-If you like this package, consider giving it a star on [GitHub](https://github.com/BendixMa/sliding-sheet) and a like on [pub.dev](https://pub.dev/packages/sliding_sheet).

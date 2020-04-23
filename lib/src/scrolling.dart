@@ -42,10 +42,11 @@ class _SheetExtent {
 
   void addPixelDelta(double pixelDelta) {
     if (targetHeight == 0 || availableHeight == 0) return;
-    currentExtent = currentExtent + (pixelDelta / availableHeight);
 
+    currentExtent = currentExtent + (pixelDelta / availableHeight);
+    
     // The bottom sheet should be allowed to be dragged below its min extent.
-    if (!isFromBottomSheet) currentExtent = currentExtent.clamp(minExtent, maxExtent);
+    currentExtent = currentExtent.clamp(isFromBottomSheet ? 0.0 : minExtent, maxExtent);
   }
 
   double get scrollOffset {
@@ -158,14 +159,12 @@ class _SlidingSheetScrollController extends ScrollController {
     ScrollContext context,
     ScrollPosition oldPosition,
   ) {
-    _currentPosition = _SlidingSheetScrollPosition(
+    return _currentPosition = _SlidingSheetScrollPosition(
+      this,
       physics: physics,
       context: context,
       oldPosition: oldPosition,
-      scrollController: this,
     );
-
-    return _currentPosition;
   }
 
   void _dispose() {
@@ -184,12 +183,12 @@ class _SlidingSheetScrollController extends ScrollController {
 
 class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
   final _SlidingSheetScrollController scrollController;
-  _SlidingSheetScrollPosition({
+  _SlidingSheetScrollPosition(
+    this.scrollController, {
     @required ScrollPhysics physics,
     @required ScrollContext context,
     ScrollPosition oldPosition,
     String debugLabel,
-    @required this.scrollController,
   })  : assert(scrollController != null),
         super(
           physics: physics,
@@ -278,6 +277,7 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
 
     final canSnapToNextExtent = snap && !extent.isAtMax && !extent.isAtMin && !shouldScroll;
     if (inDrag && !shouldMakeSheetNonDismissable && (canSnapToNextExtent || isBottomSheetBelowMinExtent)) {
+      print('go to next snap');
       goSnapped(0.0);
     }
   }

@@ -229,8 +229,8 @@ class SlidingSheet extends StatefulWidget {
   ///
   /// The `body` parameter can be used to place a widget behind the sheet and a parallax effect can
   /// be applied to it using the `parallaxSpec` parameter.
-  /// 
-  /// The `axisAlignment` parameter can be used to align the sheet on the horizontal axis when the available 
+  ///
+  /// The `axisAlignment` parameter can be used to align the sheet on the horizontal axis when the available
   /// width is bigger than the `maxWidth` of the sheet.
   SlidingSheet({
     Key key,
@@ -356,6 +356,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   // Whether a dismiss was already triggered by the sheet itself
   // and thus further route pops can be safely ignored.
   bool dismissUnderway = false;
+  // Whether the drag on a delegating widget (such as the backdrop)
+  // did start, when the sheet was not fully collapsed.
+  bool didStartDragWhenNotCollapsed = false;
   // The current sheet extent.
   _SheetExtent extent;
   // The currently assigned SheetController
@@ -831,38 +834,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   }
 
   Widget _buildSheet() {
-    // Wrap the scrollView in a ScrollConfiguration to
-    // remove the default overscroll effect.
-    Widget scrollView = Listener(
-      onPointerUp: (event) => _handleNonDismissableSnapBack(),
-      child: ScrollConfiguration(
-        behavior: const ScrollBehavior(),
-        child: SingleChildScrollView(
-          controller: controller,
-          physics: scrollSpec.physics ?? const ScrollPhysics(),
-          padding: EdgeInsets.only(
-            top: header == null ? padding.top : 0.0,
-            bottom: footer == null ? padding.bottom : 0.0,
-          ),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: widget.minHeight ?? 0.0),
-            child: SizeChangedLayoutNotifier(
-              key: childKey,
-              child: child,
-            ),
-          ),
-        ),
-      ),
-    );
-
-    // Add the overscroll if required again if required
-    if (scrollSpec.overscroll) {
-      scrollView = GlowingOverscrollIndicator(
-        axisDirection: AxisDirection.down,
-        color: scrollSpec.overscrollColor ?? Theme.of(context).accentColor,
-        child: scrollView,
-      );
-    }
+    final scrollingContent = _buildScrollView();
 
     return Align(
       alignment: Alignment(widget.axisAlignment, -1.0),
@@ -901,7 +873,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                     Column(
                       children: <Widget>[
                         SizedBox(height: headerHeight),
-                        Expanded(child: scrollView),
+                        Expanded(child: scrollingContent),
                         SizedBox(height: footerHeight),
                       ],
                     ),
@@ -929,6 +901,51 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
         ),
       ),
     );
+  }
+
+  Widget _buildScrollView() {
+    Widget scrollView = SingleChildScrollView(
+      controller: controller,
+      physics: scrollSpec.physics ?? const ScrollPhysics(),
+      padding: EdgeInsets.only(
+        top: header == null ? padding.top : 0.0,
+        bottom: footer == null ? padding.bottom : 0.0,
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: widget.minHeight ?? 0.0),
+        child: SizeChangedLayoutNotifier(
+          key: childKey,
+          child: child,
+        ),
+      ),
+    );
+
+    if (scrollSpec.showScrollbar) {
+      scrollView = Scrollbar(
+        child: scrollView,
+      );
+    }
+
+    scrollView = Listener(
+      onPointerUp: (event) => _handleNonDismissableSnapBack(),
+      // Wrap the scrollView in a ScrollConfiguration to
+      // remove the default overscroll effect.
+      child: ScrollConfiguration(
+        behavior: const ScrollBehavior(),
+        child: scrollView,
+      ),
+    );
+
+    // Add the overscroll if required again if required
+    if (scrollSpec.overscroll) {
+      scrollView = GlowingOverscrollIndicator(
+        axisDirection: AxisDirection.down,
+        color: scrollSpec.overscrollColor ?? Theme.of(context).accentColor,
+        child: scrollView,
+      );
+    }
+
+    return scrollView;
   }
 
   Widget _buildBody() {
@@ -984,9 +1001,10 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
     void onTap() => widget.isDismissable ? _pop(0.0) : _onDismissPrevented(backDrop: true);
 
-    if (opacity >= 0.05) {
+    // see: https://github.com/BendixMa/sliding-sheet/issues/30
+    if (opacity >= 0.05 || didStartDragWhenNotCollapsed) {
       if (widget.isBackdropInteractable) {
-        return _delegateInteractions(backDrop, onTap: onTap);
+        return _delegateInteractions(backDrop, onTap: widget.closeOnBackdropTap ? onTap : null);
       } else if (widget.closeOnBackdropTap) {
         return GestureDetector(
           onTap: onTap,
@@ -1023,16 +1041,31 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       onVerticalDragStart: (details) {
         start = details.localPosition.dy;
         end = start;
+
+        didStartDragWhenNotCollapsed = currentExtent > snappings.first;
       },
       onVerticalDragUpdate: (details) {
         end = details.localPosition.dy;
         final delta = details.delta.dy;
 
-        controller.delegateDrag(delta);
+        // Do not delegate upward drag when the sheet is fully expanded
+        // because headers or backdrops should not be able to scroll the
+        // sheet, only to drag it between min and max extent.
+        final shouldDelegate = !delta.isNegative || currentExtent < maxExtent;
+        if (shouldDelegate) {
+          controller.delegateDrag(delta);
+        }
       },
       onVerticalDragEnd: (details) {
-        final velocity = swapSign(details.velocity.pixelsPerSecond.dy);
-        onDragEnd(velocity);
+        final deltaY = details.velocity.pixelsPerSecond.dy;
+        final velocity = swapSign(deltaY);
+
+        final shouldDelegate = !deltaY.isNegative || currentExtent < maxExtent;
+        if (shouldDelegate) {
+          onDragEnd(velocity);
+        }
+
+        setState(() => didStartDragWhenNotCollapsed = false);
       },
       onVerticalDragCancel: onDragEnd,
       child: child,
