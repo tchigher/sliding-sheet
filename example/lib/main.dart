@@ -487,7 +487,7 @@ class _MyAppState extends State<MyApp> {
           duration: const Duration(milliseconds: 500),
           snapSpec: const SnapSpec(
             snap: true,
-            initialSnap: 1.0,
+            initialSnap: 0.7,
             snappings: [
               0.3,
               0.7,

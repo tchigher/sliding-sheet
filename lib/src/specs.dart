@@ -34,7 +34,7 @@ class SnapSpec {
   ///
   /// On a [SlidingSheet] this will correspond to the initial extent of the
   /// sheet. On a [SlidingSheetDialog] this will be the first extent that
-  /// the dialog is animating to.
+  /// the dialog will animate to.
   ///
   /// The value must be included in the [snappings] array, otherwise the sheet will
   /// animate immidiately to the next valid snap.
