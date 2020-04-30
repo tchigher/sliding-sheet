@@ -20,7 +20,7 @@ Install packages from the command line
 flutter packages get
 ```
 
-If you like this package, consider giving it a star on [GitHub](https://github.com/bnxm/sliding-sheet) and a like on [pub.dev](https://pub.dev/packages/sliding_sheet) :heart:
+If you like this package, consider supporting it by giving it a star on [GitHub](https://github.com/bnxm/sliding-sheet) and a like on [pub.dev](https://pub.dev/packages/sliding_sheet) :heart:
 
 ## Usage
 
