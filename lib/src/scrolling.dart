@@ -44,7 +44,7 @@ class _SheetExtent {
     if (targetHeight == 0 || availableHeight == 0) return;
 
     currentExtent = currentExtent + (pixelDelta / availableHeight);
-    
+
     // The bottom sheet should be allowed to be dragged below its min extent.
     currentExtent = currentExtent.clamp(isFromBottomSheet ? 0.0 : minExtent, maxExtent);
   }
@@ -57,15 +57,16 @@ class _SheetExtent {
     }
   }
 
-  bool get isAtTop => scrollOffset <= 0;
-
-  bool get isAtBottom {
-    try {
-      return scrollOffset >= controller.position.maxScrollExtent;
-    } catch (e) {
-      return false;
+  double get maxScrollExtent {
+    if (controller.hasClients) {
+      return controller.position?.maxScrollExtent ?? 0.0;
     }
+
+    return 0.0;
   }
+
+  bool get isAtTop => scrollOffset <= 0;
+  bool get isAtBottom => scrollOffset >= maxScrollExtent;
 }
 
 class _SlidingSheetScrollController extends ScrollController {

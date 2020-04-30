@@ -1,3 +1,7 @@
+### 0.3.5
+- Adds `initialSnap` field to `SnapSpec`.
+- Adds `maxScrollExtent` field to `SheetState`.
+
 ### 0.3.1 - 0.3.4
 - Various bug fixes and performance improvements.
 

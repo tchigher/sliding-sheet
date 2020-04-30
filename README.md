@@ -13,7 +13,7 @@ Click [here](https://github.com/bnxm/sliding-sheet/blob/master/example/lib/main.
 Add it to your `pubspec.yaml` file:
 ```yaml
 dependencies:
-  sliding_sheet: ^0.3.4
+  sliding_sheet: ^0.3.5
 ```
 Install packages from the command line
 ```
