@@ -30,6 +30,13 @@ class SnapSpec {
   /// it will begin to scroll.
   final List<double> snappings;
 
+  /// The initial snap extent.
+  ///
+  /// On a [SlidingSheet] this will correspond to the initial extent of the
+  /// sheet. On a [SlidingSheetDialog] this will be the first extent that
+  /// the dialog is animating to.
+  final double initialExtent;
+
   /// How the snaps will be positioned:
   /// - [SnapPositioning.relativeToAvailableSpace] positions the snaps relative to the total
   /// available space (that is, the maximum height the widget can expand to). All values must be between 0 and 1.
@@ -44,6 +51,7 @@ class SnapSpec {
   const SnapSpec({
     this.snap = true,
     this.snappings = const [0.4, 1.0],
+    this.initialExtent,
     this.positioning = SnapPositioning.relativeToAvailableSpace,
     this.onSnap,
   })  : assert(snap != null),
@@ -67,12 +75,14 @@ class SnapSpec {
   SnapSpec copyWith({
     bool snap,
     List<double> snappings,
+    double initialExtent,
     SnapPositioning positioning,
     void Function(SheetState, double snap) onSnap,
   }) {
     return SnapSpec(
       snap: snap ?? this.snap,
       snappings: snappings ?? this.snappings,
+      initialExtent: initialExtent ?? this.initialExtent,
       positioning: positioning ?? this.positioning,
       onSnap: onSnap ?? this.onSnap,
     );
@@ -80,19 +90,24 @@ class SnapSpec {
 
   @override
   String toString() {
-    return 'SnapSpec(snap: $snap, snappings: $snappings, positioning: $positioning, onSnap: $onSnap)';
+    return 'SnapSpec(snap: $snap, snappings: $snappings, initialExtent: $initialExtent, positioning: $positioning, onSnap: $onSnap)';
   }
 
   @override
   bool operator ==(Object o) {
     if (identical(this, o)) return true;
 
-    return o is SnapSpec && o.snap == snap && listEquals(o.snappings, snappings) && o.positioning == positioning;
+    return o is SnapSpec &&
+        o.snap == snap &&
+        listEquals(o.snappings, snappings) &&
+        o.initialExtent == initialExtent &&
+        o.positioning == positioning &&
+        o.onSnap == onSnap;
   }
 
   @override
   int get hashCode {
-    return snap.hashCode ^ snappings.hashCode ^ positioning.hashCode;
+    return snap.hashCode ^ snappings.hashCode ^ initialExtent.hashCode ^ positioning.hashCode ^ onSnap.hashCode;
   }
 }
 

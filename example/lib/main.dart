@@ -117,6 +117,7 @@ class _MyAppState extends State<MyApp> {
             (this.state.isAtTop != state.isAtTop) ||
             (this.state.isAtBottom != state.isAtBottom);
         this.state = state;
+        print(state);
 
         if (needsRebuild) {
           postFrame(() => setState(() {}));
@@ -263,7 +264,7 @@ class _MyAppState extends State<MyApp> {
                 fontSize: 15,
               ),
             ),
-            !isExpanded ? () => controller.scrollTo(230) : controller.collapse,
+            !isExpanded ? () => controller.scrollTo(state.maxScrollExtent) : controller.collapse,
             color: Colors.white,
             border: BorderSide(
               color: Colors.grey.shade400,
@@ -486,6 +487,7 @@ class _MyAppState extends State<MyApp> {
           duration: const Duration(milliseconds: 500),
           snapSpec: const SnapSpec(
             snap: true,
+            initialExtent: 1.0,
             snappings: [
               0.3,
               0.7,

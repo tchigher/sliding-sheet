@@ -381,6 +381,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   double get headerFooterExtent => headerExtent + footerExtent;
   double get minExtent => snappings[fromBottomSheet ? 1 : 0].clamp(0.0, 1.0);
   double get maxExtent => snappings.last.clamp(0.0, 1.0);
+  double get initialExtent => snapSpec.initialExtent != null ? _normalizeSnap(snapSpec.initialExtent) : minExtent;
 
   bool get fromBottomSheet => widget.route != null;
   ScrollSpec get scrollSpec => widget.scrollSpec;
@@ -464,8 +465,11 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     if (fromBottomSheet) {
       _initBottomSheet();
     } else {
+      // Set the inital extent after the first frame.
       postFrame(
-        () => setState(() => currentExtent = minExtent),
+        () => setState(
+          () => currentExtent = initialExtent,
+        ),
       );
     }
   }
@@ -474,7 +478,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     postFrame(() {
       // Snap to the initial snap with a one frame delay when the
       // extents have been correctly calculated.
-      snapToExtent(minExtent);
+      snapToExtent(initialExtent);
 
       // When the route gets popped we animate fully out - not just
       // to the minExtent.
@@ -1100,9 +1104,6 @@ class SheetState {
   /// a progress of 0 means the sheet is fully collapsed.
   final double progress;
 
-  /// The scroll offset when the content is bigger than the available space.
-  final double scrollOffset;
-
   /// Whether the [SlidingSheet] has reached its maximum extent.
   final bool isExpanded;
 
@@ -1120,8 +1121,10 @@ class SheetState {
 
   /// Whether the sheet is visible to the user.
   final bool isShown;
+
+  final _SheetExtent _extent;
   SheetState(
-    _SheetExtent _extent, {
+    this._extent, {
     @required this.extent,
     @required this.isLaidOut,
     @required this.maxExtent,
@@ -1130,7 +1133,6 @@ class SheetState {
     // Thus we have to account for this and set the minExtent to be zero.
   })  : minExtent = minExtent != maxExtent ? minExtent : 0.0,
         progress = isLaidOut ? ((extent - minExtent) / (maxExtent - minExtent)).clamp(0.0, 1.0) : 0.0,
-        scrollOffset = _extent?.scrollOffset ?? 0,
         isExpanded = toPrecision(extent) >= toPrecision(maxExtent),
         isCollapsed = toPrecision(extent) <= toPrecision(minExtent),
         isAtTop = _extent?.isAtTop ?? true,
@@ -1140,9 +1142,15 @@ class SheetState {
 
   factory SheetState.inital() => SheetState(null, extent: 0.0, minExtent: 0.0, maxExtent: 1.0, isLaidOut: false);
 
+  /// The current scroll offset of the Scrollable inside the sheet.
+  double get scrollOffset => _extent?.scrollOffset ?? 0.0;
+
+  /// The maximum amount the Scrollable inside the sheet can scroll.
+  double get maxScrollExtent => _extent?.maxScrollExtent ?? 0.0;
+
   @override
   String toString() {
-    return 'SheetState(extent: $extent, minExtent: $minExtent, maxExtent: $maxExtent, isLaidOut: $isLaidOut, progress: $progress, scrollOffset: $scrollOffset, isExpanded: $isExpanded, isCollapsed: $isCollapsed, isAtTop: $isAtTop, isAtBottom: $isAtBottom, isHidden: $isHidden, isShown: $isShown)';
+    return 'SheetState(extent: $extent, minExtent: $minExtent, maxExtent: $maxExtent, isLaidOut: $isLaidOut, progress: $progress, scrollOffset: $scrollOffset, maxScrollExtent: $maxScrollExtent, isExpanded: $isExpanded, isCollapsed: $isCollapsed, isAtTop: $isAtTop, isAtBottom: $isAtBottom, isHidden: $isHidden, isShown: $isShown)';
   }
 }
 
