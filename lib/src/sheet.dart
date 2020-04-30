@@ -381,7 +381,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   double get headerFooterExtent => headerExtent + footerExtent;
   double get minExtent => snappings[fromBottomSheet ? 1 : 0].clamp(0.0, 1.0);
   double get maxExtent => snappings.last.clamp(0.0, 1.0);
-  double get initialExtent => snapSpec.initialExtent != null ? _normalizeSnap(snapSpec.initialExtent) : minExtent;
+  double get initialExtent => snapSpec.initialSnap != null ? _normalizeSnap(snapSpec.initialSnap) : minExtent;
 
   bool get fromBottomSheet => widget.route != null;
   ScrollSpec get scrollSpec => widget.scrollSpec;
@@ -536,7 +536,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     void isValidRelativeSnap([String message]) {
       assert(
         SnapSpec._isSnap(snap) || (snap >= 0.0 && snap <= 1.0),
-        message ?? 'Relative snap $snap is not between 0 and 1.',
+        message ?? 'Relative snap $snap is not in the range [0..1].',
       );
     }
 
