@@ -119,7 +119,7 @@ class _MyAppState extends State<MyApp> {
         this.state = state;
 
         if (needsRebuild) {
-          postFrame(() => setState(() {}));
+          setState(() {});
         }
       },
       body: _buildBody(),
@@ -191,8 +191,13 @@ class _MyAppState extends State<MyApp> {
   }
 
   Widget buildFooter(BuildContext context, SheetState state) {
-    Widget button(Icon icon, Text text, VoidCallback onTap,
-        {BorderSide border, Color color}) {
+    Widget button(
+      Icon icon,
+      Text text,
+      VoidCallback onTap, {
+      BorderSide border,
+      Color color,
+    }) {
       final child = Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
