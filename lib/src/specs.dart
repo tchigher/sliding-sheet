@@ -70,7 +70,10 @@ class SnapSpec {
   // The snap extent that expands the whole [SlidingSheet]
   static const double expanded = double.infinity;
   static bool _isSnap(double snap) =>
-      snap == expanded || snap == headerFooterSnap || snap == headerSnap || snap == footerSnap;
+      snap == expanded ||
+      snap == headerFooterSnap ||
+      snap == headerSnap ||
+      snap == footerSnap;
 
   double get minSnap => snappings.first;
   double get maxSnap => snappings.last;
@@ -110,7 +113,11 @@ class SnapSpec {
 
   @override
   int get hashCode {
-    return snap.hashCode ^ snappings.hashCode ^ initialSnap.hashCode ^ positioning.hashCode ^ onSnap.hashCode;
+    return snap.hashCode ^
+        snappings.hashCode ^
+        initialSnap.hashCode ^
+        positioning.hashCode ^
+        onSnap.hashCode;
   }
 }
 
@@ -135,9 +142,11 @@ class ScrollSpec {
   })  : assert(overscroll != null),
         assert(showScrollbar != null);
 
-  factory ScrollSpec.overscroll({Color color}) => ScrollSpec(overscrollColor: color);
+  factory ScrollSpec.overscroll({Color color}) =>
+      ScrollSpec(overscrollColor: color);
 
-  factory ScrollSpec.bouncingScroll() => const ScrollSpec(physics: BouncingScrollPhysics());
+  factory ScrollSpec.bouncingScroll() =>
+      const ScrollSpec(physics: BouncingScrollPhysics());
 
   @override
   String toString() {
@@ -157,7 +166,10 @@ class ScrollSpec {
 
   @override
   int get hashCode {
-    return overscroll.hashCode ^ overscrollColor.hashCode ^ physics.hashCode ^ showScrollbar.hashCode;
+    return overscroll.hashCode ^
+        overscrollColor.hashCode ^
+        physics.hashCode ^
+        showScrollbar.hashCode;
   }
 }
 
@@ -191,13 +203,17 @@ class ParallaxSpec {
         assert(amount >= 0.0 && amount <= 1.0);
 
   @override
-  String toString() => 'ParallaxSpec(enabled: $enabled, amount: $amount, extent: $endExtent)';
+  String toString() =>
+      'ParallaxSpec(enabled: $enabled, amount: $amount, extent: $endExtent)';
 
   @override
   bool operator ==(Object o) {
     if (identical(this, o)) return true;
 
-    return o is ParallaxSpec && o.enabled == enabled && o.amount == amount && o.endExtent == endExtent;
+    return o is ParallaxSpec &&
+        o.enabled == enabled &&
+        o.amount == amount &&
+        o.endExtent == endExtent;
   }
 
   @override
