@@ -34,8 +34,8 @@ class _SheetExtent {
 
   double maxExtent;
   double minExtent;
-  double get additionalMinExtent => isAtMin ? 0.0 : 1.0;
-  double get additionalMaxExtent => isAtMax ? 0.0 : 1.0;
+  double get additionalMinExtent => isAtMin ? 0.0 : 0.1;
+  double get additionalMaxExtent => isAtMax ? 0.0 : 0.1;
 
   bool get isAtMax => currentExtent >= maxExtent;
   bool get isAtMin => currentExtent <= minExtent && minExtent != maxExtent;
@@ -278,7 +278,6 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
 
     final canSnapToNextExtent = snap && !extent.isAtMax && !extent.isAtMin && !shouldScroll;
     if (inDrag && !shouldMakeSheetNonDismissable && (canSnapToNextExtent || isBottomSheetBelowMinExtent)) {
-      print('go to next snap');
       goSnapped(0.0);
     }
   }

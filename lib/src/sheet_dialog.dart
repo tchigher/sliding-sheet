@@ -84,6 +84,7 @@ Future<T> showSlidingBottomSheet<T>(
               onDismissPrevented: dialog.onDismissPrevented,
               isBackdropInteractable: dialog.isBackdropInteractable,
               axisAlignment: dialog.axisAlignment,
+              extendBody: dialog.extendBody,
               body: null,
             );
 
@@ -183,6 +184,9 @@ class SlidingSheetDialog {
   /// {@macro sliding_sheet.axisAlignment}
   final double axisAlignment;
 
+  /// {@macro sliding_sheet.extendBody}
+  final bool extendBody;
+
   const SlidingSheetDialog({
     @required this.builder,
     this.headerBuilder,
@@ -209,6 +213,7 @@ class SlidingSheetDialog {
     this.onDismissPrevented,
     this.isBackdropInteractable = false,
     this.axisAlignment = 0.0,
+    this.extendBody = false,
   }) : assert(isDismissable != null);
 }
 

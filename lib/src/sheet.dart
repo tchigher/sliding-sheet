@@ -183,6 +183,12 @@ class SlidingSheet extends StatefulWidget {
   /// {@endTemplate}
   final double axisAlignment;
 
+  /// {@template sliding_sheet.extendBody}
+  /// Whether to extend the scrollable body of the sheet under
+  /// header and/or footer.
+  /// {@endTemplate}
+  final bool extendBody;
+
   // * SlidingSheetDialog fields
 
   final _SlidingSheetRoute route;
@@ -260,6 +266,7 @@ class SlidingSheet extends StatefulWidget {
     Widget body,
     ParallaxSpec parallaxSpec,
     double axisAlignment = 0.0,
+    bool extendBody = false,
   }) : this._(
           key: key,
           builder: builder,
@@ -288,6 +295,7 @@ class SlidingSheet extends StatefulWidget {
           body: body,
           parallaxSpec: parallaxSpec,
           axisAlignment: axisAlignment,
+          extendBody: extendBody,
         );
 
   SlidingSheet._({
@@ -316,6 +324,7 @@ class SlidingSheet extends StatefulWidget {
     @required this.closeSheetOnBackButtonPressed,
     @required this.isBackdropInteractable,
     @required this.axisAlignment,
+    @required this.extendBody,
     this.body,
     this.parallaxSpec,
     this.route,
@@ -327,6 +336,7 @@ class SlidingSheet extends StatefulWidget {
         assert(snapSpec.snappings.length >= 2, 'There must be at least two snapping extents to snap in between.'),
         assert(snapSpec.minSnap != snapSpec.maxSnap || route != null, 'The min and max snaps cannot be equal.'),
         assert(isDismissable != null),
+        assert(extendBody != null),
         assert(isBackdropInteractable != null),
         assert(axisAlignment != null && (axisAlignment >= -1.0 && axisAlignment <= 1.0)),
         super(key: key);
@@ -465,6 +475,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     if (fromBottomSheet) {
       _initBottomSheet();
     } else {
+      didCompleteInitialRoute = true;
       // Set the inital extent after the first frame.
       postFrame(
         () => setState(
@@ -475,11 +486,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   }
 
   void _initBottomSheet() {
-    postFrame(() {
-      // Snap to the initial snap with a one frame delay when the
-      // extents have been correctly calculated.
-      snapToExtent(initialExtent);
-
+    postFrame(() async {
       // When the route gets popped we animate fully out - not just
       // to the minExtent.
       widget.route.popped.then(
@@ -492,7 +499,18 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
         },
       );
 
-      Future.delayed(widget.duration, () => didCompleteInitialRoute = true);
+      // Snap to the initial snap with a one frame delay when the
+      // extents have been correctly calculated.
+      await snapToExtent(initialExtent);
+      setState(() => didCompleteInitialRoute = true);
+
+      // Re-snap the sheet. For example if the content size changed during flyin
+      // the targeted snap would no longer represent the actual initialExtent based
+      // on the new content height. For some reason, NotificationListener doesn't
+      // notify size changes during the first frames.
+      //
+      // https://github.com/bnxm/sliding-sheet/issues/43
+      snapToExtent(initialExtent);
     });
   }
 
@@ -754,60 +772,56 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    final result = Builder(
-      builder: (context) {
+    final result = LayoutBuilder(
+      builder: (context, constrainst) {
         // The context used for the builders to allow
         // the children to inherit the SheetController
         _context = context;
         rebuild();
 
-        return LayoutBuilder(
-          builder: (context, constrainst) {
-            final previousHeight = availableHeight;
-            availableHeight = constrainst.biggest.height;
-            _detectChangesInAvailableHeight(previousHeight);
+        final previousHeight = availableHeight;
+        availableHeight = constrainst.biggest.height;
+        _detectChangesInAvailableHeight(previousHeight);
 
-            final sheet = NotificationListener<SizeChangedLayoutNotification>(
-              onNotification: (notification) {
-                _handleChangesInChildSize();
-                return true;
-              },
-              // ValueListenableBuilder is used to update the sheet irrespective of its children.
-              child: ValueListenableBuilder(
-                valueListenable: extent._currentExtent,
-                builder: (context, value, _) {
-                  // Hide the sheet for the first frame until the extents are
-                  // correctly measured.
-                  return Visibility(
-                    visible: isLaidOut,
-                    maintainInteractivity: false,
-                    maintainSemantics: true,
-                    maintainSize: true,
-                    maintainState: true,
-                    maintainAnimation: true,
-                    child: Stack(
-                      children: <Widget>[
-                        _buildBackdrop(),
-                        _buildSheet(),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            );
-
-            if (widget.body == null) {
-              return sheet;
-            } else {
-              return Stack(
-                children: <Widget>[
-                  _buildBody(),
-                  sheet,
-                ],
-              );
-            }
+        final sheet = NotificationListener<SizeChangedLayoutNotification>(
+          onNotification: (notification) {
+            _handleChangesInChildSize();
+            return true;
           },
+          // ValueListenableBuilder is used to update the sheet irrespective of its children.
+          child: ValueListenableBuilder(
+            valueListenable: extent._currentExtent,
+            builder: (context, value, _) {
+              // Hide the sheet for the first frame until the extents are
+              // correctly measured.
+              return Visibility(
+                visible: isLaidOut,
+                maintainInteractivity: false,
+                maintainSemantics: true,
+                maintainSize: true,
+                maintainState: true,
+                maintainAnimation: true,
+                child: Stack(
+                  children: <Widget>[
+                    _buildBackdrop(),
+                    _buildSheet(),
+                  ],
+                ),
+              );
+            },
+          ),
         );
+
+        if (widget.body == null) {
+          return sheet;
+        } else {
+          return Stack(
+            children: <Widget>[
+              _buildBody(),
+              sheet,
+            ],
+          );
+        }
       },
     );
 
@@ -876,9 +890,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                   children: <Widget>[
                     Column(
                       children: <Widget>[
-                        SizedBox(height: headerHeight),
+                        if (!widget.extendBody) SizedBox(height: headerHeight),
                         Expanded(child: scrollingContent),
-                        SizedBox(height: footerHeight),
+                        if (!widget.extendBody) SizedBox(height: footerHeight),
                       ],
                     ),
                     if (header != null)
@@ -910,7 +924,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   Widget _buildScrollView() {
     Widget scrollView = SingleChildScrollView(
       controller: controller,
-      physics: scrollSpec.physics ?? const ScrollPhysics(),
+      physics:
+          didCompleteInitialRoute ? scrollSpec.physics ?? const ScrollPhysics() : const NeverScrollableScrollPhysics(),
       padding: EdgeInsets.only(
         top: header == null ? padding.top : 0.0,
         bottom: footer == null ? padding.bottom : 0.0,
