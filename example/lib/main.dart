@@ -80,6 +80,7 @@ class _MyAppState extends State<MyApp> {
     return SlidingSheet(
       duration: const Duration(milliseconds: 900),
       controller: controller,
+      color: Colors.white,
       shadowColor: Colors.black26,
       elevation: 12,
       maxWidth: 500,
@@ -149,7 +150,8 @@ class _MyAppState extends State<MyApp> {
                   width: 16,
                   height: 4,
                   borderRadius: 2,
-                  color: Colors.grey.withOpacity(.5 * (1 - interval(0.7, 1.0, state.progress))),
+                  color: Colors.grey
+                      .withOpacity(.5 * (1 - interval(0.7, 1.0, state.progress))),
                 );
               },
             ),
@@ -189,7 +191,8 @@ class _MyAppState extends State<MyApp> {
   }
 
   Widget buildFooter(BuildContext context, SheetState state) {
-    Widget button(Icon icon, Text text, VoidCallback onTap, {BorderSide border, Color color}) {
+    Widget button(Icon icon, Text text, VoidCallback onTap,
+        {BorderSide border, Color color}) {
       final child = Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -264,7 +267,9 @@ class _MyAppState extends State<MyApp> {
                 fontSize: 15,
               ),
             ),
-            !isExpanded ? () => controller.scrollTo(state.maxScrollExtent) : controller.collapse,
+            !isExpanded
+                ? () => controller.scrollTo(state.maxScrollExtent)
+                : controller.collapse,
             color: Colors.white,
             border: BorderSide(
               color: Colors.grey.shade400,
@@ -368,7 +373,8 @@ class _MyAppState extends State<MyApp> {
   Widget buildSteps(BuildContext context) {
     final steps = [
       Step('Go to your pubspec.yaml file.', '2 seconds'),
-      Step("Add the newest version of 'sliding_sheet' to your dependencies.", '5 seconds'),
+      Step(
+          "Add the newest version of 'sliding_sheet' to your dependencies.", '5 seconds'),
       Step("Run 'flutter packages get' in the terminal.", '4 seconds'),
       Step("Happy coding!", 'Forever'),
     ];
@@ -607,15 +613,12 @@ class _MyAppState extends State<MyApp> {
         Align(
           alignment: Alignment.topRight,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + 16, 16, 0),
+            padding:
+                EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + 16, 16, 0),
             child: FloatingActionButton(
               backgroundColor: Colors.white,
               onPressed: () async {
-<<<<<<< HEAD
                 await showBottomSheetDialog(context);
-=======
-                await showTest(context);
->>>>>>> dev
               },
               child: Icon(
                 Icons.layers,
