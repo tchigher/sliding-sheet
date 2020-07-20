@@ -183,6 +183,12 @@ class SlidingSheet extends StatefulWidget {
   /// {@endTemplate}
   final double axisAlignment;
 
+  /// {@template sliding_sheet.extendBody}
+  /// Whether to extend the scrollable body of the sheet under
+  /// header and/or footer.
+  /// {@endTemplate}
+  final bool extendBody;
+
   // * SlidingSheetDialog fields
 
   final _SlidingSheetRoute route;
@@ -260,6 +266,7 @@ class SlidingSheet extends StatefulWidget {
     Widget body,
     ParallaxSpec parallaxSpec,
     double axisAlignment = 0.0,
+    bool extendBody = false,
   }) : this._(
           key: key,
           builder: builder,
@@ -288,6 +295,7 @@ class SlidingSheet extends StatefulWidget {
           body: body,
           parallaxSpec: parallaxSpec,
           axisAlignment: axisAlignment,
+          extendBody: extendBody,
         );
 
   SlidingSheet._({
@@ -316,6 +324,7 @@ class SlidingSheet extends StatefulWidget {
     @required this.closeSheetOnBackButtonPressed,
     @required this.isBackdropInteractable,
     @required this.axisAlignment,
+    @required this.extendBody,
     this.body,
     this.parallaxSpec,
     this.route,
@@ -327,6 +336,7 @@ class SlidingSheet extends StatefulWidget {
         assert(snapSpec.snappings.length >= 2, 'There must be at least two snapping extents to snap in between.'),
         assert(snapSpec.minSnap != snapSpec.maxSnap || route != null, 'The min and max snaps cannot be equal.'),
         assert(isDismissable != null),
+        assert(extendBody != null),
         assert(isBackdropInteractable != null),
         assert(axisAlignment != null && (axisAlignment >= -1.0 && axisAlignment <= 1.0)),
         super(key: key);
@@ -880,9 +890,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                   children: <Widget>[
                     Column(
                       children: <Widget>[
-                        SizedBox(height: headerHeight),
+                        if (!widget.extendBody) SizedBox(height: headerHeight),
                         Expanded(child: scrollingContent),
-                        SizedBox(height: footerHeight),
+                        if (!widget.extendBody) SizedBox(height: footerHeight),
                       ],
                     ),
                     if (header != null)
