@@ -1,3 +1,6 @@
+### 0.3.8
+- Added `routeSettings` field to `showSlidingBottomSheet`.
+
 ### 0.3.6 - 0.3.7
 - Added `extendBody` field
 - Various bug fixes
