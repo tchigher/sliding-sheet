@@ -1,4 +1,7 @@
-part of 'sheet.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+
+import 'sheet.dart';
 
 /// How the snaps will be positioned.
 enum SnapPositioning {
@@ -69,7 +72,7 @@ class SnapSpec {
   static const double footerSnap = -3;
   // The snap extent that expands the whole [SlidingSheet]
   static const double expanded = double.infinity;
-  static bool _isSnap(double snap) =>
+  static bool isSnap(double snap) =>
       snap == expanded ||
       snap == headerFooterSnap ||
       snap == headerSnap ||
@@ -142,8 +145,7 @@ class ScrollSpec {
   })  : assert(overscroll != null),
         assert(showScrollbar != null);
 
-  factory ScrollSpec.overscroll({Color color}) =>
-      ScrollSpec(overscrollColor: color);
+  factory ScrollSpec.overscroll({Color color}) => ScrollSpec(overscrollColor: color);
 
   factory ScrollSpec.bouncingScroll() =>
       const ScrollSpec(physics: BouncingScrollPhysics());
