@@ -80,15 +80,15 @@ class SlidingSheet extends StatefulWidget {
   /// {@endtemplate}
   final EdgeInsets padding;
 
-  /// {@template sliding_sheet.addTopViewPaddingWhenAtFullscreen}
+  /// {@template sliding_sheet.avoidStatusBar}
   /// If true, adds the top padding returned by
   /// `MediaQuery.of(context).viewPadding.top` to the [padding] when taking
   /// up the full screen.
   ///
   /// This can be used to easily avoid the content of the sheet from being
-  /// under the statusbar, which is especially useful when having a header.
+  /// under the status bar, which is especially useful when having a header.
   /// {@endtemplate}
-  final bool addTopViewPaddingOnFullscreen;
+  final bool avoidStatusBar;
 
   /// {@template sliding_sheet.margin}
   /// The amount of the empty space surrounding the sheet.
@@ -294,7 +294,7 @@ class SlidingSheet extends StatefulWidget {
           shadowColor: shadowColor,
           elevation: elevation,
           padding: padding,
-          addTopViewPaddingOnFullscreen: addTopViewPaddingOnFullscreen,
+          avoidStatusBar: addTopViewPaddingOnFullscreen,
           margin: margin,
           border: border,
           cornerRadius: cornerRadius,
@@ -327,7 +327,7 @@ class SlidingSheet extends StatefulWidget {
     @required this.shadowColor,
     @required this.elevation,
     @required this.padding,
-    @required this.addTopViewPaddingOnFullscreen,
+    @required this.avoidStatusBar,
     @required this.margin,
     @required this.border,
     @required this.cornerRadius,
@@ -369,9 +369,9 @@ class SlidingSheet extends StatefulWidget {
 }
 
 class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMixin {
-  GlobalKey childKey;
-  GlobalKey headerKey;
-  GlobalKey footerKey;
+  final GlobalKey childKey = GlobalKey();
+  final GlobalKey headerKey = GlobalKey();
+  final GlobalKey footerKey = GlobalKey();
 
   bool get hasHeader => widget.headerBuilder != null;
   bool get hasFooter => widget.footerBuilder != null;
@@ -424,7 +424,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   EdgeInsets get padding {
     final begin = widget.padding ?? const EdgeInsets.all(0);
 
-    if (!widget.addTopViewPaddingOnFullscreen || !isLaidOut) {
+    if (!widget.avoidStatusBar || !isLaidOut) {
       return begin;
     }
 
@@ -462,41 +462,25 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   @override
   void initState() {
     super.initState();
-    // Assign the keys that will be used to determine the size of
-    // the children.
-    childKey = GlobalKey();
-    headerKey = GlobalKey();
-    footerKey = GlobalKey();
 
     _updateSnappingsAndExtent();
 
-    // Call the listener when the extent or scroll position changes.
-    void listener() {
-      if (isLaidOut) {
-        final state = this.state;
-        stateNotifier.value = state;
-        widget.listener?.call(state);
-        sheetController?._state = state;
-      }
-    }
-
     controller = _SlidingSheetScrollController(
       this,
-    )..addListener(listener);
+    )..addListener(_listener);
 
     extent = _SheetExtent(
       controller,
-      isFromBottomSheet: isDialog,
+      isDialog: isDialog,
       snappings: snappings,
-      listener: (extent) => listener(),
+      listener: (extent) => _listener(),
     );
 
     _assignSheetController();
-
     _measure();
 
     if (isDialog) {
-      _initBottomSheet();
+      _initDialog();
     } else {
       didCompleteInitialRoute = true;
       // Set the inital extent after the first frame.
@@ -508,7 +492,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     }
   }
 
-  void _initBottomSheet() {
+  void _initDialog() {
     postFrame(() async {
       // Snap to the initial snap with a one frame delay when the
       // extents have been correctly calculated.
@@ -542,6 +526,16 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     }
   }
 
+  void _listener() {
+    if (isLaidOut) {
+      final state = this.state;
+
+      stateNotifier.value = state;
+      widget.listener?.call(state);
+      sheetController?._state = state;
+    }
+  }
+
   // Measure the height of all sheet components.
   void _measure() {
     postFrame(() {
@@ -561,12 +555,11 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       final prevFooterHeight = footerHeight;
       footerHeight = isFooterLaidOut ? footer.size.height : 0;
 
-      _updateSnappingsAndExtent();
-
       if (mounted &&
           (childHeight != prevChildHeight ||
               headerHeight != prevHeaderHeight ||
               footerHeight != prevFooterHeight)) {
+        _updateSnappingsAndExtent();
         setState(() {});
       }
     });
@@ -660,6 +653,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
   // Assign the controller functions to actual methods.
   void _assignSheetController() {
+    if (sheetController != null) return;
+
     // Always assing a SheetController to be able to inherit from it
     sheetController = widget.controller ?? SheetController();
 
@@ -878,11 +873,12 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
           if (hasHeader)
             Align(
               alignment: Alignment.topCenter,
-              child: SizeChangedLayoutNotifier(
-                key: headerKey,
-                child: SheetContainer(
-                  elevation: state.isAtTop ? 0.0 : widget.liftOnScrollHeaderElevation,
-                  duration: const Duration(milliseconds: 400),
+              child: ElevatedContainer(
+                shadowColor: widget.shadowColor,
+                elevation: widget.liftOnScrollHeaderElevation,
+                elevateWhen: (state) => !state.isAtTop,
+                child: SizeChangedLayoutNotifier(
+                  key: headerKey,
                   child: _delegateInteractions(
                     widget.headerBuilder(context, state),
                   ),
@@ -892,11 +888,12 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
           if (hasFooter)
             Align(
               alignment: Alignment.bottomCenter,
-              child: SizeChangedLayoutNotifier(
-                key: footerKey,
-                child: SheetContainer(
-                  elevation: state.isAtTop ? 0.0 : widget.liftOnScrollFooterElevation,
-                  duration: const Duration(milliseconds: 400),
+              child: ElevatedContainer(
+                shadowColor: widget.shadowColor,
+                elevation: widget.liftOnScrollFooterElevation,
+                elevateWhen: (state) => !state.isCollapsed && !state.isAtBottom,
+                child: SizeChangedLayoutNotifier(
+                  key: footerKey,
                   child: _delegateInteractions(
                     widget.footerBuilder(context, state),
                   ),
@@ -918,10 +915,9 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
             valueListenable: extent._currentExtent,
             builder: (context, extent, child) {
               final translation = () {
-                if (!isLaidOut && isDialog) {
-                  return 1.0;
-                } else if (headerFooterExtent > 0.0) {
-                  return 1 - (extent.clamp(0.0, headerFooterExtent) / headerFooterExtent);
+                if (headerFooterExtent > 0.0) {
+                  return 1.0 -
+                      (currentExtent.clamp(0.0, headerFooterExtent) / headerFooterExtent);
                 } else {
                   return 0.0;
                 }
@@ -961,18 +957,21 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   }
 
   Widget _buildScrollView() {
-    Widget scrollView = SingleChildScrollView(
-      controller: controller,
-      physics: scrollSpec.physics,
-      padding: EdgeInsets.only(
-        top: !hasHeader ? padding.top : 0.0,
-        bottom: !hasFooter ? padding.bottom : 0.0,
-      ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: widget.minHeight ?? 0.0),
-        child: SizeChangedLayoutNotifier(
-          key: childKey,
-          child: widget.builder(context, state),
+    Widget scrollView = Listener(
+      onPointerUp: (_) => _handleNonDismissableSnapBack(),
+      child: SingleChildScrollView(
+        controller: controller,
+        physics: scrollSpec.physics,
+        padding: EdgeInsets.only(
+          top: !hasHeader ? padding.top : 0.0,
+          bottom: !hasFooter ? padding.bottom : 0.0,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: widget.minHeight ?? 0.0),
+          child: SizeChangedLayoutNotifier(
+            key: childKey,
+            child: widget.builder(context, state),
+          ),
         ),
       ),
     );
@@ -982,13 +981,6 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
         child: scrollView,
       );
     }
-
-    scrollView = Listener(
-      onPointerUp: (event) => _handleNonDismissableSnapBack(),
-      // Wrap the scrollView in a ScrollConfiguration to
-      // remove the default overscroll effect.
-      child: scrollView,
-    );
 
     // Add the overscroll if required again if required
     if (scrollSpec.overscroll) {
@@ -1204,8 +1196,8 @@ class SheetState {
         isHidden = extent <= 0.0,
         isShown = extent > 0.0;
 
-  factory SheetState.inital() =>
-      SheetState(null, extent: 0.0, minExtent: 0.0, maxExtent: 1.0, isLaidOut: false);
+  SheetState.inital()
+      : this(null, extent: 0.0, minExtent: 0.0, maxExtent: 1.0, isLaidOut: false);
 
   static ValueNotifier<SheetState> notifier(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<_InheritedSheetState>()?.state;

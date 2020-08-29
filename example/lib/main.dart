@@ -111,17 +111,8 @@ class _MyAppState extends State<MyApp> {
         amount: 0.35,
         endExtent: 0.6,
       ),
-      listener: (state) {
-        final needsRebuild = (this.state?.isCollapsed != state.isCollapsed) ||
-            (this.state.isExpanded != state.isExpanded) ||
-            (this.state.isAtTop != state.isAtTop) ||
-            (this.state.isAtBottom != state.isAtBottom);
-        this.state = state;
-
-        if (needsRebuild) {
-          setState(() {});
-        }
-      },
+      liftOnScrollHeaderElevation: 4.0,
+      liftOnScrollFooterElevation: 4.0,
       body: _buildBody(),
       headerBuilder: buildHeader,
       footerBuilder: buildFooter,
@@ -136,7 +127,6 @@ class _MyAppState extends State<MyApp> {
       animate: true,
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      elevation: !state.isAtTop ? 4 : 0,
       shadowColor: Colors.black12,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,17 +135,12 @@ class _MyAppState extends State<MyApp> {
           const SizedBox(height: 2),
           Align(
             alignment: Alignment.topCenter,
-            child: ValueListenableBuilder(
-              valueListenable: sheetState,
-              builder: (context, state, _) {
-                return CustomContainer(
-                  width: 16,
-                  height: 4,
-                  borderRadius: 2,
-                  color: Colors.grey
-                      .withOpacity(.5 * (1 - interval(0.7, 1.0, state.progress))),
-                );
-              },
+            child: CustomContainer(
+              width: 16,
+              height: 4,
+              borderRadius: 2,
+              color:
+                  Colors.grey.withOpacity(.5 * (1 - interval(0.7, 1.0, state.progress))),
             ),
           ),
           const SizedBox(height: 8),

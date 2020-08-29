@@ -1,3 +1,8 @@
+### 0.3.8
+- Added `SheetListenerBuilder`
+- Added `liftOnScrollHeaderElevation` and `liftOnScrollFooterElevation` fields.
+- Changed `addTopViewPaddingOnFullscreen` to `avoidStatusBar`
+
 ### 0.3.6 - 0.3.7
 - Added `extendBody` field
 - Various bug fixes

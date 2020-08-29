@@ -13,7 +13,7 @@ Click [here](https://github.com/bnxm/sliding_sheet/blob/master/example/lib/main.
 Add it to your `pubspec.yaml` file:
 ```yaml
 dependencies:
-  sliding_sheet: ^0.3.7
+  sliding_sheet: ^0.3.8
 ```
 Install packages from the command line
 ```
@@ -234,10 +234,28 @@ Widget build(BuildContext context) {
 
 The children of a `SlidingSheet` are not allowed to have an inifinite (unbounded) height. Therefore when using a `ListView`, make sure to set `shrinkWrap` to `true` and `physics` to `NeverScrollableScrollPhysics`. Similarly when using a `Column` as a child of a `SlidingSheet`, make sure to set the `mainAxisSize` to `MainAxisSize.min`.
 
-### Reflecting changes
+### Material Effects
 
-To improve performace, the children of a `SlidingSheet` are not rebuild when it slides or gets scrolled. You can however pass a callback function to the `listener` parameter of a `SlidingSheet`, that gets called with the current `SheetState` whenever the `SlidingSheet` slides or gets scrolled. You can then rebuild your UI by calling `setState(() {})`, `(instance of SheetController).rebuild()` or by a different state management solution to rebuild the sheet. When using the `SlidingSheet` as a `bottomSheetDialog` you can also use `(instance of SheetController).rebuild()` to rebuild the sheet.
+In order to change the UI when the sheet gets interacted with, you can pass a callback to the `listener` field of a `SlidingSheet`, that gets called with the current `SheetState` whenever the `SlidingSheet` slides or gets scrolled. You can then rebuild your UI accordingly. When using the `SlidingSheet` as a `bottomSheetDialog` you can also use `SheetController.rebuild()` to rebuild the sheet, if you want to change certain paramerters.
 
-The example for instance decreases the corner radius of the `SlidingSheet` as it gets dragged to the top and increases the headers top padding by the status bar height. Because this is a common behavior among Material Bottom Sheets, `SlidingSheet` supports this out of the box, which can be achieved by setting the `addTopViewPaddingOnFullscreen` parameter to `true` and the `cornerRadiusOnFullscreen` to `0`.
+For rebuilding individual children of a `SlidingSheet` (e.g. elevating the header when content gets scrolled under it), you can also use the `SheetListenerBuilder`:
 
-<img width="205px" alt="Example on how to reflect changes in the SlidingSheet" src="https://raw.githubusercontent.com/bnxm/sliding_sheet/master/assets/example_reflecting_changes.gif"/>
+~~~dart
+return SheetListenerBuilder(
+  // buildWhen can be used to only rebuild the widget when needed.
+  buildWhen: (oldState, newState) => oldState.isAtTop != newState.isAtTop,
+  builder: (context, state) {
+    return AnimatedContainer(
+      elevation: !state.isAtTop ? elevation : 0.0,
+      duration: const Duration(milliseconds: 400),
+      child: child,
+    );
+  },
+);
+~~~
+
+The example for instance decreases the corner radius of the `SlidingSheet` as it gets dragged to the top and increases the headers top padding by the status bar height. Also, when content gets scrolled under the header it elevates.
+
+Because these are common Material behaviors, `SlidingSheet` supports those out of the box, which can be achieved by setting the `avoidStatusBar` field to `true`, `cornerRadiusOnFullscreen` to `0` and `liftOnScrollHeaderElevation` to the elevation.
+
+<img width="205px" alt="Example of Material Effects" src="https://raw.githubusercontent.com/bnxm/sliding_sheet/master/assets/example_reflecting_changes.gif"/>

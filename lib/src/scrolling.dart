@@ -1,7 +1,7 @@
 part of 'sheet.dart';
 
 class _SheetExtent {
-  final bool isFromBottomSheet;
+  final bool isDialog;
   final _SlidingSheetScrollController controller;
   List<double> snappings;
   double targetHeight = 0;
@@ -11,7 +11,7 @@ class _SheetExtent {
   double availableHeight = 0;
   _SheetExtent(
     this.controller, {
-    @required this.isFromBottomSheet,
+    @required this.isDialog,
     @required this.snappings,
     @required void Function(double) listener,
   }) {
@@ -45,7 +45,7 @@ class _SheetExtent {
 
     currentExtent = currentExtent + (pixelDelta / availableHeight);
     // The bottom sheet should be allowed to be dragged below its min extent.
-    currentExtent = currentExtent.clamp(isFromBottomSheet ? 0.0 : minExtent, maxExtent);
+    currentExtent = currentExtent.clamp(isDialog ? 0.0 : minExtent, maxExtent);
   }
 
   double get scrollOffset {
@@ -121,7 +121,7 @@ class _SlidingSheetScrollController extends ScrollController {
       // Clamp the end snap on every tick because the size of the sheet
       // could have changed in the meantime (for instance, the user makes
       // some fancy animation while sliding).
-      if (!sheet.isDialog && clamp) snap = snap.clamp(extent.minExtent, extent.maxExtent);
+      if (clamp) snap = snap.clamp(extent.minExtent, extent.maxExtent);
       extent.currentExtent = lerpDouble(start, snap, animation.value);
     });
 
@@ -221,7 +221,7 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
   SnapSpec get snapBehavior => sheet.snapSpec;
   ScrollSpec get scrollSpec => sheet.scrollSpec;
   List<double> get snappings => extent.snappings;
-  bool get fromBottomSheet => extent.isFromBottomSheet;
+  bool get fromBottomSheet => extent.isDialog;
   bool get snap => snapBehavior.snap;
   bool get isDismissable => sheet.widget.isDismissable && fromBottomSheet;
 

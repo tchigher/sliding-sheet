@@ -1,14 +1,5 @@
 part of 'sheet.dart';
 
-/// Shows a [SlidingSheet] as a material design bottom sheet.
-///
-/// The `builder` parameter must not be null and is used to construct a [SlidingSheetDialog].
-///
-/// The `parentBuilder` parameter can be used to wrap the sheet inside a parent, for example a
-/// [Theme] or [AnnotatedRegion].
-///
-/// The `resizeToAvoidBottomInset` parameter can be used to avoid the keyboard from obscuring
-/// the content bottom sheet.
 Future<T> showSlidingBottomSheet<T>(
   BuildContext context, {
   @required SlidingSheetDialog Function(BuildContext context) builder,
@@ -66,7 +57,7 @@ Future<T> showSlidingBottomSheet<T>(
               shadowColor: dialog.shadowColor,
               elevation: dialog.elevation,
               padding: dialog.padding,
-              addTopViewPaddingOnFullscreen: dialog.addTopViewPaddingOnFullscreen,
+              avoidStatusBar: dialog.avoidStatusBar,
               margin: dialog.margin,
               border: dialog.border,
               cornerRadius: dialog.cornerRadius,
@@ -85,6 +76,8 @@ Future<T> showSlidingBottomSheet<T>(
               isBackdropInteractable: dialog.isBackdropInteractable,
               axisAlignment: dialog.axisAlignment,
               extendBody: dialog.extendBody,
+              liftOnScrollHeaderElevation: dialog.liftOnScrollHeaderElevation,
+              liftOnScrollFooterElevation: dialog.liftOnScrollFooterElevation,
               body: null,
             );
 
@@ -139,8 +132,8 @@ class SlidingSheetDialog {
   /// {@macro sliding_sheet.padding}
   final EdgeInsets padding;
 
-  /// {@macro sliding_sheet.addTopViewPaddingWhenAtFullscreen}
-  final bool addTopViewPaddingOnFullscreen;
+  /// {@macro sliding_sheet.avoidStatusBar}
+  final bool avoidStatusBar;
 
   /// {@macro sliding_sheet.margin}
   final EdgeInsets margin;
@@ -188,6 +181,12 @@ class SlidingSheetDialog {
   /// {@macro sliding_sheet.extendBody}
   final bool extendBody;
 
+  /// {@macro sliding_sheet.liftOnScrollHeaderElevation}
+  final double liftOnScrollHeaderElevation;
+
+  /// {@macro sliding_sheet.liftOnScrollFooterElevation}
+  final double liftOnScrollFooterElevation;
+
   const SlidingSheetDialog({
     @required this.builder,
     this.headerBuilder,
@@ -199,7 +198,7 @@ class SlidingSheetDialog {
     this.shadowColor,
     this.elevation = 0.0,
     this.padding,
-    this.addTopViewPaddingOnFullscreen = false,
+    this.avoidStatusBar = false,
     this.margin,
     this.border,
     this.cornerRadius = 0.0,
@@ -215,6 +214,8 @@ class SlidingSheetDialog {
     this.isBackdropInteractable = false,
     this.axisAlignment = 0.0,
     this.extendBody = false,
+    this.liftOnScrollHeaderElevation = 0.0,
+    this.liftOnScrollFooterElevation = 0.0,
   }) : assert(isDismissable != null);
 }
 

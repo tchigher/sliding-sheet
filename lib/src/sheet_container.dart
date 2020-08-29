@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:sliding_sheet/src/sheet_listener_builder.dart';
+
+import 'sheet.dart';
+
 class SheetContainer extends StatelessWidget {
   final Duration duration;
   final double borderRadius;
@@ -51,9 +55,7 @@ class SheetContainer extends StatelessWidget {
               : const []),
     );
 
-    final child = br != BorderRadius.zero
-        ? ClipRRect(borderRadius: br, child: this.child)
-        : this.child;
+    final child = ClipRRect(borderRadius: br, child: this.child);
 
     if (duration == null || duration == Duration.zero) {
       return Container(
@@ -74,5 +76,33 @@ class SheetContainer extends StatelessWidget {
         child: child,
       );
     }
+  }
+}
+
+class ElevatedContainer extends StatelessWidget {
+  final Color shadowColor;
+  final double elevation;
+  final bool Function(SheetState state) elevateWhen;
+  final Widget child;
+  const ElevatedContainer({
+    Key key,
+    @required this.shadowColor,
+    @required this.elevation,
+    @required this.elevateWhen,
+    @required this.child,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SheetListenerBuilder(
+      buildWhen: (oldState, newState) => elevateWhen(oldState) != elevateWhen(newState),
+      builder: (context, state) {
+        return SheetContainer(
+          elevation: elevateWhen(state) ? elevation : 0.0,
+          duration: const Duration(milliseconds: 400),
+          child: child,
+        );
+      },
+    );
   }
 }
