@@ -121,7 +121,7 @@ class _SlidingSheetScrollController extends ScrollController {
       // Clamp the end snap on every tick because the size of the sheet
       // could have changed in the meantime (for instance, the user makes
       // some fancy animation while sliding).
-      if (clamp) snap = snap.clamp(extent.minExtent, extent.maxExtent);
+      if (!sheet.isDialog && clamp) snap = snap.clamp(extent.minExtent, extent.maxExtent);
       extent.currentExtent = lerpDouble(start, snap, animation.value);
     });
 

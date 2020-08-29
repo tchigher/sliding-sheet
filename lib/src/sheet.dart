@@ -7,6 +7,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import 'sheet_container.dart';
 import 'specs.dart';
 import 'util.dart';
 
@@ -191,6 +192,16 @@ class SlidingSheet extends StatefulWidget {
   /// {@endTemplate}
   final bool extendBody;
 
+  /// {@template sliding_sheet.liftOnScrollHeaderElevation}
+  /// The elevation of the header when the content scrolls under it.
+  /// {@endTemplate}
+  final double liftOnScrollHeaderElevation;
+
+  /// {@template sliding_sheet.liftOnScrollFooterElevation}
+  /// The elevation of the footer when there content scrolls under it.
+  /// {@endTemplate}
+  final double liftOnScrollFooterElevation;
+
   // * SlidingSheetDialog fields
 
   final _SlidingSheetRoute route;
@@ -269,6 +280,8 @@ class SlidingSheet extends StatefulWidget {
     ParallaxSpec parallaxSpec,
     double axisAlignment = 0.0,
     bool extendBody = false,
+    double liftOnScrollHeaderElevation = 0.0,
+    double liftOnScrollFooterElevation = 0.0,
   }) : this._(
           key: key,
           builder: builder,
@@ -298,6 +311,8 @@ class SlidingSheet extends StatefulWidget {
           parallaxSpec: parallaxSpec,
           axisAlignment: axisAlignment,
           extendBody: extendBody,
+          liftOnScrollHeaderElevation: liftOnScrollHeaderElevation,
+          liftOnScrollFooterElevation: liftOnScrollFooterElevation,
         );
 
   SlidingSheet._({
@@ -327,6 +342,8 @@ class SlidingSheet extends StatefulWidget {
     @required this.isBackdropInteractable,
     @required this.axisAlignment,
     @required this.extendBody,
+    @required this.liftOnScrollHeaderElevation,
+    @required this.liftOnScrollFooterElevation,
     this.body,
     this.parallaxSpec,
     this.route,
@@ -343,6 +360,8 @@ class SlidingSheet extends StatefulWidget {
         assert(extendBody != null),
         assert(isBackdropInteractable != null),
         assert(axisAlignment != null && (axisAlignment >= -1.0 && axisAlignment <= 1.0)),
+        assert(liftOnScrollHeaderElevation >= 0.0),
+        assert(liftOnScrollFooterElevation >= 0.0),
         super(key: key);
 
   @override
@@ -454,8 +473,6 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
     // Call the listener when the extent or scroll position changes.
     void listener() {
       if (isLaidOut) {
-        _measure();
-
         final state = this.state;
         stateNotifier.value = state;
         widget.listener?.call(state);
@@ -544,12 +561,12 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       final prevFooterHeight = footerHeight;
       footerHeight = isFooterLaidOut ? footer.size.height : 0;
 
-      currentExtent = currentExtent.clamp(minExtent, maxExtent);
       _updateSnappingsAndExtent();
 
-      if (childHeight != prevChildHeight ||
-          headerHeight != prevHeaderHeight ||
-          footerHeight != prevFooterHeight) {
+      if (mounted &&
+          (childHeight != prevChildHeight ||
+              headerHeight != prevHeaderHeight ||
+              footerHeight != prevFooterHeight)) {
         setState(() {});
       }
     });
@@ -656,8 +673,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
     if (!isDialog) {
       sheetController._rebuild = () {
-        _measure();
         setState(() {});
+        _measure();
       };
 
       sheetController._show = () async {
@@ -785,7 +802,6 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
 
         final sheet = NotificationListener<SizeChangedLayoutNotification>(
           onNotification: (notification) {
-            print('Size');
             _measure();
             return true;
           },
@@ -849,6 +865,48 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   }
 
   Widget _buildSheet() {
+    final sheet = Builder(
+      builder: (context) => Stack(
+        children: <Widget>[
+          Column(
+            children: <Widget>[
+              if (!widget.extendBody) SizedBox(height: headerHeight),
+              Expanded(child: _buildScrollView()),
+              if (!widget.extendBody) SizedBox(height: footerHeight),
+            ],
+          ),
+          if (hasHeader)
+            Align(
+              alignment: Alignment.topCenter,
+              child: SizeChangedLayoutNotifier(
+                key: headerKey,
+                child: SheetContainer(
+                  elevation: state.isAtTop ? 0.0 : widget.liftOnScrollHeaderElevation,
+                  duration: const Duration(milliseconds: 400),
+                  child: _delegateInteractions(
+                    widget.headerBuilder(context, state),
+                  ),
+                ),
+              ),
+            ),
+          if (hasFooter)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: SizeChangedLayoutNotifier(
+                key: footerKey,
+                child: SheetContainer(
+                  elevation: state.isAtTop ? 0.0 : widget.liftOnScrollFooterElevation,
+                  duration: const Duration(milliseconds: 400),
+                  child: _delegateInteractions(
+                    widget.footerBuilder(context, state),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+
     return Align(
       alignment: Alignment(widget.axisAlignment, -1.0),
       child: ConstrainedBox(
@@ -875,59 +933,27 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
                 alignment: Alignment.bottomCenter,
                 child: FractionalTranslation(
                   translation: Offset(0, translation),
-                  child: child,
+                  child: SheetContainer(
+                    color: widget.color ?? Theme.of(context).cardColor,
+                    border: widget.border,
+                    margin: widget.margin,
+                    padding: EdgeInsets.fromLTRB(
+                      padding.left,
+                      hasHeader ? padding.top : 0.0,
+                      padding.right,
+                      hasFooter ? padding.bottom : 0.0,
+                    ),
+                    elevation: widget.elevation,
+                    shadowColor: widget.shadowColor,
+                    customBorders: BorderRadius.vertical(
+                      top: Radius.circular(cornerRadius),
+                    ),
+                    child: child,
+                  ),
                 ),
               );
             },
-            child: _SheetContainer(
-              color: widget.color ?? Theme.of(context).cardColor,
-              border: widget.border,
-              margin: widget.margin,
-              padding: EdgeInsets.fromLTRB(
-                padding.left,
-                hasHeader ? padding.top : 0.0,
-                padding.right,
-                hasFooter ? padding.bottom : 0.0,
-              ),
-              elevation: widget.elevation,
-              shadowColor: widget.shadowColor,
-              customBorders: BorderRadius.vertical(
-                top: Radius.circular(cornerRadius),
-              ),
-              child: Builder(
-                builder: (context) => Stack(
-                  children: <Widget>[
-                    Column(
-                      children: <Widget>[
-                        if (!widget.extendBody) SizedBox(height: headerHeight),
-                        Expanded(child: _buildScrollView()),
-                        if (!widget.extendBody) SizedBox(height: footerHeight),
-                      ],
-                    ),
-                    if (hasHeader)
-                      Align(
-                        alignment: Alignment.topCenter,
-                        child: SizeChangedLayoutNotifier(
-                          key: headerKey,
-                          child: _delegateInteractions(
-                            widget.headerBuilder(context, state),
-                          ),
-                        ),
-                      ),
-                    if (hasFooter)
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: SizeChangedLayoutNotifier(
-                          key: footerKey,
-                          child: _delegateInteractions(
-                            widget.footerBuilder(context, state),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
+            child: sheet,
           ),
         ),
       ),
@@ -961,10 +987,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       onPointerUp: (event) => _handleNonDismissableSnapBack(),
       // Wrap the scrollView in a ScrollConfiguration to
       // remove the default overscroll effect.
-      child: ScrollConfiguration(
-        behavior: const ScrollBehavior(),
-        child: scrollView,
-      ),
+      child: scrollView,
     );
 
     // Add the overscroll if required again if required
@@ -1270,68 +1293,4 @@ class SheetController {
 
   SheetState _state;
   SheetState get state => _state;
-}
-
-/// A custom [Container] for a [SlidingSheet].
-class _SheetContainer extends StatelessWidget {
-  final double borderRadius;
-  final double elevation;
-  final Border border;
-  final BorderRadius customBorders;
-  final EdgeInsets margin;
-  final EdgeInsets padding;
-  final Widget child;
-  final Color color;
-  final Color shadowColor;
-  final List<BoxShadow> boxShadows;
-  final AlignmentGeometry alignment;
-  final BoxConstraints constraints;
-  const _SheetContainer({
-    Key key,
-    this.borderRadius = 0.0,
-    this.elevation = 0.0,
-    this.border,
-    this.customBorders,
-    this.margin,
-    this.padding = const EdgeInsets.all(0),
-    this.child,
-    this.color = Colors.transparent,
-    this.shadowColor = Colors.black12,
-    this.boxShadows,
-    this.alignment,
-    this.constraints,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final br = customBorders ?? BorderRadius.circular(borderRadius);
-
-    final List<BoxShadow> boxShadow = boxShadows ?? elevation != 0
-        ? [
-            BoxShadow(
-              color: shadowColor ?? Colors.black12,
-              blurRadius: elevation,
-              spreadRadius: 0,
-            ),
-          ]
-        : const [];
-
-    return Container(
-      margin: margin,
-      padding: padding,
-      alignment: alignment,
-      constraints: constraints,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: br,
-        boxShadow: boxShadow,
-        border: border,
-        shape: BoxShape.rectangle,
-      ),
-      child: ClipRRect(
-        borderRadius: br,
-        child: child,
-      ),
-    );
-  }
 }

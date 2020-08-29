@@ -130,6 +130,8 @@ class _MyAppState extends State<MyApp> {
   }
 
   Widget buildHeader(BuildContext context, SheetState state) {
+    print('build header');
+
     return CustomContainer(
       animate: true,
       color: Colors.white,

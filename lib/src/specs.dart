@@ -145,10 +145,8 @@ class ScrollSpec {
   })  : assert(overscroll != null),
         assert(showScrollbar != null);
 
-  factory ScrollSpec.overscroll({Color color}) => ScrollSpec(overscrollColor: color);
-
-  factory ScrollSpec.bouncingScroll() =>
-      const ScrollSpec(physics: BouncingScrollPhysics());
+  const ScrollSpec.overscroll({Color color}) : this(overscrollColor: color);
+  const ScrollSpec.bouncingScroll() : this(physics: const BouncingScrollPhysics());
 
   @override
   String toString() {
