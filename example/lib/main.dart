@@ -9,6 +9,8 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 import 'package:sliding_sheet/sliding_sheet.dart';
 
+// ignore_for_file: public_member_api_docs
+
 void main() => runApp(MyApp());
 
 class MyApp extends StatefulWidget {

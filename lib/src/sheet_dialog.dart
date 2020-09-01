@@ -96,8 +96,8 @@ Future<T> showSlidingBottomSheet<T>(
 
             if (resizeToAvoidBottomInset) {
               return Padding(
-                padding:
-                    EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom),
                 child: sheet,
               );
             }
@@ -236,7 +236,8 @@ class SlidingSheetDialog {
 
 /// A transparent route for a bottom sheet dialog.
 class _SlidingSheetRoute<T> extends PageRoute<T> {
-  final Widget Function(BuildContext, Animation<double>, _SlidingSheetRoute<T>) builder;
+  final Widget Function(BuildContext, Animation<double>, _SlidingSheetRoute<T>)
+      builder;
   final Duration duration;
   _SlidingSheetRoute({
     @required this.builder,

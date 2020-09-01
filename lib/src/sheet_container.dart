@@ -97,7 +97,8 @@ class ElevatedContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SheetListenerBuilder(
-      buildWhen: (oldState, newState) => elevateWhen(oldState) != elevateWhen(newState),
+      buildWhen: (oldState, newState) =>
+          elevateWhen(oldState) != elevateWhen(newState),
       builder: (context, state) {
         return SheetContainer(
           elevation: elevateWhen(state) ? elevation : 0.0,

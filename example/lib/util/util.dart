@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 export 'custom_container.dart';
 
+// ignore_for_file: public_member_api_docs
+
+
 // Shrinks animation values inside a specified range. E.g. from .2 - .4 => .3 = 50%.
 double interval(double lower, double upper, double progress) {
   assert(lower < upper);

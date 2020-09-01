@@ -160,7 +160,8 @@ class ScrollSpec {
   const ScrollSpec.overscroll({Color color}) : this(overscrollColor: color);
 
   /// Creates an iOS bouncing scroll effect.
-  const ScrollSpec.bouncingScroll() : this(physics: const BouncingScrollPhysics());
+  const ScrollSpec.bouncingScroll()
+      : this(physics: const BouncingScrollPhysics());
 
   @override
   String toString() {
