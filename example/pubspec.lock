@@ -127,7 +127,11 @@ packages:
       path: ".."
       relative: true
     source: path
+<<<<<<< HEAD
     version: "0.4.0"
+=======
+    version: "0.3.8"
+>>>>>>> 3486e7a26b955dd587c1f1dee3fbcfaef9f27c5b
   source_span:
     dependency: transitive
     description:

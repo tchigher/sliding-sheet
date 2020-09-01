@@ -56,8 +56,14 @@ class _SheetExtent {
     }
   }
 
+// On quick rotations (portrait to landscape then back to portrait)...  
+// During widget rebuilds, the number of positions tied to the controller can 
+// exceed 1 during the rotation. After the rotation, the number of positions
+// returns to 1. The controller.position?.maxScrollExtent has an assert 
+// ensuring there is at most 1 position.  
+
   double get maxScrollExtent {
-    if (controller.hasClients) {
+    if (controller.hasClients && controller.positions?.length == 1) {
       return controller.position?.maxScrollExtent ?? 0.0;
     }
 

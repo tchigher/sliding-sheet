@@ -1,10 +1,21 @@
 part of 'sheet.dart';
 
-/// Shows a [SlidingSheet] as a sliding sheet dialog.
+/// Shows a [SlidingSheet] as a material design bottom sheet.
+///
+/// The `builder` parameter must not be null and is used to construct a [SlidingSheetDialog].
+///
+/// The `parentBuilder` parameter can be used to wrap the sheet inside a parent, for example a
+/// [Theme] or [AnnotatedRegion].
+///
+/// The `routeSettings` argument, see [RouteSettings] for details.
+///
+/// The `resizeToAvoidBottomInset` parameter can be used to avoid the keyboard from obscuring
+/// the content bottom sheet.
 Future<T> showSlidingBottomSheet<T>(
   BuildContext context, {
   @required SlidingSheetDialog Function(BuildContext context) builder,
   Widget Function(BuildContext context, SlidingSheet sheet) parentBuilder,
+  RouteSettings routeSettings,
   bool useRootNavigator = false,
   bool resizeToAvoidBottomInset = true,
 }) {
@@ -24,6 +35,7 @@ Future<T> showSlidingBottomSheet<T>(
   ).push(
     _SlidingSheetRoute(
       duration: dialog.duration,
+      settings: routeSettings,
       builder: (context, animation, route) {
         return ValueListenableBuilder(
           valueListenable: rebuilder,

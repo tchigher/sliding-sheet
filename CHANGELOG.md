@@ -1,7 +1,12 @@
+<<<<<<< HEAD
 ### 0.4.0
 - Added `SheetListenerBuilder`
 - Added `liftOnScrollHeaderElevation` and `liftOnScrollFooterElevation` fields.
 - Changed `addTopViewPaddingOnFullscreen` to `avoidStatusBar`
+=======
+### 0.3.8
+- Added `routeSettings` field to `showSlidingBottomSheet`.
+>>>>>>> 3486e7a26b955dd587c1f1dee3fbcfaef9f27c5b
 
 ### 0.3.6 - 0.3.7
 - Added `extendBody` field
