@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import 'sheet.dart';
 
+// ignore_for_file: public_member_api_docs
+
 /// How the snaps will be positioned.
 enum SnapPositioning {
   /// Positions the snaps relative to the total
@@ -54,6 +56,8 @@ class SnapSpec {
 
   /// A callback function that gets called when the [SlidingSheet] snaps to an extent.
   final void Function(SheetState, double snap) onSnap;
+
+  /// Creates an object that defines how a [SlidingSheet] should snap, or if it should at all.
   const SnapSpec({
     this.snap = true,
     this.snappings = const [0.4, 1.0],
@@ -64,14 +68,19 @@ class SnapSpec {
         assert(snappings != null),
         assert(positioning != null);
 
-  // The snap extent that makes header and footer fully visible without account for vertical padding on the [SlidingSheet].
+  /// The snap extent that makes header and footer fully visible without account for vertical padding on the [SlidingSheet].
   static const double headerFooterSnap = -1;
-  // The snap extent that makes the header fully visible without account for top padding on the [SlidingSheet].
+
+  /// The snap extent that makes the header fully visible without account for top padding on the [SlidingSheet].
   static const double headerSnap = -2;
-  // The snap extent that makes the footer fully visible without account for bottom padding on the [SlidingSheet].
+
+  /// The snap extent that makes the footer fully visible without account for bottom padding on the [SlidingSheet].
   static const double footerSnap = -3;
-  // The snap extent that expands the whole [SlidingSheet]
+
+  /// The snap extent that expands the whole [SlidingSheet]
   static const double expanded = double.infinity;
+
+  /// private
   static bool isSnap(double snap) =>
       snap == expanded ||
       snap == headerFooterSnap ||
@@ -91,7 +100,7 @@ class SnapSpec {
     return SnapSpec(
       snap: snap ?? this.snap,
       snappings: snappings ?? this.snappings,
-      initialSnap: initialExtent ?? this.initialSnap,
+      initialSnap: initialExtent ?? initialSnap,
       positioning: positioning ?? this.positioning,
       onSnap: onSnap ?? this.onSnap,
     );
@@ -137,6 +146,8 @@ class ScrollSpec {
 
   /// Whether to wrap the scrollable content inside a `Scrollbar` widget.
   final bool showScrollbar;
+
+  /// Creates an object that defines the scroll effects, physics and more.
   const ScrollSpec({
     this.overscroll = true,
     this.overscrollColor,
@@ -145,7 +156,10 @@ class ScrollSpec {
   })  : assert(overscroll != null),
         assert(showScrollbar != null);
 
+  /// Creates an overscroll effect with the given [color].
   const ScrollSpec.overscroll({Color color}) : this(overscrollColor: color);
+
+  /// Creates an iOS bouncing scroll effect.
   const ScrollSpec.bouncingScroll() : this(physics: const BouncingScrollPhysics());
 
   @override
@@ -195,6 +209,8 @@ class ParallaxSpec {
   /// **Note that the [SnapPositioning] you set on the [SnapSpec] will be applied
   /// to this extent aswell**
   final double endExtent;
+
+  /// Creates an object that defines a parallax effect.
   const ParallaxSpec({
     this.enabled = true,
     this.amount = 0.15,

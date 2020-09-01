@@ -4,6 +4,8 @@ import 'package:sliding_sheet/src/sheet_listener_builder.dart';
 
 import 'sheet.dart';
 
+// ignore_for_file: public_member_api_docs
+
 class SheetContainer extends StatelessWidget {
   final Duration duration;
   final double borderRadius;

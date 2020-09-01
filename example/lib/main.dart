@@ -31,10 +31,6 @@ class _MyAppState extends State<MyApp> {
   BuildContext context;
   SheetController controller;
 
-  bool get isExpanded => state?.isExpanded ?? false;
-  bool get isCollapsed => state?.isCollapsed ?? true;
-  double get progress => state?.progress ?? 0.0;
-
   bool tapped = false;
   bool show = false;
 
@@ -111,8 +107,8 @@ class _MyAppState extends State<MyApp> {
         amount: 0.35,
         endExtent: 0.6,
       ),
-      liftOnScrollHeaderElevation: 4.0,
-      liftOnScrollFooterElevation: 4.0,
+      liftOnScrollHeaderElevation: 12.0,
+      liftOnScrollFooterElevation: 12.0,
       body: _buildBody(),
       headerBuilder: buildHeader,
       footerBuilder: buildFooter,
@@ -121,10 +117,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Widget buildHeader(BuildContext context, SheetState state) {
-    print('build header');
-
     return CustomContainer(
-      animate: true,
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       shadowColor: Colors.black12,
@@ -217,8 +210,6 @@ class _MyAppState extends State<MyApp> {
     }
 
     return CustomContainer(
-      animate: true,
-      elevation: !isCollapsed && !state.isAtBottom ? 4 : 0,
       shadowDirection: ShadowDirection.top,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       color: Colors.white,
@@ -226,7 +217,7 @@ class _MyAppState extends State<MyApp> {
       child: Row(
         children: <Widget>[
           button(
-            Icon(
+            const Icon(
               Icons.navigation,
               color: Colors.white,
             ),
@@ -248,25 +239,32 @@ class _MyAppState extends State<MyApp> {
             color: mapsBlue,
           ),
           const SizedBox(width: 8),
-          button(
-            Icon(
-              !isExpanded ? Icons.list : Icons.map,
-              color: mapsBlue,
-            ),
-            Text(
-              !isExpanded ? 'Steps & more' : 'Show map',
-              style: textStyle.copyWith(
-                fontSize: 15,
-              ),
-            ),
-            !isExpanded
-                ? () => controller.scrollTo(state.maxScrollExtent)
-                : controller.collapse,
-            color: Colors.white,
-            border: BorderSide(
-              color: Colors.grey.shade400,
-              width: 2,
-            ),
+          SheetListenerBuilder(
+            buildWhen: (oldState, newState) => oldState.isExpanded != newState.isExpanded,
+            builder: (context, state) {
+              final isExpanded = state.isExpanded;
+
+              return button(
+                Icon(
+                  !isExpanded ? Icons.list : Icons.map,
+                  color: mapsBlue,
+                ),
+                Text(
+                  !isExpanded ? 'Steps & more' : 'Show map',
+                  style: textStyle.copyWith(
+                    fontSize: 15,
+                  ),
+                ),
+                !isExpanded
+                    ? () => controller.scrollTo(state.maxScrollExtent)
+                    : controller.collapse,
+                color: Colors.white,
+                border: BorderSide(
+                  color: Colors.grey.shade400,
+                  width: 2,
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -610,9 +608,9 @@ class _MyAppState extends State<MyApp> {
             child: FloatingActionButton(
               backgroundColor: Colors.white,
               onPressed: () async {
-                await showBottomSheetDialog(context);
+                // await showBottomSheetDialog(context);
               },
-              child: Icon(
+              child: const Icon(
                 Icons.layers,
                 color: mapsBlue,
               ),

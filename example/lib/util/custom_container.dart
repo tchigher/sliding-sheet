@@ -36,7 +36,7 @@ class CustomContainer extends StatelessWidget {
   final Color rippleColor;
   final bool animate;
   final Duration duration;
-  CustomContainer({
+  const CustomContainer({
     Key key,
     this.child,
     this.border,
@@ -91,10 +91,10 @@ class CustomContainer extends StatelessWidget {
     content = Material(
       color: Colors.transparent,
       type: MaterialType.transparency,
-      shape: circle ? CircleBorder() : RoundedRectangleBorder(borderRadius: br),
+      shape: circle ? const CircleBorder() : RoundedRectangleBorder(borderRadius: br),
       child: InkWell(
         splashColor: onTap != null ? rippleColor ?? theme.splashColor : Colors.transparent,
-        customBorder: circle ? CircleBorder() : RoundedRectangleBorder(borderRadius: br),
+        customBorder: circle ? const CircleBorder() : RoundedRectangleBorder(borderRadius: br),
         onTap: onTap,
         onLongPress: onLongPress,
         onDoubleTap: onDoubleTap,

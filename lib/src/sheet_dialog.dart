@@ -1,5 +1,6 @@
 part of 'sheet.dart';
 
+/// Shows a [SlidingSheet] as a sliding sheet dialog.
 Future<T> showSlidingBottomSheet<T>(
   BuildContext context, {
   @required SlidingSheetDialog Function(BuildContext context) builder,
@@ -101,6 +102,7 @@ Future<T> showSlidingBottomSheet<T>(
   );
 }
 
+/// A wrapper class to show a [SlidingSheet] as a bottom sheet dialog.
 class SlidingSheetDialog {
   /// {@macro sliding_sheet.builder}
   final SheetBuilder builder;
@@ -187,6 +189,7 @@ class SlidingSheetDialog {
   /// {@macro sliding_sheet.liftOnScrollFooterElevation}
   final double liftOnScrollFooterElevation;
 
+  /// Creates a wrapper class to show a [SlidingSheet] as a bottom sheet dialog.
   const SlidingSheetDialog({
     @required this.builder,
     this.headerBuilder,

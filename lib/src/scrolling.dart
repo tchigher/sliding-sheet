@@ -232,7 +232,7 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
   double get offset => scrollController.offset;
 
   bool get shouldScroll => pixels > 0.0 && extent.isAtMax;
-  bool get isCoveringFullExtent => scrollController.sheet.isCoveringFullExtent;
+  bool get isCoveringFullExtent => scrollController.sheet.isScrollable;
   bool get shouldMakeSheetNonDismissable =>
       sheet.didCompleteInitialRoute && !isDismissable && currentExtent < minExtent;
   bool get isBottomSheetBelowMinExtent => fromBottomSheet && currentExtent < minExtent;

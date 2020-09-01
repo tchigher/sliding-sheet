@@ -204,6 +204,7 @@ class SlidingSheet extends StatefulWidget {
 
   // * SlidingSheetDialog fields
 
+  // ignore: public_member_api_docs
   final _SlidingSheetRoute route;
 
   /// {@template sliding_sheet.isDismissable}
@@ -401,7 +402,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
       childHeight + headerHeight + footerHeight + padding.vertical + borderHeight;
   // The maxiumum height that this sheet will cover.
   double get maxHeight => math.min(sheetHeight, availableHeight);
-  bool get isCoveringFullExtent => sheetHeight >= availableHeight;
+  bool get isScrollable => sheetHeight >= availableHeight;
 
   double get currentExtent => (extent?.currentExtent ?? minExtent).clamp(0.0, 1.0);
   set currentExtent(double value) => extent?.currentExtent = value;
@@ -876,7 +877,7 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
               child: ElevatedContainer(
                 shadowColor: widget.shadowColor,
                 elevation: widget.liftOnScrollHeaderElevation,
-                elevateWhen: (state) => !state.isAtTop,
+                elevateWhen: (state) => isScrollable && !state.isAtTop,
                 child: SizeChangedLayoutNotifier(
                   key: headerKey,
                   child: _delegateInteractions(
@@ -1137,7 +1138,8 @@ class _SlidingSheetState extends State<SlidingSheet> with TickerProviderStateMix
   }
 }
 
-/// A data class containing state information about the [SlidingSheet].
+/// A data class containing state information about the [SlidingSheet]
+/// such as the extent and scroll offset.
 class SheetState {
   /// The current extent the sheet covers.
   final double extent;
@@ -1176,7 +1178,14 @@ class SheetState {
   /// Whether the sheet is visible to the user.
   final bool isShown;
 
+  /// The scroll offset of the Scrollable inside the sheet
+  /// at the time this [SheetState] was emitted.
+  final double scrollOffset;
+
   final _SheetExtent _extent;
+
+  /// A data class containing state information about the [SlidingSheet]
+  /// at the time this state was emitted.
   SheetState(
     this._extent, {
     @required this.extent,
@@ -1194,20 +1203,23 @@ class SheetState {
         isAtTop = _extent?.isAtTop ?? true,
         isAtBottom = _extent?.isAtBottom ?? false,
         isHidden = extent <= 0.0,
-        isShown = extent > 0.0;
+        isShown = extent > 0.0,
+        scrollOffset = _extent?.scrollOffset ?? 0.0;
 
+  /// A default constructor which can be used to initial `ValueNotifers` for instance.
   SheetState.inital()
       : this(null, extent: 0.0, minExtent: 0.0, maxExtent: 1.0, isLaidOut: false);
 
-  static ValueNotifier<SheetState> notifier(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<_InheritedSheetState>()?.state;
-  }
-
-  /// The current scroll offset of the Scrollable inside the sheet.
-  double get scrollOffset => _extent?.scrollOffset ?? 0.0;
+  /// The current scroll offset of the [Scrollable] inside the sheet.
+  double get currentScrollOffset => _extent?.scrollOffset ?? 0.0;
 
   /// The maximum amount the Scrollable inside the sheet can scroll.
   double get maxScrollExtent => _extent?.maxScrollExtent ?? 0.0;
+
+  /// private
+  static ValueNotifier<SheetState> notifier(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<_InheritedSheetState>()?.state;
+  }
 
   @override
   String toString() {
@@ -1283,6 +1295,7 @@ class SheetController {
   Future<void> hide() => _hide?.call();
   Future<void> Function() _hide;
 
-  SheetState _state;
+  /// The current [SheetState] of this [SlidingSheet].
   SheetState get state => _state;
+  SheetState _state;
 }

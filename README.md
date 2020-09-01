@@ -13,7 +13,7 @@ Click [here](https://github.com/bnxm/sliding_sheet/blob/master/example/lib/main.
 Add it to your `pubspec.yaml` file:
 ```yaml
 dependencies:
-  sliding_sheet: ^0.3.8
+  sliding_sheet: ^0.4.0
 ```
 Install packages from the command line
 ```
@@ -236,7 +236,7 @@ The children of a `SlidingSheet` are not allowed to have an inifinite (unbounded
 
 ### Material Effects
 
-In order to change the UI when the sheet gets interacted with, you can pass a callback to the `listener` field of a `SlidingSheet`, that gets called with the current `SheetState` whenever the `SlidingSheet` slides or gets scrolled. You can then rebuild your UI accordingly. When using the `SlidingSheet` as a `bottomSheetDialog` you can also use `SheetController.rebuild()` to rebuild the sheet, if you want to change certain paramerters.
+In order to change the UI when the sheet gets interacted with, you can pass a callback to the `listener` field of a `SlidingSheet` that gets called with the current `SheetState` whenever the sheet slides or gets scrolled. You can then rebuild your UI accordingly. When using the `SlidingSheet` as a `bottomSheetDialog` you can also use `SheetController.rebuild()` to rebuild the sheet, if you want to change certain paramerters.
 
 For rebuilding individual children of a `SlidingSheet` (e.g. elevating the header when content gets scrolled under it), you can also use the `SheetListenerBuilder`:
 
