@@ -11,65 +11,53 @@ import 'package:sliding_sheet/sliding_sheet.dart';
 
 // ignore_for_file: public_member_api_docs
 
-void main() => runApp(MyApp());
+const Color mapsBlue = Color(0xFF4185F3);
 
-class MyApp extends StatefulWidget {
+void main() => runApp(
+      MaterialApp(
+        title: 'Example App',
+        debugShowCheckedModeBanner: false,
+        home: Example(),
+      ),
+    );
+
+class Example extends StatefulWidget {
   @override
-  _MyAppState createState() => _MyAppState();
+  _ExampleState createState() => _ExampleState();
 }
 
-class _MyAppState extends State<MyApp> {
-  static const mapsBlue = Color(0xFF4185F3);
+class _ExampleState extends State<Example> {
   static const textStyle = TextStyle(
     color: Colors.black,
     fontFamily: 'sans-serif-medium',
     fontSize: 15,
   );
 
-  ValueNotifier<SheetState> sheetState = ValueNotifier(SheetState.inital());
-  SheetState get state => sheetState.value;
-  set state(SheetState value) => sheetState.value = value;
-
-  BuildContext context;
-  SheetController controller;
+  SheetController controller = SheetController();
 
   bool tapped = false;
   bool show = false;
 
   @override
-  void initState() {
-    super.initState();
-    controller = SheetController();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Example App',
-      debugShowCheckedModeBanner: false,
-      home: Builder(
-        builder: (context) {
-          this.context = context;
-
-          return Scaffold(
-            resizeToAvoidBottomInset: false,
-            body: Column(
-              children: <Widget>[
-                GestureDetector(
-                  onTap: () => setState(() => tapped = !tapped),
-                  child: AnimatedContainer(
-                    duration: const Duration(seconds: 1),
-                    height: tapped ? 200 : 0,
-                    color: Colors.red,
-                  ),
-                ),
-                Expanded(
-                  child: buildSheet(),
-                ),
-              ],
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      body: Column(
+        children: <Widget>[
+          // Just some testing to ensure the sheet readjust
+          // its snapped position when the constraints change.
+          GestureDetector(
+            onTap: () => setState(() => tapped = !tapped),
+            child: AnimatedContainer(
+              duration: const Duration(seconds: 1),
+              height: tapped ? 200 : 0,
+              color: Colors.red,
             ),
-          );
-        },
+          ),
+          Expanded(
+            child: buildSheet(),
+          ),
+        ],
       ),
     );
   }

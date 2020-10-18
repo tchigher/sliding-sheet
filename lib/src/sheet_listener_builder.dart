@@ -43,9 +43,8 @@ class _SheetListenerBuilderState extends State<SheetListenerBuilder> {
 
   void _listener() {
     final newState = _notifier.value;
-    final shouldRebuild = _state == null ||
-        widget.buildWhen == null ||
-        widget.buildWhen(_state, newState);
+    final shouldRebuild =
+        _state == null || widget.buildWhen == null || widget.buildWhen(_state, newState);
 
     if (shouldRebuild) {
       _state = newState;

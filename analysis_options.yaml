@@ -647,7 +647,7 @@ linter:
 
     # Flutter only, always put child last
     # https://dart-lang.github.io/linter/lints/sort_child_properties_last.html
-    - sort_child_properties_last
+    # - sort_child_properties_last
 
     # Working, results in consistent code. But too opinionated
     # Discussion: https://github.com/passsy/dart-lint/issues/1
