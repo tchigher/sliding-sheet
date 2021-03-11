@@ -1,6 +1,7 @@
 name: example
 description: An example implementation for a SlidingSheet.
 version: 1.0.0+1
+publish_to: none
 
 environment:
   sdk: ">=2.2.0 <3.0.0"

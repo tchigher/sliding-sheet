@@ -43,7 +43,7 @@ class SnapSpec {
   ///
   /// The value must be included in the [snappings] array, otherwise the sheet will
   /// animate immidiately to the next valid snap.
-  final double initialSnap;
+  final double? initialSnap;
 
   /// How the snaps will be positioned:
   /// - [SnapPositioning.relativeToAvailableSpace] positions the snaps relative to the total
@@ -55,7 +55,7 @@ class SnapSpec {
   final SnapPositioning positioning;
 
   /// A callback function that gets called when the [SlidingSheet] snaps to an extent.
-  final void Function(SheetState, double snap) onSnap;
+  final void Function(SheetState, double? snap)? onSnap;
 
   /// Creates an object that defines how a [SlidingSheet] should snap, or if it should at all.
   const SnapSpec({
@@ -64,9 +64,7 @@ class SnapSpec {
     this.initialSnap,
     this.positioning = SnapPositioning.relativeToAvailableSpace,
     this.onSnap,
-  })  : assert(snap != null),
-        assert(snappings != null),
-        assert(positioning != null);
+  });
 
   /// The snap extent that makes header and footer fully visible without account for vertical padding on the [SlidingSheet].
   static const double headerFooterSnap = -1;
@@ -81,7 +79,7 @@ class SnapSpec {
   static const double expanded = double.infinity;
 
   /// private
-  static bool isSnap(double snap) =>
+  static bool isSnap(double? snap) =>
       snap == expanded ||
       snap == headerFooterSnap ||
       snap == headerSnap ||
@@ -91,11 +89,11 @@ class SnapSpec {
   double get maxSnap => snappings.last;
 
   SnapSpec copyWith({
-    bool snap,
-    List<double> snappings,
-    double initialExtent,
-    SnapPositioning positioning,
-    void Function(SheetState, double snap) onSnap,
+    bool? snap,
+    List<double>? snappings,
+    double? initialExtent,
+    SnapPositioning? positioning,
+    void Function(SheetState, double? snap)? onSnap,
   }) {
     return SnapSpec(
       snap: snap ?? this.snap,
@@ -139,10 +137,10 @@ class ScrollSpec {
   final bool overscroll;
 
   /// The color of the overscroll when [overscroll] is true.
-  final Color overscrollColor;
+  final Color? overscrollColor;
 
   /// The physics of the containing ScrollView.
-  final ScrollPhysics physics;
+  final ScrollPhysics? physics;
 
   /// Whether to wrap the scrollable content inside a `Scrollbar` widget.
   final bool showScrollbar;
@@ -153,11 +151,10 @@ class ScrollSpec {
     this.overscrollColor,
     this.physics,
     this.showScrollbar = false,
-  })  : assert(overscroll != null),
-        assert(showScrollbar != null);
+  });
 
   /// Creates an overscroll effect with the given [color].
-  const ScrollSpec.overscroll({Color color}) : this(overscrollColor: color);
+  const ScrollSpec.overscroll({Color? color}) : this(overscrollColor: color);
 
   /// Creates an iOS bouncing scroll effect.
   const ScrollSpec.bouncingScroll()
@@ -209,15 +206,14 @@ class ParallaxSpec {
   ///
   /// **Note that the [SnapPositioning] you set on the [SnapSpec] will be applied
   /// to this extent aswell**
-  final double endExtent;
+  final double? endExtent;
 
   /// Creates an object that defines a parallax effect.
   const ParallaxSpec({
     this.enabled = true,
     this.amount = 0.15,
     this.endExtent,
-  })  : assert(enabled != null),
-        assert(amount >= 0.0 && amount <= 1.0);
+  }) : assert(amount >= 0.0 && amount <= 1.0);
 
   @override
   String toString() =>

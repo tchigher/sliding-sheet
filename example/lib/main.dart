@@ -179,23 +179,19 @@ class _ExampleState extends State<Example> {
       );
 
       const shape = RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(18)),
+        borderRadius: BorderRadius.all(Radius.circular(16)),
       );
 
       return border == null
-          ? RaisedButton(
-              color: color,
+          ? ElevatedButton(
               onPressed: onTap,
-              elevation: 2,
-              shape: shape,
               child: child,
+              style: ElevatedButton.styleFrom(shape: shape),
             )
-          : OutlineButton(
-              color: color,
+          : OutlinedButton(
               onPressed: onTap,
-              borderSide: border,
-              shape: shape,
               child: child,
+              style: OutlinedButton.styleFrom(shape: shape),
             );
     }
 
@@ -549,7 +545,7 @@ class _ExampleState extends State<Example> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
-                  FlatButton(
+                  TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: Text(
                       'Cancel',
@@ -560,7 +556,7 @@ class _ExampleState extends State<Example> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  FlatButton(
+                  TextButton(
                     onPressed: () {
                       if (!isDismissable) {
                         isDismissable = true;
@@ -649,3 +645,4 @@ class Traffic {
     this.time,
   );
 }
+

@@ -7,21 +7,21 @@ import 'sheet.dart';
 // ignore_for_file: public_member_api_docs
 
 class SheetContainer extends StatelessWidget {
-  final Duration duration;
+  final Duration? duration;
   final double borderRadius;
   final double elevation;
-  final Border border;
-  final BorderRadius customBorders;
-  final EdgeInsets margin;
+  final Border? border;
+  final BorderRadius? customBorders;
+  final EdgeInsets? margin;
   final EdgeInsets padding;
-  final Widget child;
+  final Widget? child;
   final Color color;
-  final Color shadowColor;
-  final List<BoxShadow> boxShadows;
-  final AlignmentGeometry alignment;
-  final BoxConstraints constraints;
+  final Color? shadowColor;
+  final List<BoxShadow>? boxShadows;
+  final AlignmentGeometry? alignment;
+  final BoxConstraints? constraints;
   const SheetContainer({
-    Key key,
+    Key? key,
     this.duration,
     this.borderRadius = 0.0,
     this.elevation = 0.0,
@@ -70,7 +70,7 @@ class SheetContainer extends StatelessWidget {
       );
     } else {
       return AnimatedContainer(
-        duration: duration,
+        duration: duration!,
         padding: padding,
         alignment: alignment,
         constraints: constraints,
@@ -82,16 +82,16 @@ class SheetContainer extends StatelessWidget {
 }
 
 class ElevatedContainer extends StatelessWidget {
-  final Color shadowColor;
+  final Color? shadowColor;
   final double elevation;
   final bool Function(SheetState state) elevateWhen;
   final Widget child;
   const ElevatedContainer({
-    Key key,
-    @required this.shadowColor,
-    @required this.elevation,
-    @required this.elevateWhen,
-    @required this.child,
+    Key? key,
+    required this.shadowColor,
+    required this.elevation,
+    required this.elevateWhen,
+    required this.child,
   }) : super(key: key);
 
   @override
@@ -103,6 +103,7 @@ class ElevatedContainer extends StatelessWidget {
           elevateWhen(oldState) != elevateWhen(newState),
       builder: (context, state) {
         return SheetContainer(
+          shadowColor: shadowColor,
           elevation: elevateWhen(state) ? elevation : 0.0,
           duration: const Duration(milliseconds: 400),
           child: child,
