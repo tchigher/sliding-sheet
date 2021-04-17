@@ -293,7 +293,7 @@ class _ExampleState extends State<Example> {
             ),
           ),
         ),
-        const SizedBox(height: 32),
+        /* const SizedBox(height: 32),
         divider,
         const SizedBox(height: 32),
         Column(
@@ -341,7 +341,7 @@ class _ExampleState extends State<Example> {
             ),
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 32), */
       ],
     );
   }

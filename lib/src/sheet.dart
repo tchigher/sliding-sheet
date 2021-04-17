@@ -143,7 +143,7 @@ class SlidingSheet extends StatefulWidget {
   final double maxWidth;
 
   /// {@template sliding_sheet.maxWidth}
-  /// The minimum height of the sheet the child return by the `builder`.
+  /// The minimum height of the sheet of the child returned by the `builder`.
   ///
   /// By default, the sheet sizes itself as big as its child.
   /// {@endtemplate}
@@ -1097,8 +1097,6 @@ class _SlidingSheetState extends State<SlidingSheet>
   }
 
   Widget _delegateInteractions(Widget child, {VoidCallback? onTap}) {
-    if (child == null) return const SizedBox();
-
     var start = 0.0, end = 0.0;
 
     void onDragEnd([double velocity = 0.0]) {
