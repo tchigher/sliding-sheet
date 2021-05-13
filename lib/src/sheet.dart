@@ -21,6 +21,8 @@ typedef SheetListener = void Function(SheetState state);
 typedef OnDismissPreventedCallback = void Function(
     bool backButton, bool backDrop);
 
+typedef OnOpenCallback = void Function();
+
 /// A widget that can be dragged and scrolled in a single gesture and snapped
 /// to a list of extents.
 ///
@@ -143,7 +145,7 @@ class SlidingSheet extends StatefulWidget {
   final double maxWidth;
 
   /// {@template sliding_sheet.maxWidth}
-  /// The minimum height of the sheet of the child returned by the `builder`.
+  /// The minimum height of the sheet the child return by the `builder`.
   ///
   /// By default, the sheet sizes itself as big as its child.
   /// {@endtemplate}
@@ -226,6 +228,8 @@ class SlidingSheet extends StatefulWidget {
   /// {@endtemplate}
   final OnDismissPreventedCallback? onDismissPrevented;
 
+  final OnOpenCallback? onOpen;
+
   /// Creates a sheet than can be dragged and scrolled in a single gesture to be
   /// placed inside you widget tree.
   ///
@@ -285,6 +289,8 @@ class SlidingSheet extends StatefulWidget {
     bool extendBody = false,
     double liftOnScrollHeaderElevation = 0.0,
     double liftOnScrollFooterElevation = 0.0,
+    OnDismissPreventedCallback? onDismissPrevented,
+    OnOpenCallback? onOpen,
   }) : this._(
           key: key,
           builder: builder,
@@ -316,6 +322,8 @@ class SlidingSheet extends StatefulWidget {
           extendBody: extendBody,
           liftOnScrollHeaderElevation: liftOnScrollHeaderElevation,
           liftOnScrollFooterElevation: liftOnScrollFooterElevation,
+          onDismissPrevented: onDismissPrevented,
+          onOpen: onOpen,
         );
 
   SlidingSheet._({
@@ -352,6 +360,7 @@ class SlidingSheet extends StatefulWidget {
     this.route,
     this.isDismissable = true,
     this.onDismissPrevented,
+    this.onOpen,
   })  : assert(snapSpec.snappings.length >= 2,
             'There must be at least two snapping extents to snap in between.'),
         assert(snapSpec.minSnap != snapSpec.maxSnap || route != null,
@@ -493,9 +502,11 @@ class _SlidingSheetState extends State<SlidingSheet>
       didCompleteInitialRoute = true;
       // Set the inital extent after the first frame.
       postFrame(
-        () => setState(
-          () => currentExtent = initialExtent,
-        ),
+              () async {
+            await snapToExtent(initialExtent);
+            setState(() => currentExtent = initialExtent);
+            widget.onOpen?.call();
+          }
       );
     }
   }
@@ -795,7 +806,6 @@ class _SlidingSheetState extends State<SlidingSheet>
     // didEndScroll doesn't work reliably in ScrollPosition. There
     // should be a better solution to this problem.
     if (isDialog && !widget.isDismissable && currentExtent < minExtent) {
-      snapToExtent(minExtent);
       _onDismissPrevented();
     }
   }
@@ -855,7 +865,7 @@ class _SlidingSheetState extends State<SlidingSheet>
           }
         } else {
           if (!state.isCollapsed) {
-            snapToExtent(minExtent);
+            _pop(0.0);
             return false;
           } else {
             return true;
@@ -1097,6 +1107,8 @@ class _SlidingSheetState extends State<SlidingSheet>
   }
 
   Widget _delegateInteractions(Widget child, {VoidCallback? onTap}) {
+    if (child == null) return const SizedBox();
+
     var start = 0.0, end = 0.0;
 
     void onDragEnd([double velocity = 0.0]) {

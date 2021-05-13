@@ -395,7 +395,10 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
       if (targetSnap == 0.0) {
         onPop(velocity);
       } else if (targetSnap != extent.currentExtent && currentExtent > 0) {
-        snapTo(targetSnap!.clamp(minExtent, maxExtent));
+        final double initialSnap = (snapBehavior.initialSnap ?? 0.0) / snapBehavior.maxSnap;
+        if (extent.currentExtent < initialSnap) {
+          snapTo(targetSnap!.clamp(minExtent, maxExtent));
+        }
       }
     }
   }
