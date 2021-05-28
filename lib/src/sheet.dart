@@ -759,7 +759,7 @@ class _SlidingSheetState extends State<SlidingSheet>
     }
   }
 
-  void _pop(double velocity) {
+  void _pop(double velocity, bool isBackDrop, bool isBackButton) {
     if (isDialog && !dismissUnderway && Navigator.canPop(context)) {
       dismissUnderway = true;
       Navigator.pop(context);
@@ -771,6 +771,7 @@ class _SlidingSheetState extends State<SlidingSheet>
       final timeFraction = 1.0 - (fractionCovered * 0.5);
       snapToExtent(minExtent, duration: widget.duration * timeFraction);
     }
+    _onDismissPrevented(backButton: isBackButton, backDrop: isBackDrop);
   }
 
   // Ensure that the sheet sizes itself correctly when the
@@ -865,7 +866,7 @@ class _SlidingSheetState extends State<SlidingSheet>
           }
         } else {
           if (!state.isCollapsed) {
-            _pop(0.0);
+            _pop(0.0, false, true);
             return false;
           } else {
             return true;
@@ -1084,7 +1085,7 @@ class _SlidingSheetState extends State<SlidingSheet>
         );
 
         void onTap() => widget.isDismissable
-            ? _pop(0.0)
+            ? _pop(0.0, true, false)
             : _onDismissPrevented(backDrop: true);
 
         // see: https://github.com/BendixMa/sliding-sheet/issues/30

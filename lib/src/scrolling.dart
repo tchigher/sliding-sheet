@@ -73,7 +73,7 @@ class _SlidingSheetScrollController extends ScrollController {
   SlidingSheet get widget => sheet.widget;
 
   _SheetExtent get extent => sheet.extent!;
-  void Function(double) get onPop => sheet._pop;
+  void Function(double, bool, bool) get onPop => sheet._pop;
   Duration get duration => sheet.widget.duration;
   SnapSpec get snapSpec => sheet.snapSpec;
 
@@ -215,7 +215,7 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
 
   _SheetExtent get extent => scrollController.extent;
   _SlidingSheetState get sheet => scrollController.sheet;
-  void Function(double) get onPop => scrollController.onPop;
+  void Function(double, bool, bool) get onPop => scrollController.onPop;
   SnapSpec get snapBehavior => sheet.snapSpec;
   ScrollSpec get scrollSpec => sheet.scrollSpec;
   List<double> get snappings => extent.snappings;
@@ -344,7 +344,7 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
       if (!isMovingUp) {
         if (isDismissable) {
           // Pop from the navigator on down fling.
-          onPop(velocity);
+          onPop(velocity, false, false);
         } else {
           snapTo(minExtent);
         }
@@ -393,7 +393,7 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
       }
 
       if (targetSnap == 0.0) {
-        onPop(velocity);
+        onPop(velocity, false, false);
       } else if (targetSnap != extent.currentExtent && currentExtent > 0) {
         final double initialSnap = (snapBehavior.initialSnap ?? 0.0) / snapBehavior.maxSnap;
         if (extent.currentExtent < initialSnap) {
@@ -452,7 +452,7 @@ class _SlidingSheetScrollPosition extends ScrollPositionWithSingleContext {
         if (fromBottomSheet &&
             currentExtent <= 0.0 &&
             !shouldMakeSheetNonDismissable) {
-          onPop(0.0);
+          onPop(0.0, false, false);
         }
       }
     }
