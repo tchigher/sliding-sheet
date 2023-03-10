@@ -1,19 +1,19 @@
 import 'dart:async';
 
-import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:community_charts_flutter/community_charts_flutter.dart'
+    as charts;
 import 'package:example/util/util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-
-import 'package:sliding_sheet/sliding_sheet.dart';
+import 'package:wtf_sliding_sheet/wtf_sliding_sheet.dart';
 
 // ignore_for_file: public_member_api_docs
 
 const Color mapsBlue = Color(0xFF4185F3);
 
 void main() => runApp(
-      MaterialApp(
+      const MaterialApp(
         title: 'Example App',
         debugShowCheckedModeBanner: false,
         home: Example(),
@@ -21,8 +21,10 @@ void main() => runApp(
     );
 
 class Example extends StatefulWidget {
+  const Example({super.key});
+
   @override
-  _ExampleState createState() => _ExampleState();
+  State<Example> createState() => _ExampleState();
 }
 
 class _ExampleState extends State<Example> {
@@ -79,17 +81,14 @@ class _ExampleState extends State<Example> {
         color: Colors.grey.shade300,
         width: 3,
       ),
-      snapSpec: SnapSpec(
+      snapSpec: const SnapSpec(
         snap: true,
         positioning: SnapPositioning.relativeToAvailableSpace,
-        snappings: const [
+        snappings: [
           SnapSpec.headerFooterSnap,
           0.6,
           SnapSpec.expanded,
         ],
-        onSnap: (state, snap) {
-          print('Snapped to $snap');
-        },
       ),
       parallaxSpec: const ParallaxSpec(
         enabled: true,
@@ -165,8 +164,7 @@ class _ExampleState extends State<Example> {
       Icon icon,
       Text text,
       VoidCallback onTap, {
-      BorderSide border,
-      Color color,
+      BorderSide? border,
     }) {
       final child = Row(
         mainAxisSize: MainAxisSize.min,
@@ -185,13 +183,13 @@ class _ExampleState extends State<Example> {
       return border == null
           ? ElevatedButton(
               onPressed: onTap,
-              child: child,
               style: ElevatedButton.styleFrom(shape: shape),
+              child: child,
             )
           : OutlinedButton(
               onPressed: onTap,
-              child: child,
               style: OutlinedButton.styleFrom(shape: shape),
+              child: child,
             );
     }
 
@@ -216,7 +214,7 @@ class _ExampleState extends State<Example> {
             ),
             () async {
               // Inherit from context...
-              await SheetController.of(context).hide();
+              await SheetController.of(context)?.hide();
               Future.delayed(
                 const Duration(milliseconds: 1500),
                 () {
@@ -225,11 +223,11 @@ class _ExampleState extends State<Example> {
                 },
               );
             },
-            color: mapsBlue,
           ),
           const SizedBox(width: 8),
           SheetListenerBuilder(
-            buildWhen: (oldState, newState) => oldState.isExpanded != newState.isExpanded,
+            buildWhen: (oldState, newState) =>
+                oldState.isExpanded != newState.isExpanded,
             builder: (context, state) {
               final isExpanded = state.isExpanded;
 
@@ -245,7 +243,6 @@ class _ExampleState extends State<Example> {
                 !isExpanded
                     ? () => controller.scrollTo(state.maxScrollExtent)
                     : controller.collapse,
-                color: Colors.white,
                 border: BorderSide(
                   color: Colors.grey.shade400,
                   width: 2,
@@ -354,11 +351,11 @@ class _ExampleState extends State<Example> {
         '2 seconds',
       ),
       Step(
-        "Add the newest version of 'sliding_sheet' to your dependencies.",
+        "Add the newest version of 'wtf_sliding_sheet' to your dependencies.",
         '5 seconds',
       ),
       Step(
-        "Run 'flutter packages get' in the terminal.",
+        "Run 'flutter pub get' in the terminal.",
         '4 seconds',
       ),
       Step(
@@ -388,7 +385,7 @@ class _ExampleState extends State<Example> {
               Row(
                 children: <Widget>[
                   Text(
-                    '${step.time}',
+                    step.time,
                     style: textStyle.copyWith(
                       color: Colors.grey,
                       fontSize: 15,
@@ -424,7 +421,9 @@ class _ExampleState extends State<Example> {
           Traffic(0.6, '16:30'),
         ],
         colorFn: (traffic, __) {
-          if (traffic.time == '14:30') return charts.Color.fromHex(code: '#F0BA64');
+          if (traffic.time == '14:30') {
+            return charts.Color.fromHex(code: '#F0BA64');
+          }
           return charts.MaterialPalette.gray.shade300;
         },
         domainFn: (Traffic traffic, _) => traffic.time,
@@ -512,8 +511,6 @@ class _ExampleState extends State<Example> {
             // if (backButton) {
             //   Navigator.pop(context);
             // }
-
-            print('Dismiss prevented');
           },
           builder: (context, state) {
             return Container(
@@ -523,7 +520,7 @@ class _ExampleState extends State<Example> {
                 children: <Widget>[
                   Text(
                     'Confirm purchase',
-                    style: textTheme.headline4.copyWith(
+                    style: textTheme.headlineMedium?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
@@ -536,7 +533,7 @@ class _ExampleState extends State<Example> {
                           'Lorem ipsum dolor sit amet, consectetur adipiscing '
                           'elit. Praesent sagittis tellus lacus, et pulvinar '
                           'orci eleifend in.',
-                          style: textTheme.subtitle1.copyWith(
+                          style: textTheme.titleMedium?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
@@ -565,7 +562,7 @@ class _ExampleState extends State<Example> {
                     onPressed: () => Navigator.pop(context),
                     child: Text(
                       'Cancel',
-                      style: textTheme.subtitle1.copyWith(
+                      style: textTheme.titleMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
@@ -576,14 +573,14 @@ class _ExampleState extends State<Example> {
                     onPressed: () {
                       if (!isDismissable) {
                         isDismissable = true;
-                        SheetController.of(context).rebuild();
+                        SheetController.of(context)?.rebuild();
                       } else {
                         Navigator.pop(context);
                       }
                     },
                     child: Text(
                       'Approve',
-                      style: textTheme.subtitle1.copyWith(
+                      style: textTheme.titleMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
