@@ -1,3 +1,6 @@
+## 0.6.2
+* **Fixed** [#7](https://github.com/flutterwtf/wtf_sliding_sheet/pull/7)
+
 ## 0.6.1
 * **Migrate** to a new repository name
 

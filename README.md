@@ -16,7 +16,7 @@ Add it to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  wtf_sliding_sheet: ^0.6.1
+  wtf_sliding_sheet: ^0.6.2
 ```
 
 Install packages from the command line

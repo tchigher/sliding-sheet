@@ -11,11 +11,8 @@ import 'specs.dart';
 import 'util.dart';
 
 part 'scrolling.dart';
-
 part 'sheet_controller.dart';
-
 part 'sheet_dialog.dart';
-
 part 'sheet_state.dart';
 
 /// Widget for building sheet
@@ -610,6 +607,9 @@ class _SlidingSheetState extends State<SlidingSheet>
       final RenderBox? footer =
           footerKey.currentContext?.findRenderObject() as RenderBox?;
 
+      final previousMaxExtent =
+          isLaidOut ? (sheetHeight / availableHeight).clamp(0.0, 1.0) : 1.0;
+
       final isChildLaidOut = child?.hasSize == true;
       final prevChildHeight = childHeight;
       childHeight = isChildLaidOut ? child!.size.height : 0;
@@ -626,7 +626,7 @@ class _SlidingSheetState extends State<SlidingSheet>
           (childHeight != prevChildHeight ||
               headerHeight != prevHeaderHeight ||
               footerHeight != prevFooterHeight)) {
-        _updateSnappingsAndExtent();
+        _updateSnappingsAndExtent(previousMaxExtent: previousMaxExtent);
         setState(() {});
       }
     });
@@ -703,7 +703,7 @@ class _SlidingSheetState extends State<SlidingSheet>
     }
   }
 
-  void _updateSnappingsAndExtent() {
+  void _updateSnappingsAndExtent({num? previousMaxExtent}) {
     snappings = snapSpec.snappings.map(_normalizeSnap).toList()..sort();
 
     if (extent != null) {
@@ -717,7 +717,12 @@ class _SlidingSheetState extends State<SlidingSheet>
         ..maxExtent = maxExtent
         ..minExtent = minExtent;
 
-      if (currentExtent > maxExtent) currentExtent = maxExtent;
+      final isCurrentPreviousMaxExtent = previousMaxExtent != null &&
+          (currentExtent - previousMaxExtent).abs() < 0.01;
+
+      if (currentExtent > maxExtent || isCurrentPreviousMaxExtent) {
+        currentExtent = maxExtent;
+      }
     }
   }
 
